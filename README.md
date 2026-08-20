@@ -38,10 +38,17 @@ npm run build    # reconstruit dist/sensen-mini.html (fichier unique, file://)
    Chrome : menu ⋮ → Installer l'application). Le jeu s'ouvre alors plein
    écran, sans barre d'adresse, et fonctionne sans réseau.
 
-Pour y jouer sans l'ordinateur allumé, il faut héberger le dossier quelque
-part en HTTPS — GitHub Pages, Netlify, Cloudflare Pages : c'est un site
-statique, il suffit de déposer le dossier. La sauvegarde reste dans le
-navigateur du téléphone.
+### En ligne, sans l'ordinateur allumé
+
+Le dépôt est sur **[github.com/devmarcpro/sensenmini](https://github.com/devmarcpro/sensenmini)**.
+C'est un site statique : GitHub Pages suffit à l'héberger, sans build ni
+serveur. Sur le dépôt → *Settings* → *Pages* → *Source : Deploy from a
+branch* → branche `main`, dossier `/ (root)` → *Save*. Une minute plus tard,
+le jeu est jouable sur `https://devmarcpro.github.io/sensenmini/`, installable
+depuis le téléphone, et hors-ligne une fois ouvert.
+
+La sauvegarde reste dans le navigateur de chaque appareil — pour la déplacer,
+自 VEILLE → *Exporter la sauvegarde*, puis *Importer* sur l'autre appareil.
 
 ---
 
@@ -203,8 +210,11 @@ livre toutes les ~20 min, un gisement qui nourrit ~45 min de récolte.
 `src/51-save.js` choisit le stockage au chargement : `window.storage` quand il
 existe (environnement Claude), `localStorage` sinon (navigateur classique, clé
 `sensen:mini:step2`). La partie persiste donc entre deux rechargements, y
-compris en `file://`. Pour repartir de zéro : DevTools → Application →
-Local Storage → supprimer la clé.
+compris en `file://`.
+
+L'onglet 自 VEILLE porte tout le reste : **exporter** la partie en un bloc de
+texte, l'**importer** sur un autre appareil, couper les sons, et **recommencer**
+(double confirmation).
 
 ---
 

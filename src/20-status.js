@@ -51,7 +51,13 @@ function tickStatus(tgt,dt,estJoueur){
     }
   });
   const fini=tgt.st.filter(x=>x.t<=0);
-  if(fini.length&&estJoueur)log(fini.map(x=>STATUS[x.k].n).join(', ')+' — dissipé');
+  /* le HUD affiche déjà les statuts actifs : n'annoncer que ce qui pesait
+     vraiment — une entrave, un poison — sinon le journal se remplit de
+     « saignement dissipé » toutes les vingt secondes */
+  if(estJoueur){
+    const notables=fini.filter(x=>x.k==='poison'||x.k==='affaibli'||STATUS[x.k].dur);
+    if(notables.length)log(notables.map(x=>STATUS[x.k].n).join(', ')+' — dissipé');
+  }
   tgt.st=tgt.st.filter(x=>x.t>0);
 }
 const statusTxt=tgt=>(tgt&&tgt.st||[]).map(x=>

@@ -183,9 +183,11 @@ function removeEnemy(e){
     return;}
   refocus(Math.min(foc,EE.length-1));
 }
-/* rompre le contact (走) : jamais refusé, mais un dos tourné se paie */
-function disengage(){
-  const list=engaged();
+/* Rompre le contact (走) : jamais refusé, mais un dos tourné se paie.
+   `force` : le repli automatique sous 25 % de PV. On fuit parce qu'on doit —
+   ajouter une pénalité à une retraite qu'on n'a pas choisie serait injuste. */
+function disengage(force){
+  const list=force?[]:engaged();
   if(list.length){
     const dd=10+list.length*2;
     const jet=d20()+lv('discretion')/2+st('dex')/4;

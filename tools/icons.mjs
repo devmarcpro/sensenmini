@@ -33,7 +33,9 @@ const page=(size,pad)=>`<!doctype html><meta charset="utf-8">
 
 const profile=join(tmpdir(),'sensen-icons-'+process.pid);
 const browser=spawn(bin,['--headless=new','--disable-gpu','--no-first-run','--remote-debugging-port=0',
-  '--remote-allow-origins=*','--user-data-dir='+profile,'--hide-scrollbars','about:blank'],{stdio:'ignore'});
+  '--remote-allow-origins=*','--user-data-dir='+profile,'--hide-scrollbars',
+  ...(process.platform==='win32'?[]:['--no-sandbox','--disable-dev-shm-usage']),
+  'about:blank'],{stdio:'ignore'});
 const cleanup=()=>{
   if(process.platform==='win32')try{spawnSync('taskkill',['/PID',String(browser.pid),'/T','/F'],{stdio:'ignore'});}catch{}
   try{browser.kill();}catch{}

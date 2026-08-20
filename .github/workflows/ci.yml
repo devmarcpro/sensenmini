@@ -1,0 +1,43 @@
+name: Vérifications
+
+# Le projet n'a aucune dépendance : Node seul suffit, et Chrome est déjà
+# présent sur les runners GitHub. Rien à installer.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Syntaxe des modules
+        run: npm run check
+
+      - name: Règles du jeu (spec)
+        run: npm run spec
+
+      - name: Interface, tactile et hors-ligne (smoke)
+        run: npm run smoke
+
+      - name: Le fichier unique se reconstruit
+        run: npm run build
+
+      - name: Une partie de huit heures tourne sans exception
+        run: npm run sim -- --hours 8
+
+      - name: Captures d'écran
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures
+          path: .shots/
+          if-no-files-found: ignore
+          retention-days: 14

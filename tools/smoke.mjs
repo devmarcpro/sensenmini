@@ -32,7 +32,10 @@ const server=spawn(process.execPath,[join(root,'tools/serve.mjs'),String(PORT)],
 const profile=join(tmpdir(),'sensen-smoke-'+process.pid);
 const browser=spawn(bin,['--headless=new','--disable-gpu','--no-first-run','--no-default-browser-check',
   '--remote-debugging-port=0','--remote-allow-origins=*','--user-data-dir='+profile,
-  '--hide-scrollbars','--window-size=1280,900','about:blank'],{stdio:'ignore'});
+  '--hide-scrollbars','--window-size=1280,900',
+  /* hors Windows, le bac à sable demande des privilèges qu'un runner d'intégration n'a pas */
+  ...(process.platform==='win32'?[]:['--no-sandbox','--disable-dev-shm-usage']),
+  'about:blank'],{stdio:'ignore'});
 let cleaned=false;
 const cleanup=()=>{
   if(cleaned)return;cleaned=true;

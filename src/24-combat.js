@@ -145,7 +145,7 @@ function spawn(){
   const nuit=isNight()&&!inDj&&!eclaireIci();
   const power=inDj?djPower():1+c.corr/26*(nuit?1.1:1)+c.depth*0.6;
   const rare=Math.random()<0.02;
-  const ck=creaturePool(c,inDj,nuit),C=CREATURE[ck];
+  const ck=creaturePool(c,inDj,nuit,power),C=CREATURE[ck];
   const boss=inDj&&room&&room.t==='boss';
   /* combien : une meute vient en meute, une salle gardée envoie sa garde,
      un camp est un camp. Le gardien vient seul — il suffit à lui-même. */

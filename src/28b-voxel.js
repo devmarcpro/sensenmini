@@ -58,6 +58,16 @@ const VOX={
     [.8,-2.6,2.2,.7,1.6,.7,.8],[.8,-2.6,-2.2,.7,1.6,.7,.8],
     [-.6,-2.6,2.4,.7,1.6,.7,.8],[-.6,-2.6,-2.4,.7,1.6,.7,.8],
     [1.8,-2.6,2,.7,1.6,.7,.8],[1.8,-2.6,-2,.7,1.6,.7,.8]],
+  /* crustacés : large, plat, sans queue. Emprunter le squelette du scorpion
+     leur collait un dard qu'ils n'ont pas — la silhouette mentait. */
+  crustace:[[0,-1,0,4.6,2,5.6],[0,.4,0,3.6,.9,4.4,1.15],
+    [2.6,-1.2,1.1,1.4,1.2,1.2,.92],[2.6,-1.2,-1.1,1.4,1.2,1.2,.92],
+    [3.8,-1.2,1.7,2,1.6,1.6,.86],[3.8,-1.2,-1.7,2,1.6,1.6,.86],
+    [5.2,-1.2,2.1,1.4,1,.9,.78],[5.2,-1.2,-2.1,1.4,1,.9,.78],
+    [1.3,.9,1,.6,1,.6,.6],[1.3,.9,-1,.6,1,.6,.6],
+    [1,-2.6,2.6,.7,1.6,.7,.8],[1,-2.6,-2.6,.7,1.6,.7,.8],
+    [-.4,-2.6,2.9,.7,1.6,.7,.8],[-.4,-2.6,-2.9,.7,1.6,.7,.8],
+    [-1.8,-2.6,2.6,.7,1.6,.7,.8],[-1.8,-2.6,-2.6,.7,1.6,.7,.8]],
   /* volants : perchés, pas en vol. Une aile déployée part sur l'axe des z,
      perpendiculaire à la caméra — la perspective l'écrase en une lame
      illisible. Repliée le long du corps, elle se lit d'un coup d'œil. */
@@ -122,6 +132,12 @@ const ARCH={
   deserteur:['humanoide',1],braconnier:['encapuchonne',1],ermite:['encapuchonne',.95],
   rodeur:['encapuchonne',1.05],suaire:['encapuchonne',1.1],
   cendre:['amorphe',1],sylve:['amorphe',1.15],eclat:['cristal',1],
+  crabe:['crustace',.8],crabetour:['crustace',1.45],
+  goeland:['volant',.75],harfang:['volant',.85],heron:['volant',.9],
+  phoque:['ursin',.85],mammouth:['ursin',1.55],
+  glouton:['quadrupede',.8],salamandre:['reptile',.7],sangsues:['nuee',.9],
+  naufrageur:['humanoide',1],mercenaire:['humanoide',1.1],colosse:['humanoide',1.5],
+  cauchemar:['amorphe',1.35],
 };
 /* filet de sécurité : une créature sans entrée retombe sur sa catégorie */
 const ARCHCAT={bete:'quadrupede',vermine:'nuee',humain:'humanoide',corrompu:'amorphe'};

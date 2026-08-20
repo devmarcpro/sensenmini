@@ -48,6 +48,23 @@ const CREATURE={
   sylve:{n:'Sylve',g:'樹',cat:'corrompu',bio:['foretmana','foret'],corr:35,lv:11,vec:{0:.8,4:.2},dt:'contondant',delay:3.2,wind:1.4,hp:1.4,dmg:.9,arm:.8,pat:['lourd','balayage'],mats:['ebene','ambre']},
   cendre:{n:'Cendre',g:'燼',cat:'corrompu',bio:['cendres'],corr:30,lv:11,vec:{1:.9,2:.1},dt:'tranchant',delay:2.4,wind:1.0,hp:.9,dmg:1.2,arm:.7,brule:1,pat:['crachat','simple','balayage'],mats:['cendre','charbon']},
   suaire:{n:'Suaire',g:'帷',cat:'corrompu',bio:['marcorr','marecage'],corr:50,dj:1,lv:13,vec:{4:.5,2:.5},dt:'percant',delay:2.8,wind:1.2,hp:1.1,dmg:1.0,arm:.9,affaiblit:1,pack:[1,2],pat:['simple','crachat','morsure'],mats:['os','ecaille']},
+  /* la côte était le biome le plus vide : quatre espèces, dont trois de passage */
+  crabe:{n:'Crabe des galets',g:'蟹',cat:'bete',bio:['cote'],lv:5,vec:{2:.5,4:.5},dt:'percant',delay:2.6,wind:1.1,hp:.7,dmg:.7,arm:1.8,tame:1,pack:[1,3],pat:['simple','morsure'],mats:['ecaille','coquillage']},
+  goeland:{n:'Goéland pillard',g:'鴎',cat:'bete',bio:['cote'],lv:4,vec:{4:.5,3:.5},dt:'tranchant',delay:1.9,wind:.8,hp:.5,dmg:.6,arm:.2,fuit:1,tame:1,pack:[1,4],pat:['simple','double'],mats:['os']},
+  phoque:{n:'Phoque gris',g:'鰭',cat:'bete',bio:['cote','toundra'],lv:7,vec:{4:1},dt:'contondant',delay:3.0,wind:1.3,hp:1.1,dmg:.7,arm:.7,fuit:1,tame:1,pack:[1,2],pat:['simple','lourd'],mats:['cuir','os']},
+  naufrageur:{n:'Naufrageur',g:'難',cat:'humain',bio:['cote'],camp:1,lv:13,vec:{4:.5,1:.5},dt:'contondant',delay:2.7,wind:1.2,hp:1.2,dmg:1.2,arm:1.0,or:4,loot:2,pack:[1,3],pat:['simple','lourd','balayage'],mats:['cuir']},
+  crabetour:{n:'Crabe-tour',g:'甲',cat:'bete',bio:['cote','marecage'],minp:3,lv:19,vec:{2:.6,4:.4},dt:'contondant',delay:3.6,wind:1.7,hp:1.8,dmg:1.4,arm:2.4,pat:['lourd','balayage','simple'],mats:['ecaille','coquillage','os']},
+  /* toundra et marécage : deux prédateurs et deux guetteurs de plus */
+  harfang:{n:'Harfang des neiges',g:'梟',cat:'bete',bio:['toundra','taiga'],lv:6,vec:{4:.6,3:.4},dt:'tranchant',delay:2.1,wind:.9,hp:.6,dmg:.8,arm:.3,nuit:2.5,tame:1,pat:['simple','double'],mats:['os','fourrure']},
+  glouton:{n:'Glouton',g:'貂',cat:'bete',bio:['toundra','taiga'],lv:13,vec:{2:.5,4:.5},dt:'tranchant',delay:1.7,wind:.8,hp:.9,dmg:1.25,arm:.8,embuscade:1,tame:1,pat:['morsure','double','simple'],mats:['fourrure','os','cuir']},
+  sangsues:{n:'Grappe de sangsues',g:'蛭',cat:'vermine',bio:['marecage','marcorr'],lv:6,vec:{4:.7,0:.3},dt:'percant',delay:1.3,wind:.6,hp:.5,dmg:.35,arm:0,nuee:1,venin:1,pat:['double','morsure'],mats:[]},
+  heron:{n:'Héron cendré',g:'鷺',cat:'bete',bio:['marecage','cote'],lv:5,vec:{4:.6,3:.4},dt:'percant',delay:2.3,wind:1.0,hp:.6,dmg:.75,arm:.3,fuit:1,tame:1,pack:[1,2],pat:['simple','double'],mats:['os']},
+  salamandre:{n:'Salamandre de braise',g:'蜥',cat:'bete',bio:['cendres'],minp:2,lv:15,vec:{1:.8,2:.2},dt:'tranchant',delay:2.5,wind:1.1,hp:.9,dmg:1.3,arm:.9,brule:1,tame:1,pat:['morsure','crachat','simple'],mats:['ecaille','soufre','cendre']},
+  /* le haut du bestiaire : rien ne dépassait le loup blanc et l'ours polaire */
+  mercenaire:{n:'Mercenaire franc',g:'傭',cat:'humain',bio:['plaine','montagne','cote'],camp:1,dj:1,minp:3,lv:20,vec:{3:.7,1:.3},dt:'tranchant',delay:2.5,wind:1.1,hp:1.5,dmg:1.4,arm:1.6,or:8,loot:3,pack:[1,2],pat:['simple','double','lourd'],mats:['cuir']},
+  mammouth:{n:'Mammouth des glaces',g:'象',cat:'bete',bio:['toundra','montcris'],minp:4,lv:24,vec:{4:.6,2:.4},dt:'contondant',delay:3.8,wind:1.9,hp:2.4,dmg:2.0,arm:1.8,pat:['lourd','balayage','simple'],mats:['fourrure','cuir','os','laine']},
+  colosse:{n:'Colosse d\'obsidienne',g:'巌',cat:'corrompu',bio:['cendres','montcris'],corr:60,dj:1,minp:4,lv:26,vec:{2:.5,3:.5},dt:'contondant',delay:3.6,wind:1.8,hp:2.2,dmg:1.9,arm:2.2,pat:['lourd','balayage'],mats:['obsidienne','basalte','onyx']},
+  cauchemar:{n:'Cauchemar',g:'夢',cat:'corrompu',bio:['marcorr','cendres'],corr:70,dj:2,minp:5,lv:30,vec:null,dt:'percant',delay:2.6,wind:1.2,hp:1.8,dmg:1.9,arm:1.4,affaiblit:1,pack:[1,2],pat:['simple','double','crachat'],mats:['onyx','osfossile']},
 };
 const CK=Object.keys(CREATURE);
 /* ==================================================================
@@ -70,16 +87,21 @@ const PATTERN={
 const patOf=e=>PATTERN[e&&e.pat]||PATTERN.simple;
 /* thèmes de donjon (E.29) : ils choisissent le peuplement et le nom */
 const DJTHEME={
-  ruine:{n:'Ruine',noms:['Ruine effondrée','Portail muré','Tour écroulée','Bastion oublié'],pop:{ermite:4,bandit:3,deserteur:2,rodeur:2,loup:1}},
-  crypte:{n:'Crypte',noms:['Crypte','Sépulcre','Ossuaire','Caveau scellé'],pop:{suaire:4,rodeur:3,deserteur:1,serpent:1,moustiques:1}},
-  mine:{n:'Mine',noms:['Mine noyée','Puits ancien','Galerie morte','Veine muette'],pop:{eclat:3,scorpion:2,serpent:2,bandit:2,rodeur:1}},
-  repaire:{n:'Repaire',noms:['Gouffre','Tanière','Faille','Antre'],pop:{oursbrun:3,loup:3,lynx:2,chef:1,loupblanc:1,crocodile:1}},
+  ruine:{n:'Ruine',noms:['Ruine effondrée','Portail muré','Tour écroulée','Bastion oublié'],pop:{ermite:4,bandit:3,deserteur:2,rodeur:2,loup:1,mercenaire:2}},
+  crypte:{n:'Crypte',noms:['Crypte','Sépulcre','Ossuaire','Caveau scellé'],pop:{suaire:4,rodeur:3,deserteur:1,serpent:1,moustiques:1,sangsues:2,cauchemar:1}},
+  mine:{n:'Mine',noms:['Mine noyée','Puits ancien','Galerie morte','Veine muette'],pop:{eclat:3,scorpion:2,serpent:2,bandit:2,rodeur:1,colosse:1}},
+  repaire:{n:'Repaire',noms:['Gouffre','Tanière','Faille','Antre'],pop:{oursbrun:3,loup:3,lynx:2,chef:1,loupblanc:1,crocodile:1,glouton:2,crabetour:1}},
 };
 /* pool de spawn pour une cellule : biome, heure, corruption, donjon ou camp */
-function creaturePool(c,inDj,night){
+function creaturePool(c,inDj,night,power){
   const pool=[];
   const th=inDj&&c.dj&&c.dj.theme?DJTHEME[c.dj.theme]:null;
   CK.forEach(k=>{const C=CREATURE[k];let w=0;
+    /* Une porte de puissance. Le niveau affiché d'une créature n'a jamais
+       rien décidé : la difficulté vient de la puissance du lieu, qui
+       multiplie ses PV et ses dégâts. Sans garde-fou, un mammouth pouvait
+       donc tomber sur un débutant dans une toundra tranquille. */
+    if(C.minp&&power!==undefined&&power<C.minp)return;
     if(inDj){if(th&&th.pop[k])w=th.pop[k];else if(C.dj)w=C.dj;else if(C.cat==='bete'&&['oursbrun','loup','loupblanc','serpent','scorpion'].includes(k))w=.5;}
     else{
       if(C.bio.includes(c.b))w=2;

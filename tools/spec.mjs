@@ -603,6 +603,37 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('bestiaire — chaque espèce est jouable, visible et à sa place',()=>{
+  const c=nouveau();
+  const cles=G(c,'CK');
+  /* une espèce dont un matériau, un pattern ou un biome n'existe pas
+     casse le butin, le télégraphe ou le peuplement — silencieusement */
+  const matsInconnus=G(c,'CK.filter(k=>(CREATURE[k].mats||[]).some(m=>!MAT[m]))');
+  eq(matsInconnus.length,0,'aucune créature ne lâche un matériau inconnu','fautives : '+matsInconnus.join(', '));
+  const patsInconnus=G(c,'CK.filter(k=>(CREATURE[k].pat||[]).some(p=>!PATTERN[p]))');
+  eq(patsInconnus.length,0,'aucune créature n\'annonce un geste inconnu','fautives : '+patsInconnus.join(', '));
+  const biosInconnus=G(c,'CK.filter(k=>(CREATURE[k].bio||[]).some(b=>!BIOME[b]))');
+  eq(biosInconnus.length,0,'aucune créature ne vit dans un biome inexistant','fautives : '+biosInconnus.join(', '));
+  /* sans squelette explicite, une créature retombe sur sa catégorie et
+     un crabe se retrouve à quatre pattes de loup */
+  const sansSquelette=G(c,'CK.filter(k=>!ARCH[k])');
+  eq(sansSquelette.length,0,'chaque espèce a son squelette voxel','sans squelette : '+sansSquelette.join(', '));
+  const squelettesInconnus=G(c,'Object.keys(ARCH).filter(k=>!VOX[ARCH[k][0]])');
+  eq(squelettesInconnus.length,0,'chaque squelette référencé existe','fautifs : '+squelettesInconnus.join(', '));
+  const orphelins=G(c,'Object.keys(ARCH).filter(k=>!CREATURE[k])');
+  eq(orphelins.length,0,'aucun squelette ne pointe vers une espèce disparue','orphelins : '+orphelins.join(', '));
+  /* chaque biome doit pouvoir peupler une rencontre */
+  const biomesVides=G(c,'Object.keys(BIOME).filter(b=>!CK.some(k=>CREATURE[k].bio.includes(b)))');
+  eq(biomesVides.length,0,'aucun biome n\'est dépeuplé','vides : '+biomesVides.join(', '));
+  /* la porte de puissance : les grosses bêtes ne tombent pas sur un débutant */
+  R(c,'globalThis.__cel={b:"toundra",corr:0,depth:0,poi:null};'
+    +'globalThis.__bas=[];for(let i=0;i<600;i++)__bas.push(creaturePool(__cel,false,false,1));');
+  eq(G(c,'__bas.includes("mammouth")'),false,'un mammouth n\'apparaît pas dans une toundra tranquille');
+  R(c,'globalThis.__ht=[];for(let i=0;i<600;i++)__ht.push(creaturePool(__cel,false,false,6));');
+  eq(G(c,'__ht.includes("mammouth")'),true,'il apparaît là où la puissance le justifie');
+  gte(cles.length,44,'le bestiaire compte au moins quarante-quatre espèces');
+});
+
 /* ================= exécution ================= */
 let total=0,echecs=0;
 const t0=Date.now();

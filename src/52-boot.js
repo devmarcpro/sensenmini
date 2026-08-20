@@ -3,7 +3,7 @@
    Chargé dans l'ordre par index.html ; portée globale partagée. */
 
 /* ===== INTÉGRITÉ DU CHARGEMENT =====
-   Le jeu se charge en cinquante-six fichiers. Sur un réseau capricieux ou
+   Le jeu se charge en cinquante-sept fichiers. Sur un réseau capricieux ou
    un hébergeur qui limite, il suffit qu'un seul échoue pour que la partie
    démarre amputée — sans que rien ne le dise. On vérifie donc quelques
    symboles répartis sur tout l'ordre de chargement, et l'on recharge une
@@ -18,7 +18,7 @@ function chargementComplet(){
       &&genCell&&NEW&&gainXp&&gainStat&&mkItem&&partFor&&cutGem&&GEMSPEC&&mkNpc&&linkFamilies&&JOBS
       &&GOV&&GUILDS&&QTPL&&PLANTE&&cook&&escortList&&ORDERS&&PLOT&&MEUBLE&&plots&&genDungeon&&DJTHEME
       &&METEO&&SEASON&&offline&&AUTOS&&STATUS&&addStatus&&KSIZE&&kingdomsNear&&starterKit&&SHOPDEF
-      &&CREATURE&&PATTERN&&STANCE&&attack&&compileSpell&&harvestTick&&tickClock&&step&&paint&&grp&&foldHead
+      &&CREATURE&&PATTERN&&VOX&&voxelHtml&&STANCE&&attack&&compileSpell&&harvestTick&&tickClock&&step&&paint&&grp&&foldHead
       &&pMonde&&pCell&&pAtelier&&pEquip&&pMagie&&pTable&&pVille&&pPnj&&pComps&&pBatir&&pRoyaume
       &&pGuilde&&pSac&&pAuto&&pSkills&&pRecolte&&TIPS&&SFX&&save&&exportSave
       &&buildGate&&applyBirth&&defaultStart&&repLocale&&lawsHere&&handle&&tabsEdges);
@@ -27,7 +27,7 @@ function chargementComplet(){
 /* ===== DÉMARRAGE ===== */
 (async()=>{
   if(!chargementComplet()){
-    /* réseau capricieux ou hébergeur qui limite : un fichier sur cinquante-six
+    /* réseau capricieux ou hébergeur qui limite : un fichier sur cinquante-sept
        a manqué. On recharge une fois, puis on l'annonce plutôt que de boucler. */
     let dejaTente=false;
     try{dejaTente=sessionStorage.getItem('sensen:reload')==='1';sessionStorage.setItem('sensen:reload','1');}catch(e){}

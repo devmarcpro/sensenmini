@@ -118,7 +118,7 @@ function combatScene(){
    +'</div>'
    +'<div class="stage"><div class="gridfloor"></div><div class="bigk">戦</div>'
    +'<div class="eName" id="eName">—</div><div class="eInfo" id="eInfo"></div>'
-   +'<div class="mob" id="mob"><i class="fr"></i><i class="rt"></i><i class="tp"></i><b class="pk" id="mobPack"></b></div>'
+   +'<div class="mob" id="mob"><div class="cam" id="mobCam"></div><b class="pk" id="mobPack"></b></div>'
    +'<div class="floaters" id="floaters"></div></div>'
    +'<div class="bar2"><span id="eHp" style="background:#C8332B"></span><em id="eHpT">—</em></div>'
    +'<div class="tele" id="tele"><span id="teleF"></span><b id="teleW"></b><em id="teleG"></em></div>'
@@ -155,8 +155,10 @@ function renderCombat(){
   const mo=$('mob');
   if(mo){mo.style.setProperty('--e',EL[domi(E.vec)].c);
     mo.className='mob'+(E.stg>0?' stag':'')+(E.rare?' rare':'')+(hitFx>0?' hit':'')+(E.boss?' boss':'');
-    const g=E.cre&&CREATURE[E.cre]?CREATURE[E.cre].g:'獣';
-    const fr=mo.firstElementChild;if(fr&&fr.textContent!==g)fr.textContent=g;
+    /* la silhouette ne se réassemble que si l'espèce ou le gabarit a changé :
+       recomposer une trentaine de pavés à chaque image serait du gâchis */
+    const cam=$('mobCam'),sig=(E.cre||'x')+':'+voxMul(E);
+    if(cam&&cam.dataset.sig!==sig){cam.dataset.sig=sig;cam.innerHTML=voxelHtml(E.cre,voxMul(E));}
     const pk=$('mobPack');if(pk)pk.textContent=EE.length>1?'×'+EE.length:'';}
   const t=$('tele'),P=patOf(E),fen=parryWinVs(E);
   if(E.w>=0){

@@ -19,7 +19,8 @@ const PK=Object.keys(PLOT);
 const MEUBLE={
   lit:{n:'Lit',g:'床',cost:[['bois',4],['vegetal',2]],d:'loge un résident'},
   table:{n:'Table',g:'机',cost:[['bois',3]],d:'meuble — +1 humeur par type distinct dans le bâtiment'},
-  coffre:{n:'Coffre',g:'箱',cost:[['bois',5]],d:'meuble'},
+  coffre:{n:'Coffre',g:'箱',cost:[['bois',5]],d:'range 30 objets sur cette cellule — ce que le dos ne porte plus'},
+  grandcoffre:{n:'Grand coffre',g:'櫃',cost:[['bois',10],['form:lingot',2]],d:'range 60 objets sur cette cellule'},
   tapis:{n:'Tapis',g:'毯',cost:[['vegetal',6]],d:'meuble'},
   trophee:{n:'Trophée',g:'角',cost:[['fossile',3]],d:'meuble'},
   lanterne:{n:'Lanterne',g:'灯',cost:[['form:lingot',2],['mineral',2]],d:'éclaire la cellule — la nuit n\'y attire plus les prédateurs'},
@@ -141,6 +142,46 @@ function countPlot(k){let n=0;
   return n;}
 function countSlot(k){let n=0;eachBuilding(b=>b.slots.forEach(sl=>{if(sl&&sl.k===k)n++;}));return n;}
 const beds=()=>countSlot('lit');
+/* ===== LES COFFRES (F.6) =====
+   Le sac a un fond ; le coffre est l'endroit où poser le reste. Il est
+   ATTACHÉ À SA CELLULE : ce qu'on y range n'est repris que sur place. */
+function coffreOf(c){
+  c=c||here();
+  if(!c.plots)return null;
+  let n=0;
+  c.plots.forEach(p=>{if(p&&p.t==='batiment')p.slots.forEach(sl=>{
+    if(sl&&sl.k==='coffre')n+=30;if(sl&&sl.k==='grandcoffre')n+=60;});});
+  return n||null;
+}
+const coffreKey=()=>key(S.pos[0],S.pos[1]);
+/* lire n'écrit rien : un coffre n'existe dans la sauvegarde que s'il contient quelque chose */
+const coffreList=()=>(S.coffres&&S.coffres[coffreKey()])||[];
+function coffreEcrire(){S.coffres=S.coffres||{};const k=coffreKey();return S.coffres[k]=S.coffres[k]||[];}
+function ranger(i){
+  const cap=coffreOf();
+  if(!cap)return toast('Aucun coffre ici — bâtis-en un dans un bâtiment');
+  const l=coffreEcrire();
+  if(l.length>=cap)return toast('Coffre plein ('+l.length+'/'+cap+')');
+  const it=S.items[i];if(!it)return;
+  S.items.splice(i,1);l.push(it);
+  log('Rangé : '+it.nom);
+}
+function reprendre(i){
+  const l=coffreEcrire(),it=l[i];if(!it)return;
+  if(sacPlein())return toast('Sac plein ('+S.items.length+'/'+sacMax()+')');
+  l.splice(i,1);S.items.push(it);
+  if(!l.length)delete S.coffres[coffreKey()];
+  log('Repris : '+it.nom);
+}
+function rangerTout(){
+  const cap=coffreOf();if(!cap)return toast('Aucun coffre ici');
+  const l=coffreEcrire();let n=0;
+  for(let i=S.items.length-1;i>=0&&l.length<cap;i--){
+    l.push(S.items[i]);S.items.splice(i,1);n++;
+  }
+  if(!l.length)delete S.coffres[coffreKey()];
+  log(n?'Rangé '+n+' objet'+(n>1?'s':'')+' dans le coffre':'Rien à ranger');
+}
 /* humeur d'un bâtiment : +1 par type de meuble distinct (max 10), +5 si bien rempli (7.5) */
 function buildingComfort(b){
   const types=new Set(b.slots.filter(sl=>sl&&sl.t==='meuble').map(sl=>sl.k));

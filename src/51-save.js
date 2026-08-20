@@ -81,6 +81,11 @@ function sanitize(){
   Object.keys(S.ref||{}).forEach(k=>{const p=k.split(':');if(!FORM[p[0]]||!MAT[p[1]]||!(S.ref[k]>0))delete S.ref[k];});
   Object.keys(S.comp||{}).forEach(k=>{const c=S.comp[k];if(!c||!COMP[c.ct]||!MAT[c.mk]||!(c.n>0))delete S.comp[k];});
   S.items=(S.items||[]).filter(it=>it&&it.kind);
+  S.coffres=S.coffres||{};
+  for(const k in S.coffres){
+    S.coffres[k]=(S.coffres[k]||[]).filter(it=>it&&it.kind);
+    if(!S.coffres[k].length)delete S.coffres[k];
+  }
   S.modules=(S.modules||[]).filter(m=>m&&MODULE[m.id]&&DOMAIN[m.dom]);
   S.books=(S.books||[]).filter(b=>b&&DOMAIN[b.dom]);
   S.gems=(S.gems||[]).filter(g=>g&&GEMSPEC[g.spec]);

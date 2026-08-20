@@ -117,6 +117,9 @@ function handle(e){
   if(b=t.closest('[data-unsocket]')){const q=b.dataset.unsocket.split(':');unsocketGem(q[0]+':'+q[1],+q[2]);paint();return;}
   if(b=t.closest('[data-socket]')){const card=b.closest('[data-gemcard]');const sel=card&&card.querySelector('[data-gemsel]');
     if(sel)socketGem(b.dataset.socket,+sel.value);paint();return;}
+  if(b=t.closest('[data-ranger]')){ranger(+b.dataset.ranger);paint();return;}
+  if(b=t.closest('[data-reprendre]')){reprendre(+b.dataset.reprendre);paint();return;}
+  if(b=t.closest('[data-rangetout]')){rangerTout();paint();return;}
   if(b=t.closest('[data-equip]')){equipItem(+b.dataset.equip);paint();return;}
   if(b=t.closest('[data-unslot]')){unequip(b.dataset.unslot);paint();return;}
   if(b=t.closest('[data-scrap]')){const it=S.items[+b.dataset.scrap];

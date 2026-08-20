@@ -20,8 +20,22 @@ function pEquip(){
     h+=grp('玉','SERTISSURES',(S.gems||[]).length+' gemme(s) taillée(s) en réserve');
     h+=worn.map(k=>gemBlock(S.eq[k],'eq:'+k)).join('')||'<p class="hint">Aucune pièce portée n\'a de sertissure.</p>';
   }
+  /* le coffre : ce que le dos ne porte plus, attaché à sa cellule */
+  const cap=coffreOf();
+  if(cap){
+    const l=coffreList();
+    h+=grp('箱','COFFRE',l.length+' / '+cap+' · '+(here().town||BIOME[here().b].n));
+    h+='<div class="meta" style="margin-bottom:6px">Un coffre appartient à sa cellule : ce qu\'on y range ne se reprend que sur place.</div>';
+    h+='<div class="row" style="margin-bottom:8px"><button class="btn" data-rangetout="1" '+(S.items.length&&l.length<cap?'':'disabled')+'>Tout ranger</button></div>';
+    if(l.length)h+='<div class="matlist">'+l.map((it,i)=>'<button class="mat" data-reprendre="'+i+'" '+(sacPlein()?'disabled':'')+'>'
+      +'<b>'+(it.kind==='arme'?'刀':it.kind==='armure'?'甲':it.kind==='statue'?'像':'具')+'</b>'+it.nom
+      +'<small>'+(it.rar?RARITY[it.rar].n+' · ':'')+'q'+it.q.toFixed(2)+(it.aff&&it.aff.length?' · '+it.aff.length+' affixe(s)':'')+'</small>'
+      +'<small style="color:var(--jade)">'+(sacPlein()?'sac plein':'reprendre')+'</small></button>').join('')+'</div>';
+    else h+='<p class="hint">Coffre vide.</p>';
+  }
   h+=grp('袋','OBJETS',S.items.length+' / '+sacMax()+' en sac');
-  h+='<div class="meta" style="margin-bottom:6px">Le dos porte 20 + Force×2 objets. Au-delà, le butin banal reste où il tombe — ou passe au creuset si tu as le Fondeur (自 VEILLE).</div>';
+  h+='<div class="meta" style="margin-bottom:6px">Le dos porte 20 + Force×2 objets. Au-delà, le butin banal reste où il tombe — ou passe au creuset si tu as le Fondeur (自 VEILLE).'
+   +(cap?'':' Un <b>coffre</b> (建 BÂTIR → bâtiment → coffre) garde le reste au chaud.')+'</div>';
   h+=S.items.map((it,i)=>'<div class="card"><h3><span>'+it.nom+'</span><i>'+(it.rar?RARITY[it.rar].n+' · ':'')+(it.kind==='armure'?'armure':it.kind)+'</i></h3>'
     +'<div class="meta">'+(it.kind==='statue'?'trophée de chasse — valeur '+it.val+' or':itemLine(it))+'</div>'
     +(it.parts.length?'<div class="meta">'+it.parts.map(p=>COMP[p.ct].n+' '+(p.f==='brut'?'':FORM[p.f].n+' ')+matName(p.mk)).join(' + ')+'</div>':'')
@@ -29,6 +43,7 @@ function pEquip(){
     +vecBar(itemVec(it))
     +(it.slots?gemBlock(it,'bag:'+i,true):'')
     +'<div class="row"><button class="btn pri" data-equip="'+i+'">Équiper</button>'
+    +(cap?'<button class="btn" data-ranger="'+i+'">Ranger</button>':'')
     +'<button class="btn" data-scrap="'+i+'">Fondre · '+Math.round(itemValue(it)/3)+' or</button></div></div>').join('')
     ||'<p class="hint">Le sac d\'objets est vide.</p>';
   return h;

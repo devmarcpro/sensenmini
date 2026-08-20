@@ -31,9 +31,10 @@ for(const l of f1){
   if(!cat||!l.startsWith('| ')||l.startsWith('| Matériau')||l.startsWith('|---'))continue;
   const cols=l.split('|').slice(1,-1).map(x=>x.trim());
   if(cols.length<14||isNaN(+cols[1]))continue;
-  const [name,dur,den,val,cma,fla,iso,cel,flo,lum]=cols;
+  /* Dur | Den | Val | CMa | Fla | Iso | CÉl | Flo | Lum | Fer | Tra | Éla | Fri */
+  const [name,dur,den,val,cma,fla,iso,cel,flo,lum,fer,tra,ela]=cols;
   const key=slug(name.replace(/\s*\(.*\)$/,''));if(SKIP.has(key))continue;
-  rows.push({key,n:name.replace(/\s*\(.*\)$/,'').replace('Granit noir','Granit noir').replace('Liège','Liège'),c:cat,d:+dur,de:+den,v:+val,cma:+cma,iso:+iso,lum:+lum});
+  rows.push({key,n:name.replace(/\s*\(.*\)$/,''),c:cat,d:+dur,de:+den,v:+val,cma:+cma,iso:+iso,lum:+lum,ela:+ela||0});
 }
 /* ----- palette F.1.1 ----- */
 const col={};
@@ -49,8 +50,8 @@ const EXTRA=[ /* fantaisie et parties : pas dans F.1 */
   {key:'mithril',n:'Mithril',c:'metal',d:31,de:5,v:130,cma:110,iso:5,lum:6,col:'#9FD7E8'},
   {key:'adamant',n:'Adamant',c:'metal',d:44,de:15,v:280,cma:40,iso:5,lum:0,col:'#5B6A80'},
   {key:'cristalmana',n:'Cristal de mana',c:'mineral',d:18,de:6,v:150,cma:150,iso:15,lum:40,col:'#7FB2FF',wx:{4:.4,0:.3,3:.3}},
-  {key:'os',n:'Os',c:'fossile',d:14,de:6,v:6,cma:5,iso:20,lum:0,col:'#E9E3CF'},
-  {key:'ecaille',n:'Écailles',c:'fossile',d:19,de:7,v:24,cma:10,iso:15,lum:0,col:'#4F7A6A',wx:{4:.5,3:.5}},
+  {key:'os',n:'Os',c:'fossile',d:14,de:6,v:6,cma:5,iso:20,lum:0,ela:35,col:'#E9E3CF'},
+  {key:'ecaille',n:'Écailles',c:'fossile',d:19,de:7,v:24,cma:10,iso:15,lum:0,ela:55,col:'#4F7A6A',wx:{4:.5,3:.5}},
   {key:'cendre',n:'Cendre',c:'meteo',d:2,de:2,v:2,cma:3,iso:40,lum:0,col:'#6F6B66'},
   {key:'limon',n:'Limon',c:'terre',d:2,de:6,v:1,cma:5,iso:35,lum:0,col:'#8C6E4A'},
   {key:'onyx',n:'Onyx',c:'gemme',d:25,de:9,v:30,cma:40,iso:10,lum:4,col:'#2B2B33',wx:{3:1}},
@@ -110,6 +111,7 @@ const fmt=m=>{
   if(m.cma>=20)o.push('m:'+Math.round(m.cma/5));
   if(m.iso!==undefined)o.push('iso:'+Math.round(m.iso/10));
   if(m.lum)o.push('lum:'+m.lum);
+  if(m.ela)o.push('ela:'+m.ela);
   if(m.wx)o.push('wx:'+JSON.stringify(m.wx).replace(/"/g,''));
   if(m.nutr!==undefined)o.push('nutr:'+m.nutr);
   if(m.grp)o.push('grp:\''+m.grp+'\'');
@@ -129,6 +131,7 @@ let out=`/* Sensen Mini — 02-data-materials.js
 /* ===== MATÉRIAUX (4.2 / B.2 / F.1) =====
    d dureté · de densité · v valeur · m mana (CMa/5) · iso isolation (/10) ·
    lum luminosité · wx vecteur Wu Xing s'il diffère de la catégorie ·
+   ela élasticité (c'est elle, pas la dureté, qui donne sa puissance à un arc) ·
    nutr nutrition crue · grp groupe de potentiel (7.7) · tox toxique cru · crop semable (7.4) · col couleur */
 const CAT={
   bois:{n:'Bois',g:'木',tool:'hache',sk:'bucheronnage',wx:{0:1}},

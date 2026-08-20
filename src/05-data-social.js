@@ -15,10 +15,10 @@ const RACE={
   echomorphe:{n:'Échomorphe',g:'響',b:'Corps mimétique — −10% XP, potentiels plats',life:120,st:{dex:1,per:1},xp:.90,cult:['resonance'],pot:{}},
 };
 const CLASSE={
-  guerrier:{n:'Guerrier',g:'武',st:{force:2,endu:1},sk:{epee:5,bouclier:5},kit:'epee',pot:{epee:120,encaissement:120,m_arcane:60}},
+  guerrier:{n:'Guerrier',g:'武',st:{force:2,endu:1},sk:{epee:5,bouclier:5},kit:'epee',kit2:'bouclier',pot:{epee:120,encaissement:120,m_arcane:60}},
   mage:{n:'Mage',g:'呪',st:{vol:2,per:1},sk:{meditation:5,mana:5},kit:'baton',books:2,pot:{meditation:130,m_feu:120,m_eau:120,epee:60}},
   artisan:{n:'Artisan',g:'工',st:{dex:2,force:1},sk:{forge:5,menuiserie:5,assemblage:5},kit:'pioche',pot:{forge:130,menuiserie:120,assemblage:130}},
-  chasseur:{n:'Chasseur',g:'狩',st:{dex:2,per:1},sk:{dague:5,herboristerie:5},kit:'dague',pot:{dague:120,esquive:120,herboristerie:120}},
+  chasseur:{n:'Chasseur',g:'狩',st:{dex:2,per:1},sk:{arc:5,herboristerie:5},kit:'arc',pot:{arc:120,esquive:120,herboristerie:120}},
   marchand:{n:'Marchand',g:'商',st:{cha:2,per:1},sk:{negociation:5,lecture:5},kit:'dague',or:500,pot:{negociation:130,lecture:120}},
   vagabond:{n:'Vagabond',g:'浪',st:{},sk:{},kit:'masse',pts:15,pot:{}},
 };

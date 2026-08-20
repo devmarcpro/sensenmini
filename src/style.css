@@ -171,8 +171,12 @@ body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
 .eName{position:absolute;top:2px;left:0;right:0;text-align:center;font-family:var(--px);font-size:12px;z-index:3}
 .eInfo{position:absolute;right:4px;top:20px;z-index:3;font-family:var(--px);font-size:9px;color:#5C6B63;text-align:right;line-height:1.7}
 .eInfo b{color:#171C1A;font-weight:400}
-.tele{height:8px;margin-top:4px;background:#DAD7CD;border:1px solid #171C1A;position:relative;overflow:hidden;opacity:.3}
+.tele{height:12px;margin-top:4px;background:#DAD7CD;border:1px solid #171C1A;position:relative;overflow:hidden;opacity:.3}
 .tele.on{opacity:1}
+.tele.nopar{border-color:var(--zhu)}
+.tele>em{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:4px;
+  font-style:normal;font-family:var(--px);font-size:9px;color:#171C1A;pointer-events:none;letter-spacing:.06em}
+.tele.nopar>em{color:var(--zhu)}
 .tele>span{position:absolute;inset:0 auto 0 0;width:0;background:#171C1A}
 .tele>b{position:absolute;top:0;bottom:0;right:0;background:#6FBFA0}
 .mobs{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}

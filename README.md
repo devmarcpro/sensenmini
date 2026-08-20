@@ -170,8 +170,30 @@ GDD entre parenthèses) :
 | bestiaire (F.3) | `23c-creatures.js` | 30 espèces par biome, meutes, fuite, venin, nuées, embuscade, humains à bourse, corrompus, statue 1:1 |
 | donjons (E.29) | `17-dungeon.js` | quatre thèmes, onze types de salles (piège, autel, puits, cellule, cache, armurerie…) |
 | multi-ennemis (5.1) | `24-combat.js`, `28-loop.js` | groupe de quatre, cible au tap, le dos coûte +30 %, balayage à l'allonge |
+| prises en main (5.1) | `10-craft.js`, `24-combat.js` | bouclier, deux mains, deux armes, arc — chacune sa contrepartie |
+| gestes des créatures (5.1) | `23c-creatures.js` | six patterns télégraphiés : coup, enchaînement, charge, balayage, morsure, crachat |
 | guildes (7.3 / B.7) | `13b-guilds.js` | 29 gabarits de quête, rangs qui les ouvrent, présent à chaque palier |
 | familles (12.2 / 12.3) | `12b-family.js` | couples et enfants, deuil, héritage, succession des trônes |
+
+---
+
+### Ce qu'on tient dans les mains
+
+Le GDD posait la question sans la trancher : « un bouclier occupe une main dans
+un système qui récompense la rotation d'armes — quelle compensation ? » Voici
+la réponse retenue, et ses symétries.
+
+| prise | ce qu'elle donne | ce qu'elle coûte |
+|---|---|---|
+| **arme et bouclier** | réduction sur toutes les zones, parade élargie de 35 %, et **une parade parfaite pose l'élément du bouclier dans la chaîne** — il défend *en* participant au cycle | −6 % de dégâts |
+| **deux armes** | la seconde main pose **son propre segment** : la chaîne tourne deux fois plus vite | aucune réduction, aucune parade élargie |
+| **deux mains** | +18 % de dégâts, et l'allonge ≥ 2 balaie tout le groupe | fenêtre de parade −15 %, seconde main impossible |
+| **arc, fronde** | la Dextérité porte le trait, et l'on tient la créature à distance (elle revient 38 % moins vite) | **rien ne se pare**, et pas de balayage |
+
+Un arc ne tire pas sa puissance de la dureté mais de l'**élasticité** du bois
+(colonne `Éla` de F.1) : if 78, bambou 75, frêne 62 — contre ébène 15 et fer 10.
+Un arc d'if frappe trois fois plus fort qu'un arc d'ébène. L'if pousse en forêt
+de mana, le bambou sur la côte : faire un vrai arc demande d'aller le chercher.
 
 ---
 

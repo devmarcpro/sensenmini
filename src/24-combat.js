@@ -78,7 +78,27 @@ function wSpeed(){
   const F=FUNC[w.fn];
   return F.spd*Math.pow(20/Math.max(5,w.de),0.75/2)*stanceNow().spd*(1+(st('dex')-5)*.015)*(1+passives().spd);
 }
-const parryWin=()=>0.25*(1+lv('esquive')*0.01+passives().win)*stanceNow().win;
+/* la fenêtre de parade : l'esquive l'ouvre, le bouclier la double presque,
+   et l'arc la ferme — on ne pare pas une massue avec une corde (5.1) */
+function parryWin(){
+  const g=grip();
+  if(g.k==='dist')return 0;                       /* on ne pare pas avec une corde */
+  const bo=g.k==='bouclier'?(1.35+lv('bouclier')*.02)   /* le bois large rattrape ce que la lame rate */
+    :g.k==='deuxmains'?.85:1;                     /* une hampe est lente à ramener */
+  return 0.25*(1+lv('esquive')*0.01+passives().win)*stanceNow().win*bo;
+}
+/* ce que la prise en main ajoute : le bouclier défend, les deux mains frappent,
+   les deux armes font tourner la chaîne plus vite (5.2) */
+function gripBonus(){
+  const g=grip(),b=S.eq.main2;
+  const o={dmg:1,red:0,parry:1,off:null};
+  if(g.k==='deuxmains')o.dmg=1.18+lv('deuxmains')*.008;
+  else if(g.k==='bouclier'&&b){
+    o.red=b.durBase/5*b.q*(1+lv('bouclier')*.02);      /* réduction sur TOUTES les zones */
+    o.dmg=.94;}
+  else if(g.k==='dualwield'&&b){o.dmg=1.0;o.off=b;}
+  return o;
+}
 const capChain=()=>S.capBase||5;
 
 /* une créature, seule : le gabarit d'espèce autour de la puissance du lieu */
@@ -98,10 +118,24 @@ function mkEnemy(ck,power,rare,boss,suffixe){
     delay:(boss?C.delay*.8:C.delay),wind:boss?C.wind*.85:C.wind,
     drop:C.mats.length?pick(C.mats):null,fuit:C.fuit,venin:C.venin,nuee:C.nuee,brule:C.brule,affaiblit:C.affaiblit,
     or:C.or||0,lootM:C.loot||1,livre:C.livre||0,embuscade:C.embuscade,
-    st:[],cdStun:0,stg:0};
+    st:[],cdStun:0,stg:0,pats:C.pat||['simple'],pat:'simple'};
   /* chacune a son propre télégraphe : une embuscade est déjà à mi-course */
   e.tt=e.embuscade?e.delay*.7:0;e.w=-1;
   return e;
+}
+/* le geste choisi pour ce cycle, et ce qu'il change */
+function armePattern(e){
+  e.pat=pick(e.pats||['simple']);
+  const P=PATTERN[e.pat];
+  e.wEff=e.wind*P.wm;
+  return P;
+}
+/* la fenêtre de parade contre CE geste : une charge se lit de loin,
+   un crachat ne se pare pas du tout */
+function parryWinVs(e){
+  const P=patOf(e);
+  if(P.dist)return 0;
+  return parryWin()*(P.win||1);
 }
 function spawn(){
   const c=here();
@@ -194,11 +228,17 @@ function attack(heavy){
   (w.aff||[]).forEach(a=>{
     if(a.id==='des'&&hitN%a.p.n===0)extra+=a.p.k;
     if(a.id==='bas'&&S.hp/maxHp()<a.p.s/100)extra+=a.p.k;});
-  /* dégâts = dés × (dureté base / 20) × qualité × compétence × éléments × domination */
-  let base=roll(F.d[0]+extra,F.d[1])*(w.durBase/20)*w.q*sf(lv(w.fn));
+  /* dégâts = dés × (dureté base / 20) × qualité × compétence × éléments × domination.
+     Sur une arme de jet, c'est l'ÉLASTICITÉ qui remplace la dureté : un arc d'if
+     porte loin, un arc d'ébène ne porte pas — le bois fait l'arme (A.4.1 / F.1). */
+  const puis=isDist(w)?((w.ela||8)/45):(w.durBase/20);
+  let base=roll(F.d[0]+extra,F.d[1])*puis*w.q*sf(lv(w.fn));
   base+=gemSum(w,'degats')*sf(lv(w.fn));                 /* gemmes : des dégâts plats, jamais une règle */
   const crit=d20()>=F.crit-PA.crit;if(crit)base*=1.8;
-  base*=sd.dmg*(heavy?2.6*(1+PA.heavy):1)*(1+PA.dmg+buffOf('dmg')*.12)*(1+(st('force')-5)*.03);
+  const GB=gripBonus(),tir=isDist(w);
+  /* à l'arc, c'est la Dextérité qui porte le trait, pas la Force (E.3) */
+  base*=sd.dmg*(heavy?2.6*(1+PA.heavy):1)*(1+PA.dmg+buffOf('dmg')*.12)
+    *(1+(st(tir?'dex':'force')-5)*.03)*GB.dmg;
   if(gasping)base*=.6;
   base*=v.reduce((a,p,i)=>a+p*(1+lv('el_'+EL[i].k)/100),0);
   base*=1+.05*S.seg.length;
@@ -207,8 +247,8 @@ function attack(heavy){
   let pierce=PA.pierce;(w.aff||[]).forEach(a=>{if(a.id==='perce'&&hitN%a.p.n===0)pierce=Math.min(1,pierce+a.p.p/100);});
   const dtype=sd.t||F.t;
   hitN++;
-  /* balayage : allonge ≥ 2, ou le passif du manuel de Frappes */
-  const swp=Math.max(F.reach>=2?.4:0,PA.sweep||0);
+  /* balayage : une hampe qui fauche, ou le passif du manuel — jamais un arc */
+  const swp=tir?(PA.sweep||0):Math.max(F.reach>=2?.4:0,PA.sweep||0);
   const cibles=[[E,1]];
   if(swp)engaged().forEach(x=>{if(x!==E)cibles.push([x,swp]);});
   let premier=true,mortes=[];
@@ -246,6 +286,26 @@ function attack(heavy){
     log('<span class="hi">Chaîne résolue ×'+(1+S.bonus).toFixed(2)+(cibles.length>1?' — '+cibles.length+' cibles':'')+'</span>');
     S.seg=[];S.bonus=0;questTick('chain',1);}
   mortes.forEach(m=>kill(m));
+  /* la prise en main s'apprend en s'en servant */
+  const gsk=grip().sk;
+  if(gsk&&SKILLS[gsk])gainXp(gsk,base*.35);
+  /* DEUX ARMES : la seconde frappe moins fort, mais elle POSE SON PROPRE SEGMENT.
+     C'est la contrepartie du bouclier — l'un défend, l'autre fait tourner la chaîne. */
+  if(GB.off&&E&&E.hp>0&&!heavy&&Math.random()<.35+lv('dualwield')*.02){
+    const ov=itemVec(GB.off),oe=domi(ov);
+    const ores=pushSeg(oe);
+    let od=roll(FUNC[GB.off.fn].d[0],FUNC[GB.off.fn].d[1])*(GB.off.durBase/20)*GB.off.q*sf(lv(GB.off.fn))*.45;
+    od*=vmult(ov,E.vec,multOff);
+    if(ores)od*=1+S.bonus;
+    const oarm=E.arm*(1-PA.pierce);
+    od=Math.max(1,od*(1-oarm/(oarm+10)));
+    E.hp-=od;dpsA+=od;
+    float((ores?'連 ':'副 ')+Math.round(od),EL[oe].c,ores);
+    gainXp('dualwield',od*.6);gainXp(GB.off.fn,Math.min(od,E.hp+od));
+    if(ores){log('<span class="hi">Chaîne résolue par la seconde main ×'+(1+S.bonus).toFixed(2)+'</span>');
+      S.seg=[];S.bonus=0;questTick('chain',1);}
+    if(E.hp<=0)kill(E);
+  }
   if(E&&E.hp>0)fuite(E);
 }
 /* --- coup de la créature : la zone sort de la géométrie (6.2) --- */
@@ -258,17 +318,32 @@ function pickZone(){
 function resolveHit(q,atk){
   atk=atk||E;
   if(!atk)return;
+  const P=patOf(atk);
+  /* un geste en plusieurs temps : on résout chaque coup, puis on remet le télégraphe */
+  if((P.hits||1)>1&&!atk.enCours){
+    atk.enCours=1;
+    for(let i=0;i<P.hits;i++){if(!atk||atk.hp<=0||!E)break;resolveHit(q,atk);}
+    if(atk)atk.enCours=0;
+    return;
+  }
   const dos=atk!==E;                     /* dans le dos : impossible à parer, et ça frappe plus fort */
   if(dos&&q===2)q=1;
+  if(P.dist&&q===2)q=1;                  /* on ne pare pas un projectile */
   const tgt=pickTarget();
   if(tgt&&q!==2){
-    hitCompanion(tgt,atk.dmg*vmult(atk.vec,V({[tgt.el]:1}),multDef));
-    atk.w=-1;atk.tt=0;return;
+    hitCompanion(tgt,atk.dmg*P.dm*vmult(atk.vec,V({[tgt.el]:1}),multDef));
+    if(!P.aoe){atk.w=-1;atk.tt=0;return;}
+  }
+  /* un balayage n'épargne personne : il prend l'escorte ET toi */
+  if(P.aoe){
+    escortList().filter(c=>c!==tgt&&c.order!=='suivre').forEach(c=>
+      hitCompanion(c,atk.dmg*P.dm*.6*vmult(atk.vec,V({[c.el]:1}),multDef)));
   }
   const zk=pickZone(),z=ZONE[zk];
   const sl=SLOTS.find(x=>x.zone===zk),it=eqOf(sl.k);
-  const raw=atk.dmg*z.mult*vmult(atk.vec,avgVec(),multDef)*(hasStatus(atk,'affaibli')?.7:1)*(dos?backMul():1);
+  const raw=atk.dmg*P.dm*z.mult*vmult(atk.vec,avgVec(),multDef)*(hasStatus(atk,'affaibli')?.7:1)*(dos?backMul():1);
   if(S.dodge&&q!==2){S.dodge=0;float('影 esquive','#B9A7D6');gainXp('esquive',raw);atk.w=-1;atk.tt=0;return;}
+  const G=grip(),GB=gripBonus();
   if(q===2){                                    /* parade parfaite */
     S.end=Math.min(100,S.end+10);atk.stg=.6;
     const w=weapon(),PA=passives();
@@ -276,17 +351,31 @@ function resolveHit(q,atk){
     if(PA.riposte){const rip=atk.max*.06;atk.hp-=rip;dpsA+=rip;float('返撃','#6FBFA0');if(atk.hp<=0)kill(atk);}
     if(it)gainXp('c_'+it.cons,raw);
     gainXp('encaissement',raw);gainXp('esquive',raw*.4);
+    /* LE BOUCLIER dans un jeu de rotation : une parade parfaite POSE SON ÉLÉMENT
+       dans la chaîne. Il ne casse plus le cycle — il y participe, en défendant. */
+    if(G.k==='bouclier'&&S.eq.main2){
+      const be=domi(itemVec(S.eq.main2));
+      const bres=pushSeg(be);
+      gainXp('bouclier',raw*1.2);
+      float('盾 '+EL[be].g,EL[be].c,bres);
+      if(bres){log('<span class="hi">Chaîne résolue au bouclier ×'+(1+S.bonus).toFixed(2)+'</span>');
+        const bd=raw*2*(1+S.bonus);atk.hp-=bd;dpsA+=bd;
+        S.seg=[];S.bonus=0;questTick('chain',1);
+        if(atk.hp<=0){kill(atk);return;}}
+    }
     float('返 '+z.g,'#6FBFA0');if(typeof sfx==='function')sfx('parry');
   } else {
     const inc=raw*(q===1?.20:1);
     const cost=q===1?(12+inc/4)*(1+passives().gardecost):0;
-    const red=(it?armorOf(zk)*consMult(it.cons,atk.dt):0)+buffOf('def')*2+passives().def;
+    const red=(it?armorOf(zk)*consMult(it.cons,atk.dt):0)+buffOf('def')*2+passives().def+GB.red;
+    if(GB.red>0)gainXp('bouclier',Math.min(GB.red,inc)*.8);
     const fin=Math.max(1,inc-red);
     const evite=raw-fin;
     if(it&&evite>0)gainXp('c_'+it.cons,evite);   /* l'armure gagne ce qu'elle épargne */
     if(evite>0)gainXp('encaissement',evite*.5);
     S.hp-=fin;S.end=Math.max(0,S.end-cost);
-    float('-'+Math.round(fin)+(dos?' 背':' ')+z.g,'#C8332B');
+    float('-'+Math.round(fin)+(dos?' 背':' ')+(P.g!=='一'?P.g:z.g),'#C8332B');
+    if(P.st&&Math.random()<.55)addStatus(S,P.st,3.5,Math.max(1,fin*.12));
     if(typeof sfx==='function'){sfx('hurt');flashHp();if(q===0&&fin>maxHp()*.12)shake(false);}
     /* certaines créatures marquent : saignement fréquent, venin, brûlure, étourdissement rare et borné */
     if(q===0){

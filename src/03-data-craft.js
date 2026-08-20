@@ -39,6 +39,8 @@ const COMP={
   focus:{n:'Focus',g:'珠',w:.7,st:'enchantement',forms:['brut'],raw:['rubis','saphir','emeraude','topaze','onyx','ambre','cristalmana']},
   manche:{n:'Manche',g:'柄',w:.25,st:'scierie',forms:['planche','lingot','brut'],raw:['os']},
   hampe:{n:'Hampe',g:'竿',w:.25,st:'scierie',forms:['planche','lingot'],raw:[]},
+  /* le corps d'un arc : c'est lui qui porte la puissance, comme la lame porte la coupe */
+  fut:{n:'Fût d\'arc',g:'弓',w:.7,st:'scierie',forms:['planche','brut'],raw:['os','ecaille','ebene','if','boisfer']},
   plaque:{n:'Plaque',g:'板',w:.7,st:'enclume',forms:['lingot'],raw:[],cons:'plaque'},
   anneaux:{n:'Anneaux',g:'環',w:.7,st:'enclume',forms:['lingot'],raw:[],cons:'mailles'},
   ecailles:{n:'Écailles',g:'鱗',w:.7,st:'enclume',forms:['brut'],raw:['os','ecaille'],cons:'ecailles'},
@@ -68,17 +70,25 @@ const STATION={
 };
 /* ===== OBJETS (A.4.1 / 6.2) ===== */
 const DT={tranchant:'tranchant',percant:'perforant',contondant:'contondant'};
+/* `h` : mains occupées. Une arme à deux mains interdit la seconde main —
+   c'est ce qui donne son prix au bouclier et au dual wielding (5.1).
+   `dist` : arme de jet — la Dextérité y remplace la Force, on tient la
+   distance, mais on ne pare pas avec un arc. */
 const FUNC={
-  dague:{n:'Dague',d:[1,6],crit:19,spd:3.0,reach:1,t:'percant',comp:['lame','manche']},
-  epee:{n:'Épée',d:[2,6],crit:20,spd:2.0,reach:1.5,t:'tranchant',comp:['lame','manche']},
-  masse:{n:'Masse',d:[3,8],crit:20,spd:1.2,reach:1.5,t:'contondant',comp:['tetemasse','manche']},
-  lance:{n:'Lance',d:[2,8],crit:20,spd:1.5,reach:2.5,t:'percant',comp:['pointe','hampe']},
-  hache:{n:"Hache d'armes",d:[2,10],crit:20,spd:1.4,reach:1.5,t:'tranchant',comp:['ferhache','manche']},
-  baton:{n:'Bâton magique',d:[1,4],crit:20,spd:1.8,reach:1,t:'contondant',comp:['focus','hampe']},
-  marteau:{n:'Marteau de guerre',d:[2,12],crit:20,spd:.9,reach:1.5,t:'contondant',comp:['tetemasse','hampe']},
-  hallebarde:{n:'Hallebarde',d:[2,9],crit:20,spd:1.1,reach:2.5,t:'tranchant',comp:['ferhache','hampe']},
-  trident:{n:'Trident',d:[3,4],crit:19,spd:1.6,reach:2,t:'percant',comp:['pointe','hampe']},
+  dague:{n:'Dague',d:[1,6],crit:19,spd:3.0,reach:1,t:'percant',h:1,comp:['lame','manche']},
+  epee:{n:'Épée',d:[2,6],crit:20,spd:2.0,reach:1.5,t:'tranchant',h:1,comp:['lame','manche']},
+  masse:{n:'Masse',d:[3,8],crit:20,spd:1.2,reach:1.5,t:'contondant',h:1,comp:['tetemasse','manche']},
+  hache:{n:"Hache d'armes",d:[2,10],crit:20,spd:1.4,reach:1.5,t:'tranchant',h:1,comp:['ferhache','manche']},
+  baton:{n:'Bâton magique',d:[1,4],crit:20,spd:1.8,reach:1,t:'contondant',h:2,comp:['focus','hampe']},
+  lance:{n:'Lance',d:[2,8],crit:20,spd:1.5,reach:2.5,t:'percant',h:2,comp:['pointe','hampe']},
+  marteau:{n:'Marteau de guerre',d:[2,12],crit:20,spd:.9,reach:1.5,t:'contondant',h:2,comp:['tetemasse','hampe']},
+  hallebarde:{n:'Hallebarde',d:[2,9],crit:20,spd:1.1,reach:2.5,t:'tranchant',h:2,comp:['ferhache','hampe']},
+  trident:{n:'Trident',d:[3,4],crit:19,spd:1.6,reach:2,t:'percant',h:2,comp:['pointe','hampe']},
+  arc:{n:'Arc',d:[2,8],crit:19,spd:1.6,reach:6,t:'percant',h:2,dist:1,comp:['fut','sangles']},
+  fronde:{n:'Fronde',d:[1,8],crit:20,spd:2.1,reach:4,t:'contondant',h:1,dist:1,comp:['sangles','manche']},
+  bouclier:{n:'Bouclier',d:[1,4],crit:20,spd:1.0,reach:1,t:'contondant',h:1,shield:1,comp:['plaque','sangles']},
 };
+const FK2=Object.keys(FUNC);
 const OUTIL={
   pioche:{n:'Pioche',comp:['teteoutil','manche'],cat:'roche'},
   hachebois:{n:'Hache',comp:['ferhache','manche'],cat:'bois'},

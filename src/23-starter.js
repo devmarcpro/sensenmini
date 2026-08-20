@@ -15,8 +15,11 @@ function starterKit(){
   mk('outil','serpe',['fer','chene']);
   mk('outil','pelle',['fer','chene']);
   const C=CLASSE[S.classe]||{kit:'epee'};
-  mk('arme',C.kit==='pioche'?'masse':C.kit,['fer','chene']);
+  /* un arc de départ est en frêne : correct sans être l'if des maîtres archers */
+  const kitMats=C.kit==='arc'?['frene','cuir']:['fer','chene'];
+  mk('arme',C.kit==='pioche'?'masse':C.kit,kitMats);
   S.eq.main1=S.items.pop();
+  if(C.kit2&&hands(S.eq.main1)===1){mk('arme',C.kit2,['fer','cuir']);S.eq.main2=S.items.pop();}
   S.mat.chene=8;S.mat.fer=6;
   const nb=C.books||1;
   for(let i=0;i<nb;i++)S.books.push({id:'b'+i,dom:pick(['feu','eau','terre','postures','frappes']),diff:4});

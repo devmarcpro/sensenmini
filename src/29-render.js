@@ -88,7 +88,7 @@ function combatScene(){
    +'<div class="mob" id="mob"><i class="fr"></i><i class="rt"></i><i class="tp"></i><b class="pk" id="mobPack"></b></div>'
    +'<div class="floaters" id="floaters"></div></div>'
    +'<div class="bar2"><span id="eHp" style="background:#C8332B"></span><em id="eHpT">—</em></div>'
-   +'<div class="tele" id="tele"><span id="teleF"></span><b id="teleW"></b></div>'
+   +'<div class="tele" id="tele"><span id="teleF"></span><b id="teleW"></b><em id="teleG"></em></div>'
    +'<div class="mobs" id="mobs"></div>'
    +'<div class="stances" id="stances">'+STANCE.map((st,i)=>
       '<button data-st="'+i+'" aria-pressed="'+(i===(S.stance||0))+'"><b>'+st.g+'</b>'+st.n.toUpperCase()+'<kbd>'+(i+1)+'</kbd></button>').join('')+'</div>'
@@ -100,6 +100,12 @@ function combatScene(){
    +'<div class="cinfo"><div>Bonus <b id="cBonus">+0.00</b> · résolveur <b id="cRes" style="color:var(--terre)">×1.00</b>'
    +' · segments <b id="cSeg">0/5</b></div><div id="cNext">—</div>'
    +'<div>Arme : <b>'+(w?w.nom+' · '+FUNC[w.fn].d[0]+'d'+FUNC[w.fn].d[1]+' '+DT[FUNC[w.fn].t]:'aucune — les mains nues ne posent pas de segment')+'</b></div>'
+   +'<div>Prise : <b>'+grip().n+'</b>'+(function(){const G=gripBonus(),g=grip();
+      return g.k==='bouclier'?' — réduction +'+G.red.toFixed(1)+' sur toutes les zones, parade élargie, et une parade parfaite pose son élément dans la chaîne'
+        :g.k==='deuxmains'?' — dégâts ×'+G.dmg.toFixed(2)+', mais pas de seconde main'
+        :g.k==='dualwield'?' — la seconde main pose son propre segment : la chaîne tourne plus vite'
+        :g.k==='dist'?' — la Dextérité porte le trait, tu tiens la distance, mais rien ne se pare'
+        :'';})()+'</div>'
    +'</div></div>';
 }
 function renderCombat(){
@@ -119,12 +125,16 @@ function renderCombat(){
     const g=E.cre&&CREATURE[E.cre]?CREATURE[E.cre].g:'獣';
     const fr=mo.firstElementChild;if(fr&&fr.textContent!==g)fr.textContent=g;
     const pk=$('mobPack');if(pk)pk.textContent=EE.length>1?'×'+EE.length:'';}
-  const t=$('tele');
-  if(E.w>=0){t.className='tele on';
-    $('teleF').style.width=(E.w/E.wind*100)+'%';
-    $('teleW').style.width=Math.min(100,parryWin()/E.wind*100)+'%';
-    $('guardBtn').className=(E.wind-E.w)<=parryWin()?'armed':'';}
-  else{t.className='tele';$('teleF').style.width='0';$('guardBtn').className=S.guard?'held':'';}
+  const t=$('tele'),P=patOf(E),fen=parryWinVs(E);
+  if(E.w>=0){
+    const we=E.wEff||E.wind;
+    t.className='tele on'+(fen?'':' nopar');
+    $('teleF').style.width=(E.w/we*100)+'%';
+    $('teleW').style.width=fen?Math.min(100,fen/we*100)+'%':'0';
+    $('guardBtn').className=(fen&&(we-E.w)<=fen)?'armed':'';
+    const tg=$('teleG');if(tg)tg.textContent=P.g+' '+P.n+(fen?'':' — imparable');}
+  else{t.className='tele';$('teleF').style.width='0';$('guardBtn').className=S.guard?'held':'';
+    const tg=$('teleG');if(tg)tg.textContent='';}
   /* le groupe engagé : celles que tu ne regardes pas frappent dans ton dos */
   const mb=$('mobs');
   if(mb){

@@ -83,6 +83,8 @@ function mkItem(kind,fn,parts,q){
   const dur=parts.reduce((a,p)=>a+MAT[p.mk].d*COMP[p.ct].w,0)/wsum;
   const de=parts.reduce((a,p)=>a+MAT[p.mk].de*COMP[p.ct].w,0)/wsum;
   const mana=parts.reduce((a,p)=>a+(MAT[p.mk].m||0)*COMP[p.ct].w,0)/wsum;
+  /* l'élasticité : ce qui donne sa puissance à un arc, là où la lame veut de la dureté */
+  const ela=parts.reduce((a,p)=>a+(MAT[p.mk].ela||8)*COMP[p.ct].w,0)/wsum;
   /* vecteur composite : chaque composant au prorata de son poids (5.2) */
   let v=[0,0,0,0,0];
   parts.forEach(p=>{const pv=formVec(p.f,p.mk);for(let i=0;i<5;i++)v[i]+=pv[i]*COMP[p.ct].w;});
@@ -90,7 +92,7 @@ function mkItem(kind,fn,parts,q){
   const def=kind==='arme'?FUNC[fn]:kind==='outil'?OUTIL[fn]:null;
   return {id:'i'+(S.nid++),kind,fn:kind==='armure'?null:fn,slot:kind==='armure'?fn:(kind==='arme'||kind==='outil'?'main1':null),
     parts:parts.map(p=>({ct:p.ct,f:p.f,mk:p.mk})),q:+q.toFixed(2),
-    dur:+(dur*q).toFixed(1),durBase:+dur.toFixed(1),de:+de.toFixed(1),mana:+mana.toFixed(1),vec:v,
+    dur:+(dur*q).toFixed(1),durBase:+dur.toFixed(1),de:+de.toFixed(1),mana:+mana.toFixed(1),ela:+ela.toFixed(1),vec:v,
     nom:(def?def.n:'Pièce')+' de '+matName(parts[0].mk)};
 }
 const itemVec=it=>it.vec||[.2,.2,.2,.2,.2];
@@ -139,16 +141,40 @@ function itemValue(it){
   return Math.round(base*1.5*it.q);
 }
 /* équipement */
+/* ce que tient une main : 1 ou 2, et ce que ça interdit (5.1) */
+const hands=it=>(it&&it.kind==='arme'&&FUNC[it.fn])?(FUNC[it.fn].h||1):1;
+const isShield=it=>!!(it&&it.kind==='arme'&&FUNC[it.fn]&&FUNC[it.fn].shield);
+const isDist=it=>!!(it&&it.kind==='arme'&&FUNC[it.fn]&&FUNC[it.fn].dist);
+const twoHanded=()=>hands(S.eq.main1)===2;
+/* la prise en main : ce qui décide de la compétence et du style de combat */
+function grip(){
+  const a=S.eq.main1,b=S.eq.main2;
+  if(!a||a.kind!=='arme')return {k:'nu',n:'mains nues',sk:null};
+  if(isDist(a))return {k:'dist',n:'tir',sk:a.fn};
+  if(hands(a)===2)return {k:'deuxmains',n:'à deux mains',sk:'deuxmains'};
+  if(isShield(b))return {k:'bouclier',n:'arme et bouclier',sk:'bouclier'};
+  if(b&&b.kind==='arme')return {k:'dualwield',n:'deux armes',sk:'dualwield'};
+  return {k:'simple',n:'une main',sk:null};
+}
 function equipItem(i){
   const it=S.items[i];if(!it)return;
   if(it.kind==='statue')return toast('Une statue se pose, ne se porte pas — vends-la, ou garde-la pour le prestige');
   let slot=it.slot;
   if(it.kind==='outil'||it.kind==='arme'){
-    if(S.eq.main1&&!S.eq.main2)slot='main2';else slot='main1';
+    /* une arme à deux mains prend tout ; on ne met rien en seconde main tant qu'elle est là */
+    if(hands(it)===2)slot='main1';
+    else if(S.eq.main1&&!S.eq.main2&&hands(S.eq.main1)===1)slot='main2';
+    else slot='main1';
   }
   const old=S.eq[slot];
   S.eq[slot]=it;S.items.splice(i,1);
   if(old)S.items.push(old);
+  /* la main libérée n'existe plus si l'arme prend les deux */
+  if(slot==='main1'&&hands(it)===2&&S.eq.main2){
+    S.items.push(S.eq.main2);
+    log('<span class="bd">'+S.eq.main2.nom+' rangé : '+it.nom+' prend les deux mains.</span>');
+    delete S.eq.main2;
+  }
   log('Équipé : '+it.nom+' ('+SLOTS.find(s2=>s2.k===slot).n+')');
 }
 function unequip(k){const it=S.eq[k];if(!it)return;delete S.eq[k];S.items.push(it);}

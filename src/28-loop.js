@@ -99,15 +99,19 @@ function combatTick(dt){
     if(e.hp<=0){kill(e);continue;}
     if(hasStatus(e,'etourdi')||hasStatus(e,'terreur')){e.w=-1;e.tt=0;continue;}
     if(e.stg>0)continue;
-    const lent=(hasStatus(e,'ralenti')?.6:1)*(hasStatus(e,'enracine')?.75:1);
-    if(e.w<0){e.tt+=dt*lent;if(e.tt>=e.delay)e.w=0;}
+    /* à distance, on tient la créature à l'écart : elle met plus de temps à revenir au
+       contact — sauf si son geste porte lui aussi à distance */
+    const kite=(isDist(weapon())&&e===E&&!patOf(e).dist)?.62:1;
+    const lent=(hasStatus(e,'ralenti')?.6:1)*(hasStatus(e,'enracine')?.75:1)*kite;
+    if(e.w<0){e.tt+=dt*lent;
+      if(e.tt>=e.delay){e.w=0;armePattern(e);}}   /* le geste se choisit au moment de s'armer */
     else{
       e.w+=dt*lent;
       const cible=e===E;                      /* la garde réflexe ne couvre que la cible regardée */
-      const reste=e.wind-e.w;
-      if(cible&&auto('garde')&&reste<=parryWin()*.55&&S.end>=14)
+      const fen=parryWinVs(e),reste=e.wEff-e.w;
+      if(cible&&fen>0&&auto('garde')&&reste<=fen*.55&&S.end>=14)
         resolveHit(Math.random()<.12*auto('garde')?2:1,e);
-      else if(e.w>=e.wind)resolveHit(S.guard&&cible?1:(S.guard?1:0),e);
+      else if(e.w>=e.wEff)resolveHit(S.guard?1:0,e);
     }
     if(!E)return;
   }
@@ -129,7 +133,8 @@ function combatTick(dt){
 }
 function tryParry(){
   if(!E||E.w<0){S.guard=true;return;}
-  if((E.wind-E.w)<=parryWin())resolveHit(2,E);else S.guard=true;
+  const fen=parryWinVs(E);
+  if(fen>0&&(E.wEff-E.w)<=fen)resolveHit(2,E);else S.guard=true;
 }
 /* changer de cible : au tap sur une créature, ou au clavier */
 function cycleFocus(d){

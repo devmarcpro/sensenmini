@@ -188,6 +188,23 @@ async function runScenario(scen){
       if(!E||E===e0)return 'le changement de cible ne prend pas';
       return 'ok:'+EE.length;
     }catch(e){return 'erreur '+e.message;}})()`);
+    /* prises en main : bouclier, deux mains, deux armes, arc */
+    const pr=await evalJs(`(()=>{try{
+      const mk=fn=>{const p=FUNC[fn].comp.map(ct=>partFor(ct,['fer','chene','cuir','frene']));p.push(partFor('fixations',['fer']));return mkItem('arme',fn,p,1.2);};
+      const set=(a,b)=>{S.eq={};S.items=[];S.items.push(mk(a));equipItem(0);if(b){S.items.push(mk(b));equipItem(0);}return grip().k;};
+      const out=[];
+      if(set('epee')!=='simple')out.push('epee seule');
+      if(set('epee','bouclier')!=='bouclier')out.push('bouclier');
+      if(set('epee','dague')!=='dualwield')out.push('deux armes');
+      if(set('marteau')!=='deuxmains')out.push('deux mains');
+      if(set('arc')!=='dist')out.push('arc');
+      set('epee','bouclier');const pw=parryWin();
+      set('marteau');if(!(pw>parryWin()))out.push('le bouclier n elargit pas la parade');
+      set('arc');if(parryWin()!==0)out.push('on pare avec un arc');
+      set('marteau','bouclier');if(S.eq.main2)out.push('deux mains garde une seconde main');
+      return out.length?out.join(', '):'ok';
+    }catch(e){return 'erreur '+e.message;}})()`);
+    if(pr!=='ok')report(scen.name,'prise en main',pr);
     if(!String(grp).startsWith('ok'))report(scen.name,'multi-ennemis',grp);
     else{await sleep(200);await shot('5-groupe');await checkOverflow('combat de groupe');flushErrors('groupe');}
   }

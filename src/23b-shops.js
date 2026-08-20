@@ -38,8 +38,8 @@ function offItem(t,it){return {t:'item',it,label:it.nom,sub:itemLine(it).split('
   p:Math.max(5,Math.round(itemValue(it)*1.3*buyMul(t)))};}
 function mkShopItem(kind,fn,mats,q){
   const def=kind==='arme'?FUNC[fn]:OUTIL[fn];
-  const parts=def.comp.map((ct,i)=>({ct,f:COMP[ct].forms[0],mk:mats[i]||mats[0]}));
-  parts.push({ct:'fixations',f:'lingot',mk:'fer'});
+  const parts=def.comp.map(ct=>partFor(ct,mats));
+  parts.push(partFor('fixations',mats.concat(['fer'])));
   return mkItem(kind,fn,parts,q);
 }
 function mkShopArmor(sl,ct,mk,q){
@@ -79,7 +79,12 @@ const SHOPGEN={
     for(let i=0;i<ri(2,3);i++){const sl=pick(SLOTS.filter(x=>x.zone)).k;const ct=pick(['plaque','anneaux','peau','rembourrage']);
       const mk=ct==='peau'?'cuir':ct==='rembourrage'?'laine':pick(['fer','cuivre']);
       o.push(offItem(t,mkShopArmor(sl,ct,mk,+(0.8+Math.random()*.5).toFixed(2))));}
-    o.push(offItem(t,mkShopItem('arme',pick(Object.keys(FUNC)),['fer','chene'],+(0.8+Math.random()*.4).toFixed(2))));
+    o.push(offItem(t,mkShopItem('arme',pick(FK2.filter(f=>!FUNC[f].dist)),['fer','chene'],+(0.8+Math.random()*.4).toFixed(2))));
+    /* l'armurier tient toujours un bouclier, et souvent un arc — en bois de pays */
+    o.push(offItem(t,mkShopItem('arme','bouclier',['fer','cuir'],+(0.8+Math.random()*.5).toFixed(2))));
+    if(Math.random()<.6){
+      const bois=pick(['frene','orme','if','bambou','chene']);
+      o.push(offItem(t,mkShopItem('arme',Math.random()<.7?'arc':'fronde',[bois,'cuir'],+(0.8+Math.random()*.4).toFixed(2))));}
     return o;},
   alchimiste(t){const o=[];
     for(let i=0;i<ri(2,3);i++)o.push(offPotion(t,pick(Object.keys(BUFFN))));

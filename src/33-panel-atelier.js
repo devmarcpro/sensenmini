@@ -97,7 +97,11 @@ function pAtelier(){
 function itemLine(it){
   const def=it.kind==='arme'?FUNC[it.fn]:it.kind==='outil'?OUTIL[it.fn]:null;
   let l='qualité '+it.q.toFixed(2)+' '+QNAME(it.q)+' · dureté '+it.dur.toFixed(1)+' (base '+it.durBase.toFixed(1)+')';
-  if(it.kind==='arme')l+=' · '+def.d[0]+'d'+def.d[1]+' '+DT[def.t]+' · portée '+def.reach;
+  if(it.kind==='arme'){
+    l+=' · '+def.d[0]+'d'+def.d[1]+' '+DT[def.t]+' · portée '+def.reach+' · '+(def.h===2?'deux mains':'une main');
+    if(def.dist)l+=' · <b>élasticité '+(it.ela||0).toFixed(0)+'</b> — c\'est elle qui porte le trait, pas la dureté';
+    if(def.shield)l+=' · bouclier';
+  }
   if(it.kind==='outil')l+=' · mord jusqu\'à '+Math.floor(it.dur*2);
   if(it.kind==='armure')l+=' · '+CONS[it.cons].n+' · fort contre '+(CONS[it.cons].fort.map(t=>DT[t]).join(', ')||'—')
     +' · faible contre '+(CONS[it.cons].faible.map(t=>DT[t]).join(', ')||'—');

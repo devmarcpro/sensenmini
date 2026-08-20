@@ -173,12 +173,18 @@ function fuite(e){
   removeEnemy(e);
   return true;
 }
+/* L'épuisement d'une case : de 1 (giboyeuse) à 4 (raclée jusqu'à l'os).
+   Il n'entre en jeu qu'après trois purges — le temps de nettoyer un
+   endroit reste sans pénalité. */
+const vide=c=>1+Math.min(3,(c&&c.vide||0)/40);
 /* retire une créature du groupe ; sans groupe, on relance le compte à rebours */
 function removeEnemy(e){
   const i=EE.indexOf(e);
   if(i>=0)EE.splice(i,1);
   if(!EE.length){E=null;S.seg=[];S.bonus=0;
-    if(S.occ==='combat')respawnT=(isNight()&&!eclaireIci())?1.2:2.2;
+    /* le délai d'une case épuisée s'étire jusqu'à quatre fois ; sous terre,
+       rien ne se raréfie — un donjon n'est pas un territoire de chasse */
+    if(S.occ==='combat')respawnT=((isNight()&&!eclaireIci())?1.2:2.2)*vide(here());
     if(S.occ==='donjon')respawnT=1.3;
     return;}
   refocus(Math.min(foc,EE.length-1));
@@ -426,6 +432,16 @@ function kill(who){
   c.kills=(c.kills||0)+1;
   if(c.kills%5===0){c.cleared++;
     if(c.cleared===3)cutIn('浄',(c.town||BIOME[c.b].n)+' se calme','la corruption reflue chaque semaine');}
+  /* Une fois la case purgée, chaque bête abattue vide un peu plus les
+     environs. C'était le trou de la boucle : on pouvait rester au même
+     endroit indéfiniment, à un or par créature, sans que rien ne le dise
+     ni ne pousse à lever le camp. Le gibier se raréfie, et revient si on
+     laisse l'endroit tranquille (voir weekly()). */
+  if(c.cleared>=3){
+    const av=vide(c);c.vide=(c.vide||0)+1;
+    if(av<2&&vide(c)>=2)cutIn('疎',(c.town||BIOME[c.b].n)+' se dépeuple',
+      'à force d\'y chasser, il n\'y reste plus grand-chose — va voir ailleurs, ou laisse la case respirer quelques semaines');
+  }
   float('+'+g+' or','#D9A441');if(typeof sfx==='function')sfx('kill');
   log(K.nom+' tombe. <span class="gd">+'+g+' or</span>');
   questTick('kill',1,{cat:K.cre&&CREATURE[K.cre]?CREATURE[K.cre].cat:'corrompu',rare:K.rare,boss:K.boss});noteRate('kill');

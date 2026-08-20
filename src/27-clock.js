@@ -28,6 +28,9 @@ function weekly(){
         const n=S.world[key(c.x+d[0],c.y+d[1])];
         if(n&&n.corr<100){n.corr=Math.min(100,n.corr+1);inf++;}}}
     if(c.cleared>=3&&c.corr>Math.max(0,c.corr0-25)){c.corr-=2;calm++;}
+    /* le gibier revient : une case qu'on cesse de racler se repeuple
+       en quelques semaines (l'epuisement retombe de vingt-cinq par semaine) */
+    if(c.vide>0)c.vide=Math.max(0,c.vide-25);
   }
   S.npcs.forEach(n=>{
     n.or=Math.min(n.orMax,Math.round(n.or+n.orMax*.15));

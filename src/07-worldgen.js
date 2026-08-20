@@ -33,7 +33,7 @@ function genCell(x,y){
   const c={x,y,b,alt:+alt.toFixed(2),temp:+temp.toFixed(2),hum:+hum.toFixed(2),
     mana:+mana.toFixed(2),res:+res.toFixed(2),veg:+veg.toFixed(2),
     corr:Math.round(dang*100),corr0:Math.round(dang*100),
-    seen:false,depth:0,cleared:0,claim:null,dug:0};
+    seen:false,depth:0,cleared:0,vide:0,claim:null,dug:0};
   const r=hash(x,y,s,9);
   if(r<.04)c.poi='village';else if(r<.10)c.poi='donjon';else if(r<.18)c.poi='camp';
   else if(r<.21)c.poi='sanctuaire';else if(r<.27)c.poi='filon';

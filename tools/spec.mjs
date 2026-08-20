@@ -603,6 +603,23 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('territoire — une case raclée se dépeuple, et se repeuple',()=>{
+  const c=nouveau();
+  R(c,'S.pos=[0,0];here().cleared=0;here().kills=0;here().vide=0;');
+  eq(G(c,'vide(here())'),1,'une case intacte a tout son gibier');
+  /* les trois premières purges ne coûtent rien : nettoyer reste gratuit */
+  R(c,'here().kills=14;here().cleared=2;');
+  eq(G(c,'vide(here())'),1,'nettoyer une case ne la vide pas');
+  R(c,'here().cleared=3;here().vide=200;');
+  eq(G(c,'vide(here())'),4,'raclée jusqu\'à l\'os, elle plafonne à quatre fois le délai');
+  /* et le gibier revient si on laisse la case tranquille */
+  R(c,'here().vide=120;for(let i=0;i<5;i++)weekly();');
+  eq(G(c,'vide(here())'),1,'cinq semaines de répit la repeuplent entièrement');
+  /* un donjon n'est pas un territoire de chasse : rien ne s'y raréfie */
+  R(c,'here().vide=200;S.occ="donjon";EE=[];removeEnemy({});');
+  ok(G(c,'respawnT')<=1.4,'sous terre, rien ne se raréfie');
+});
+
 test('bestiaire — chaque espèce est jouable, visible et à sa place',()=>{
   const c=nouveau();
   const cles=G(c,'CK');

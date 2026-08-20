@@ -4,7 +4,8 @@
 function pCell(){
   const c=here(),v=cellVec(c),d=domi(v);
   let h='<div class="card"><h3><span>'+(c.town||BIOME[c.b].n)+'</span><i>'+c.x+','+c.y+'</i></h3>'
-   +'<div class="meta">'+BIOME[c.b].n+(c.poi?' · '+POI[c.poi].n:'')+' · nettoyée '+c.cleared+' fois</div>'
+   +'<div class="meta">'+BIOME[c.b].n+(c.poi?' · '+POI[c.poi].n:'')+' · nettoyée '+c.cleared+' fois'
+   +(vide(c)>1.15?' · gibier '+(vide(c)>=3?'quasi disparu':vide(c)>=2?'rare':'clairsemé'):'')+'</div>'
    +'<div class="meta">corruption '+c.corr+' ('+(c.corr>66?'mortelle':c.corr>33?'dangereuse':'paisible')+') · fertilité '+BIOME[c.b].fert+'</div></div>';
   h+=grp('層','COUCHES DE BRUIT');
   h+='<div class="card"><div class="meta">altitude '+c.alt+' · température '+c.temp+' · humidité '+c.hum+'</div>'

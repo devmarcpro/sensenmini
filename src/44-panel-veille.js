@@ -41,11 +41,14 @@ function pAuto(){
     +'<div class="row"><button class="btn" data-draw="'+i+'">Dégainer · 5 endurance</button></div></div>').join('');
   /* cadence observée */
   const rt=S.rate||{};
-  h+=grp('率','CADENCE OBSERVÉE','ce que la veille rendra');
+  const est=k=>{const o=(rt[k]||0),e=cadence(k);
+    return e.toFixed(1)+(o>0?'':' <i style="font-style:normal;color:var(--terre)">(estimée)</i>');};
+  h+=grp('率','CADENCE','ce que la veille rendra');
   h+='<div class="card"><div class="meta">'
-   +'combat '+(rt.kill||0).toFixed(1)+' créatures/min · récolte '+(rt.harv||0).toFixed(1)+'/min · '
-   +'atelier '+(rt.craft||0).toFixed(1)+'/min · salles de donjon '+(rt.djroom||0).toFixed(1)+'/min</div>'
-   +'<div class="meta">Hors-ligne : 60 % de cette cadence, plafonné à 8 h. Les semaines de territoire, elles, se résolvent toutes.</div>'
+   +'combat '+est('kill')+' créatures/min · récolte '+est('harv')+'/min · '
+   +'atelier '+est('craft')+'/min · salles de donjon '+(rt.djroom||0).toFixed(1)+'/min</div>'
+   +'<div class="meta">Hors-ligne : 60 % de cette cadence, plafonné à 8 h. Faute de cadence observée, elle est <b>calculée</b> — le temps d\'un coup de pioche est connu à la seconde près. Les semaines de territoire, elles, se résolvent toutes.</div>'
+   +'<div class="meta">Pendant l\'absence, on mange sur le garde-manger et les vivres : garnis-les avant de fermer.</div>'
    +'<div class="meta">Occupation qui tournera : <b>'+({repos:'repos',combat:'combat',donjon:'donjon',recolte:'récolte de '+(S.target?matName(S.target):'—'),atelier:'atelier',explore:'exploration',dormir:'sommeil'}[S.occ]||S.occ)+'</b></div></div>';
   return h;
 }

@@ -65,6 +65,31 @@ function rollRates(){
     S.rate[k]=S.rate[k]===undefined?v:S.rate[k]*.5+v*.5;
     S.cnt[k]=0;});
 }
+/* --- la cadence effective (E.6) ---
+   On reprend le rythme observé. À défaut — première nuit, occupation
+   qu'on vient de changer — on le CALCULE : le temps d'un coup de pioche
+   ou d'une pièce d'atelier est connu à la seconde près, et la vitesse
+   d'un tueur se déduit de son arme. Mieux vaut une estimation prudente
+   qu'un rapport vide. */
+function cadence(k){
+  const r=(S.rate||{})[k];
+  if(r>0)return r;
+  if(k==='harv'&&S.target&&canHarvest(S.target))return 60/harvestTime(S.target)*.8;
+  if(k==='craft'&&S.craft&&craftCan()){
+    const j=S.craft,skk=j.t==='form'?STATION[FORM[j.f].st].sk:STATION[COMP[j.ct].st].sk;
+    return 60/craftTime(j.mk,skk)*.8;}
+  if(k==='kill'){
+    const w=weapon();if(!w)return 0;
+    const c=here();
+    const power=S.occ==='donjon'&&c.dj?djPower():1+c.corr/26+c.depth*.6;
+    const hp=40*Math.pow(1.21,power);
+    const F=FUNC[w.fn];
+    const puis=isDist(w)?((w.ela||8)/45):(w.durBase/20);
+    const dps=F.d[0]*(F.d[1]+1)/2*puis*w.q*sf(lv(w.fn))*F.spd*.45;
+    if(dps<=0)return 0;
+    return Math.max(.15,Math.min(6,60/Math.max(3,hp/dps)));}
+  return 0;
+}
 /* --- résolution de l'absence (E.6 : formules, jamais de simulation) --- */
 function offline(sec){
   const capH=8;
@@ -75,8 +100,21 @@ function offline(sec){
   const w=Math.floor(S.day/WEEK);
   let nw=0;while(S.week<w&&nw<24){S.week++;weekly();nw++;}
   if(nw)r.push(nw+' semaine'+(nw>1?'s':'')+' de territoire résolues');
+  /* la faim : on ne jeûne pas huit heures quand le garde-manger est plein.
+     L'absence y pioche, exactement comme on le ferait à la main. */
   S.faim=Math.max(0,S.faim-coupe/90);
-  const rt=S.rate||{};
+  if(S.faim<70){
+    let repas=0;
+    for(let i=0;i<500&&S.faim<95;i++){
+      const k=Object.keys(S.food).find(x=>S.food[x]>0);
+      if(k){useFood(k,1);S.faim=Math.min(100,S.faim+foodInfo(k).nutr*.5);repas++;continue;}
+      if(S.vivres>0){S.vivres--;S.faim=Math.min(100,S.faim+28);repas++;continue;}
+      break;
+    }
+    if(repas)r.push(repas+' repas pris sur les réserves');
+    else if(S.faim<=0)r.push('<span class="bd">rien à manger — tu reviens affamé</span>');
+  }
+  const rt={kill:cadence('kill'),harv:cadence('harv'),craft:cadence('craft'),djroom:(S.rate||{}).djroom||0};
   const c=here();
   if((S.occ==='combat'||S.occ==='donjon')&&rt.kill>0){
     const n=Math.round(rt.kill*min*eff);

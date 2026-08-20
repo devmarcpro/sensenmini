@@ -11,12 +11,59 @@ const STORE=window.storage
   ? {get:k=>window.storage.get(k).then(r=>r&&r.value),set:(k,v)=>window.storage.set(k,v)}
   : {get:async k=>localStorage.getItem(k),set:async(k,v)=>localStorage.setItem(k,v)};
 
-async function save(){S.t=Date.now();try{await STORE.set(KEY,JSON.stringify(S));}catch(e){}}
+/* ----- le monde ne se stocke pas, il se regénère (G.1) -----
+   `genCell` est déterministe : la graine suffit à retrouver chaque cellule.
+   On n'enregistre donc que ce qui S'ÉCARTE du monde généré — vu ou non,
+   creusé, revendiqué, bâti, nettoyé, sa corruption qui a dérivé. Une
+   cellule seulement traversée pèse alors une quinzaine d'octets au lieu
+   de deux cent cinquante. */
+function packWorld(){
+  const out={};
+  for(const k in S.world){
+    const c=S.world[k];
+    if(!c||c.x===undefined)continue;
+    const base=genCell(c.x,c.y),d={};
+    for(const f in c){
+      if(f==='x'||f==='y')continue;
+      const a=JSON.stringify(c[f]),b=JSON.stringify(base[f]);
+      if(a!==b)d[f]=c[f];
+    }
+    if(Object.keys(d).length)out[k]=d;
+  }
+  return out;
+}
+function unpackWorld(p){
+  const w={};
+  if(!p)return w;
+  for(const k in p){
+    const xy=k.split(',');
+    const x=+xy[0],y=+xy[1];
+    if(!isFinite(x)||!isFinite(y))continue;
+    w[k]=Object.assign(genCell(x,y),p[k]);
+  }
+  return w;
+}
+/* la sauvegarde : l'état tel quel, le monde en écarts */
+function packSave(){
+  S.t=Date.now();
+  const w=S.world;
+  S.world=packWorld();S.v=2;
+  const j=JSON.stringify(S);
+  S.world=w;
+  return j;
+}
+function unpackSave(d){
+  S=Object.assign(NEW(),d);
+  /* v2 : le monde est stocké en écarts. Les sauvegardes d'avant sont complètes. */
+  if(d.v>=2)S.world=unpackWorld(d.world);
+  sanitize();
+}
+async function save(){try{await STORE.set(KEY,packSave());}catch(e){}}
 async function load(){
   try{
     const v=await STORE.get(KEY);if(!v)return false;
-    const d=JSON.parse(v);S=Object.assign(NEW(),d);
-    sanitize();
+    const d=JSON.parse(v);
+    unpackSave(d);
     absence((Date.now()-(d.t||Date.now()))/1000);
     return true;
   }catch(e){return false;}
@@ -44,15 +91,14 @@ function sanitize(){
   if(S.quest&&!GUILDS.some(g=>g.k===S.quest.g))S.quest=null;
 }
 /* ----- export / import : la partie sous forme de texte, d'un appareil à l'autre ----- */
-function exportSave(){S.t=Date.now();return 'SENSEN1:'+btoa(unescape(encodeURIComponent(JSON.stringify(S))));}
+function exportSave(){return 'SENSEN1:'+btoa(unescape(encodeURIComponent(packSave())));}
 function importSave(txt){
   try{
     txt=(txt||'').trim();
     const raw=txt.startsWith('SENSEN1:')?decodeURIComponent(escape(atob(txt.slice(8)))):txt;
     const d=JSON.parse(raw);
     if(!d||!d.sk||!d.race)return toast('Ce texte n\'est pas une sauvegarde Sensen');
-    S=Object.assign(NEW(),d);
-    sanitize();
+    unpackSave(d);
     E=null;sceneMode='';tab='monde';
     save();paint();
     cutIn('保','Sauvegarde chargée',S.nom+' · semaine '+S.week);

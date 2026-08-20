@@ -242,6 +242,16 @@ existe (environnement Claude), `localStorage` sinon (navigateur classique, clé
 `sensen:mini:step2`). La partie persiste donc entre deux rechargements, y
 compris en `file://`.
 
+**Le monde ne se stocke pas, il se regénère.** `genCell(x,y)` est déterministe :
+la graine suffit à retrouver chaque cellule. La sauvegarde n'enregistre donc que
+ce qui *s'écarte* du monde généré — vu ou non, creusé, revendiqué, bâti, sa
+corruption qui a dérivé. Une cellule seulement traversée pèse une quinzaine
+d'octets au lieu de deux cent cinquante : **82 % de moins** sur un monde
+largement exploré. C'est le principe G.1 du GDD, appliqué là où il compte.
+
+Repère mesuré sur 24 h de jeu simulé : 24 à 89 ko selon le style de jeu, contre
+90 à 200 ko avant. `npm run sim` affiche la ligne `sauvegarde` à chaque run.
+
 L'onglet 自 VEILLE porte tout le reste : **exporter** la partie en un bloc de
 texte, l'**importer** sur un autre appareil, couper les sons, et **recommencer**
 (double confirmation).

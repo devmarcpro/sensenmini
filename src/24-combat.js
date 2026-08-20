@@ -473,8 +473,23 @@ function dropLoot(c,rare){
   it.slots=rar===0?0:rar===1?ri(0,1):rar===2?ri(1,2):ri(2,3);
   if(rar===3&&typeof randomGem==='function'){const g=randomGem(c);if(g&&!(GEMSPEC[g.spec].arme&&it.kind!=='arme')){it.gems=[g];applyGemVec(it);applyGemQ(it);}}
   it.aff=AFF.slice().sort(()=>Math.random()-.5).slice(0,RARITY[rar].a).map(a=>({id:a.id,p:a.r()}));
-  it.aff.forEach(a=>{if(a.id==='vecaff'){const v=it.vec.slice();v[a.p.e]+=a.p.p/100;it.vec=norm(v);}});
+  it.aff.forEach(a=>{if(a.id==='vecaff'){const v=it.vec.slice();v[a.p.e]+=a.p.p/100;it.vec=rnd4(norm(v));}});
   if(rar>=2)it.nom=pick(NAME_A)+' '+it.nom+' '+pick(NAME_B);
+  /* le sac a un fond : au-delà, le banal reste par terre, ou part au creuset */
+  if(sacPlein()){
+    const porte=it.kind==='arme'?weapon():S.eq[it.slot];
+    const mieux=!porte||itemScore(it)>itemScore(porte);
+    if(!mieux){
+      if(auto('fondeur')){const g=Math.round(itemValue(it)/3);S.or+=g;
+        log('Sac plein — '+it.nom+' passe au creuset (+'+g+' or)');}
+      else log('<span class="bd">Sac plein ('+S.items.length+'/'+sacMax()+') — '+it.nom+' reste sur place.</span>');
+      return;
+    }
+    /* il vaut mieux que ce qu'on porte : on fait de la place en fondant le pire du sac */
+    const pire=S.items.map((x,i)=>({x,i})).filter(x=>!x.x.artefact&&x.x.kind!=='statue')
+      .sort((a,b)=>itemScore(a.x)-itemScore(b.x))[0];
+    if(pire){const g=scrapItem(pire.i);log('Sac plein — '+pire.x.nom+' fondu pour faire place (+'+g+' or)');}
+  }
   S.items.push(it);questTick('loot',1,rar);
   cutIn('宝',it.nom,RARITY[rar].n+' · '+(it.aff.length?it.aff.length+' affixe(s)':'sans affixe')+(it.slots?' · '+it.slots+' sertissure'+(it.slots>1?'s':''):''));
 }

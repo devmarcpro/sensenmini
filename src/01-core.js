@@ -9,6 +9,8 @@ const EL=[{k:'bois',g:'木',n:'Bois',c:'#4FA96B'},{k:'feu',g:'火',n:'Feu',c:'#E
 const gen=i=>(i+1)%5, dom=i=>(i+2)%5;
 const V=o=>{const v=[0,0,0,0,0];for(const k in o)v[+k]=o[k];return v;};
 const norm=v=>{const s=v.reduce((a,b)=>a+b,0)||1;return v.map(x=>x/s);};
+/* un vecteur qu'on va garder en sauvegarde : quatre décimales, pas dix-sept */
+const rnd4=v=>v.map(x=>Math.round(x*1e4)/1e4);
 const domi=v=>v.indexOf(Math.max(...v));
 const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const pick=a=>a[Math.floor(Math.random()*a.length)];

@@ -20,7 +20,8 @@ function pEquip(){
     h+=grp('玉','SERTISSURES',(S.gems||[]).length+' gemme(s) taillée(s) en réserve');
     h+=worn.map(k=>gemBlock(S.eq[k],'eq:'+k)).join('')||'<p class="hint">Aucune pièce portée n\'a de sertissure.</p>';
   }
-  h+=grp('袋','OBJETS',S.items.length+' en sac');
+  h+=grp('袋','OBJETS',S.items.length+' / '+sacMax()+' en sac');
+  h+='<div class="meta" style="margin-bottom:6px">Le dos porte 20 + Force×2 objets. Au-delà, le butin banal reste où il tombe — ou passe au creuset si tu as le Fondeur (自 VEILLE).</div>';
   h+=S.items.map((it,i)=>'<div class="card"><h3><span>'+it.nom+'</span><i>'+(it.rar?RARITY[it.rar].n+' · ':'')+(it.kind==='armure'?'armure':it.kind)+'</i></h3>'
     +'<div class="meta">'+(it.kind==='statue'?'trophée de chasse — valeur '+it.val+' or':itemLine(it))+'</div>'
     +(it.parts.length?'<div class="meta">'+it.parts.map(p=>COMP[p.ct].n+' '+(p.f==='brut'?'':FORM[p.f].n+' ')+matName(p.mk)).join(' + ')+'</div>':'')

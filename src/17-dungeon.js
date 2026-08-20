@@ -113,7 +113,7 @@ function dropArtefact(lvl){
   const it=mkItem('arme',fn,parts,+(1.5+Math.random()*.6+lvl*.18).toFixed(2));
   it.rar=3;it.artefact=1;
   it.aff=AFF.slice().sort(()=>Math.random()-.5).slice(0,ri(3,4)).map(a=>({id:a.id,p:a.r()}));
-  it.aff.forEach(a=>{if(a.id==='vecaff'){const v=it.vec.slice();v[a.p.e]+=a.p.p/100;it.vec=norm(v);}});
+  it.aff.forEach(a=>{if(a.id==='vecaff'){const v=it.vec.slice();v[a.p.e]+=a.p.p/100;it.vec=rnd4(norm(v));}});
   it.nom=pick(['Serment','Relique','Vestige','Legs','Sceau'])+' '
     +pick(['du Puits','des Cendres Premières','de la Veine Muette','du Gardien','des Neuf Étages','de l\'Aube Fendue']);
   S.items.push(it);

@@ -224,13 +224,23 @@ async function runScenario(scen){
     +await evalJs('JSON.stringify({race:S.race,gate:document.getElementById("gate").hidden,saved:(localStorage.getItem(KEY)||"").length,ready:document.readyState})'));
   /* export / import : le texte doit recharger la meme partie */
   const io=await evalJs(`(()=>{try{
-    S.or=12345;S.nom='Testeur';const txt=exportSave();
+    for(let x=-8;x<=8;x++)for(let y=-8;y<=8;y++)cell(x,y).seen=true;
+    here().depth=2;here().kills=17;
+    S.or=12345;S.nom='Testeur';
+    const complet=JSON.stringify(S).length,txt=exportSave();
     if(!txt.startsWith('SENSEN1:'))return 'export mal forme';
-    S.or=1;S.nom='Efface';
+    const gain=Math.round((1-(txt.length*.75)/complet)*100);
+    const vus=Object.values(S.world).filter(c=>c.seen).length,biome=cell(5,5).b;
+    S.or=1;S.nom='Efface';S.world={};
     importSave(txt);
-    return (S.or===12345&&S.nom==='Testeur')?'ok':'import : or '+S.or+' nom '+S.nom;
+    if(S.or!==12345||S.nom!=='Testeur')return 'import : or '+S.or+' nom '+S.nom;
+    if(Object.values(S.world).filter(c=>c.seen).length!==vus)return 'le monde ne survit pas a l aller-retour';
+    if(cell(5,5).b!==biome)return 'le biome regenere ne correspond pas';
+    if(here().depth!==2||here().kills!==17)return 'les ecarts de cellule sont perdus';
+    if(gain<40)return 'le monde n est pas compresse ('+gain+'%)';
+    return 'ok:'+gain+'%';
   }catch(e){return 'erreur '+e.message;}})()`);
-  if(io!=='ok')report(scen.name,'sauvegarde','export/import : '+io);
+  if(!String(io).startsWith('ok'))report(scen.name,'sauvegarde','export/import : '+io);
   /* hors-ligne : le service worker doit servir le jeu sans reseau */
   const swState=await evalJs('(async()=>{if(!("serviceWorker" in navigator))return "absent";try{const r=await Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),6000))]);if(!r)return "timeout";for(let i=0;i<40&&!navigator.serviceWorker.controller;i++)await new Promise(r=>setTimeout(r,150));return navigator.serviceWorker.controller?"ok":"sans controleur";}catch(e){return "erreur "+e.message;}})()');
   if(swState!=='ok')report(scen.name,'hors-ligne','service worker : '+swState);

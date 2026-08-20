@@ -130,6 +130,7 @@ function buyOffer(shopKey,idx){
   const list=shopStock(t)[shopKey];if(!list)return;
   const o=list[idx];if(!o)return;
   if(S.or<o.p)return toast('Il faut '+o.p+' or');
+  if(o.t==='item'&&sacPlein())return toast('Sac plein ('+S.items.length+'/'+sacMax()+') — fonds ou équipe avant');
   S.or-=o.p;t.or=Math.min(t.orMax*3,t.or+o.p);
   list.splice(idx,1);
   if(o.t==='mat'){S.mat[o.mk]=(S.mat[o.mk]||0)+o.n;if(PLANTE[o.mk])addFood(o.mk,o.n);}

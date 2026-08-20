@@ -45,6 +45,7 @@ function takeComp(k){const c=S.comp[k];if(!c)return null;const o={ct:c.ct,f:c.f,
 /* assemblage : composants → objet (A.4.7) */
 function assembleFrom(kind,fn,picks){
   const def=kind==='arme'?FUNC[fn]:OUTIL[fn];
+  if(sacPlein())return toast('Sac plein ('+S.items.length+'/'+sacMax()+') — fonds ou équipe avant d\'assembler');
   const parts=picks.map(k=>takeComp(k)).filter(Boolean);
   if(parts.length!==picks.length)return toast('Composant manquant');
   const jet=quality(lv('assemblage'));
@@ -60,6 +61,7 @@ function assembleFrom(kind,fn,picks){
   return it;
 }
 function assembleArmor(slotK,picks){
+  if(sacPlein())return toast('Sac plein ('+S.items.length+'/'+sacMax()+') — fonds ou équipe avant d\'assembler');
   const parts=picks.map(k=>takeComp(k)).filter(Boolean);
   if(parts.length!==picks.length)return toast('Composant manquant');
   const major=parts.find(p=>COMP[p.ct].cons);
@@ -88,7 +90,7 @@ function mkItem(kind,fn,parts,q){
   /* vecteur composite : chaque composant au prorata de son poids (5.2) */
   let v=[0,0,0,0,0];
   parts.forEach(p=>{const pv=formVec(p.f,p.mk);for(let i=0;i<5;i++)v[i]+=pv[i]*COMP[p.ct].w;});
-  v=norm(v);
+  v=rnd4(norm(v));   /* quatre décimales suffisent, et la sauvegarde s'en porte bien mieux */
   const def=kind==='arme'?FUNC[fn]:kind==='outil'?OUTIL[fn]:null;
   return {id:'i'+(S.nid++),kind,fn:kind==='armure'?null:fn,slot:kind==='armure'?fn:(kind==='arme'||kind==='outil'?'main1':null),
     parts:parts.map(p=>({ct:p.ct,f:p.f,mk:p.mk})),q:+q.toFixed(2),
@@ -120,6 +122,11 @@ function itemScore(it){
   if(it.kind==='armure')return it.durBase*it.q*(1+(it.aff||[]).length*.12);
   return it.dur;
 }
+/* ===== CE QU'ON PEUT PORTER (A.4.2 : poids porté) =====
+   La Force décide de ce que le dos supporte. Un sac plein ne bloque rien :
+   le butin banal reste sur place — ou passe au creuset si le Fondeur est là. */
+const sacMax=()=>20+st('force')*2;
+const sacPlein=()=>S.items.length>=sacMax();
 /* fond un objet : un tiers de sa valeur */
 function scrapItem(i){const it=S.items[i];if(!it)return 0;const g=Math.round(itemValue(it)/3);S.or+=g;S.items.splice(i,1);return g;}
 /* le Fondeur : fond le butin banal qui ne bat pas ce qu'on porte (ni les artefacts, ni le rare) */

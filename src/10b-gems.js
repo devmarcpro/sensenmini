@@ -60,7 +60,7 @@ function applyGemVec(it){
   let v=it.vec0.slice();
   (it.aff||[]).forEach(a=>{if(a.id==='vecaff')v[a.p.e]+=a.p.p/100;});
   (it.gems||[]).forEach(g=>{if(g.spec==='affinite')v[g.el]+=g.v;});
-  it.vec=norm(v);
+  it.vec=rnd4(norm(v));
 }
 const itemOf=where=>where.startsWith('eq:')?S.eq[where.slice(3)]:S.items[+where.slice(4)];
 function socketGem(where,gi){

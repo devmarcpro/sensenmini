@@ -36,6 +36,8 @@ function makeContext(seed){
   const ctx={document,console,Math,JSON,Date,performance:{now:()=>0},
     setTimeout:()=>0,clearTimeout(){},requestAnimationFrame(){},addEventListener(){},
     localStorage:{getItem:()=>null,setItem(){},removeItem(){}},
+    btoa:s=>Buffer.from(s,'binary').toString('base64'),atob:s=>Buffer.from(s,'base64').toString('binary'),
+    unescape:global.unescape,escape:global.escape,encodeURIComponent,decodeURIComponent,
     navigator:{},location:{protocol:'file:'},
     getComputedStyle:()=>({}),
   };
@@ -47,7 +49,7 @@ function makeContext(seed){
   ctx.Math.random=()=>{s+=0x6D2B79F5;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};
   return ctx;
 }
-const files=readdirSync(join(root,'src')).filter(f=>/^(0[1-9]|[1-3][0-9]|4[0-9]|10b|12b|13b|23b|23c|29b)-.*\.js$/.test(f)&&f.endsWith('.js')).sort();
+const files=readdirSync(join(root,'src')).filter(f=>/^(0[1-9]|[1-3][0-9]|4[0-9]|51|10b|12b|13b|23b|23c|29b)-.*\.js$/.test(f)&&f.endsWith('.js')).sort();
 const code=files.map(f=>readFileSync(join(root,'src',f),'utf8')).join('\n');
 
 function newGame(seed,classe,race){
@@ -265,10 +267,17 @@ function run(botName,classe,race,hours,seed){
   snaps.push(snapshot(ctx));
   const ev=G(ctx,'JSON.stringify(__ev)');
   const trace=G(ctx,'JSON.stringify(__tr)');
+  const poids=G(ctx,`(()=>{const brut=JSON.stringify(S).length,reel=packSave().length;
+    const w=S.world;S.world=packWorld();const p={};
+    for(const k in S)p[k]=JSON.stringify(S[k]).length;
+    S.world=w;
+    const top=Object.entries(p).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k,v])=>k+' '+Math.round(v/1024)+'ko');
+    return {ko:Math.round(reel/1024),brut:Math.round(brut/1024),cells:Object.keys(S.world).length,npcs:S.npcs.length,
+      items:S.items.length,top:top.join(' · ')};})()`);
   const extra=G(ctx,`JSON.stringify({claims:S.claims.length,plots:S.claims.reduce((a,k)=>a+((S.world[k].plots||[]).filter(Boolean).length),0),
     rec:S.npcs.filter(n=>n.rec).length,assign:S.npcs.filter(n=>n.rec&&n.assign).length,tresor:Math.round(S.tresor),dette:Math.round(S.dette),
     vivres:S.vivres||0,plats:S.plats||0,stations:[...stationsHere()].join('/'),log:S.log.slice(0,4)})`);
-  return {bot:botName,classe,race,seed,hours,ms:Date.now()-t0,snaps,errors,events:JSON.parse(ev),trace:JSON.parse(trace),extra:JSON.parse(extra)};
+  return {bot:botName,classe,race,seed,hours,ms:Date.now()-t0,snaps,errors,events:JSON.parse(ev),trace:JSON.parse(trace),extra:JSON.parse(extra),poids};
 }
 
 const plan=BOT==='tous'?[['guerrier','guerrier','humain'],['mineur','artisan','nain'],['mixte','chasseur','elfe'],['batisseur','artisan','humain']]
@@ -294,6 +303,8 @@ for(const r of results){
   const x=r.extra;
   console.log('  territoire : '+x.claims+' claims · '+x.plots+' parcelles · stations ici '+(x.stations||'—')+' · résidents '+x.rec+' ('+x.assign+' assignés) · trésor '+x.tresor+' · dette '+x.dette+' · vivres '+x.vivres+' · plats '+x.plats);
   console.log('  journal : '+x.log.join(' | '));
+  const p=r.poids;
+  console.log('  sauvegarde : '+p.ko+' ko (état brut '+p.brut+' ko) · '+p.cells+' cellules · '+p.npcs+' PNJ · '+p.items+' objets — '+p.top);
   if(r.trace.length){console.log('  trace :');r.trace.slice(0,30).forEach(l=>console.log('    '+l));}
   if(r.errors.length){console.log('  ERREURS :');r.errors.slice(0,8).forEach(e=>console.log('    h'+e.h+' '+e.msg));}
 }

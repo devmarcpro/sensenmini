@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>森森 Sensen Mini</title>
+<meta name="description" content="Sensen Mini — version idle du RPG voxel Wu Xing. Jouable hors-ligne, sur ordinateur et téléphone.">
+<meta name="theme-color" content="#0B0D0C">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sensen">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Ma+Shan+Zheng&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
@@ -18,6 +28,10 @@
   <div class="grp"><b>生</b><span>NAISSANCE — CYCLE SEXAGÉSIMAL</span></div>
   <p class="hint">L'élément (cycle de 5 ans) et l'animal (cycle de 12) donnent un <b>plancher de potentiel</b>, jamais un bonus dur : une pente, pas un plafond. Les trines harmonieuses décident aussi de qui t'appréciera vite.</p>
   <div class="pick" id="pkEl"></div><div class="pick" id="pkAn"></div>
+  <div class="grp"><b>地</b><span>LIEU DE NAISSANCE</span><em id="posInfo"></em></div>
+  <p class="hint">Tu choisis ta case de départ — et donc ton risque. Trois niveaux lisibles : paisible, dangereuse, mortelle. Les villages connus sont marqués 村.</p>
+  <div class="map gatemap" id="pkPos" style="grid-template-columns:repeat(9,1fr)"></div>
+  <p class="hint" id="posHint"></p>
   <div class="grp"><b>能</b><span>STATS</span><em id="ptLeft"></em></div>
   <div id="pkStats"></div>
   <div id="gPrev" class="hint" style="margin-top:12px"></div>
@@ -57,10 +71,12 @@
   <button data-tab="guilde" aria-selected="false">会 GUILDES</button>
   <button data-tab="sac" aria-selected="false">袋 SAC</button>
   <button data-tab="skills" aria-selected="false">練 COMPÉTENCES</button>
+  <button data-tab="autos" aria-selected="false">自 VEILLE</button>
 </nav>
 <section class="panel" id="panel"></section>
 <div class="log" id="log"></div>
 </div>
+<div class="tip" id="tip" hidden></div>
   <script src="src/01-core.js"></script>
   <script src="src/02-data-materials.js"></script>
   <script src="src/03-data-craft.js"></script>
@@ -71,6 +87,7 @@
   <script src="src/08-state.js"></script>
   <script src="src/09-progress.js"></script>
   <script src="src/10-craft.js"></script>
+  <script src="src/10b-gems.js"></script>
   <script src="src/11-character.js"></script>
   <script src="src/12-npc.js"></script>
   <script src="src/13-kingdom.js"></script>
@@ -84,6 +101,8 @@
   <script src="src/21-reputation.js"></script>
   <script src="src/22-realms.js"></script>
   <script src="src/23-starter.js"></script>
+  <script src="src/23b-shops.js"></script>
+  <script src="src/23c-creatures.js"></script>
   <script src="src/24-combat.js"></script>
   <script src="src/25-modules.js"></script>
   <script src="src/26-harvest.js"></script>
@@ -107,6 +126,8 @@
   <script src="src/43-panel-sac.js"></script>
   <script src="src/44-panel-veille.js"></script>
   <script src="src/45-panel-competences.js"></script>
+  <script src="src/46-tips.js"></script>
+  <script src="src/47-sfx.js"></script>
   <script src="src/50-input.js"></script>
   <script src="src/51-save.js"></script>
   <script src="src/52-boot.js"></script>

@@ -3,8 +3,48 @@
    Chargé dans l'ordre par index.html ; portée globale partagée. */
 
 /* ===== CRÉATION DE PERSONNAGE ===== */
-let cr={race:null,classe:null,el:null,an:null,pts:30,st:{force:5,dex:5,endu:5,vol:5,per:5,cha:5}};
+let cr={race:null,classe:null,el:null,an:null,pos:null,pts:30,st:{force:5,dex:5,endu:5,vol:5,per:5,cha:5}};
+/* ----- lieu de naissance (6.3) : le joueur choisit son risque sur une carte vague ----- */
+const START_R=4;
+const BIOME_START={plaine:3,foret:3,taiga:2,cote:2,marecage:1.5,toundra:1,desert:1,montagne:1,foretmana:1,cendres:0,marcorr:0,montcris:0};
+function startScore(c){
+  let s=BIOME_START[c.b]||0;
+  s-=c.corr/40;
+  if(c.poi==='donjon')s-=5;
+  if(c.poi==='village'||townAt(c.x,c.y))s+=1;
+  else for(let dx=-2;dx<=2;dx++)for(let dy=-2;dy<=2;dy++){const n=genCell(c.x+dx,c.y+dy);if(n.poi==='village'){s+=.6;dx=dy=3;}}
+  s+=BIOME[c.b].fert*.5;
+  return s;
+}
+function defaultStart(){
+  let best=null,bs=-99;
+  for(let dy=-START_R;dy<=START_R;dy++)for(let dx=-START_R;dx<=START_R;dx++){
+    const c=cell(dx,dy),sc=startScore(c);
+    if(sc>bs){bs=sc;best=[dx,dy];}}
+  return best||[0,0];
+}
+const dangerBand=corr=>corr>66?['mortelle','#C8332B']:corr>33?['dangereuse','#D9A441']:['paisible','#4FA96B'];
+function paintPos(){
+  if(!cr.pos)cr.pos=defaultStart();
+  let h='';
+  for(let dy=-START_R;dy<=START_R;dy++)for(let dx=-START_R;dx<=START_R;dx++){
+    const c=cell(dx,dy),sel=cr.pos[0]===dx&&cr.pos[1]===dy,band=dangerBand(c.corr);
+    const vil=c.poi==='village'||townAt(dx,dy);
+    h+='<div class="cell'+(sel?' here':'')+'" data-cpos="'+dx+','+dy+'" style="background:'+BIOME[c.b].c+'" title="'+BIOME[c.b].n+' · '+band[0]+'">'
+      +(vil?'<span class="poi">村</span>':'')+(c.poi==='donjon'?'<span class="poi">塔</span>':'')
+      +'<span class="dg" style="background:'+band[1]+'"></span></div>';
+  }
+  $('pkPos').innerHTML=h;
+  const c=cell(cr.pos[0],cr.pos[1]),band=dangerBand(c.corr);
+  $('posInfo').textContent=cr.pos[0]+','+cr.pos[1];
+  $('posHint').innerHTML='<b style="color:'+band[1]+'">'+BIOME[c.b].n+' — '+band[0]+'</b>'
+    +(c.poi==='donjon'?' · un donjon occupe la cellule : impossible d\'y bâtir':'')
+    +(c.poi==='village'||townAt(c.pos?c.x:cr.pos[0],cr.pos[1])?' · un village sur place':'')
+    +' · fertilité '+BIOME[c.b].fert+' · on y trouve '+BIOME[c.b].mats.slice(0,4).map(matName).join(', ')
+    +'. Le danger sort des couches de bruit, pas de la distance : une case mortelle rapporte plus, tout de suite.';
+}
 function buildGate(){
+  paintPos();
   $('pkRace').innerHTML=Object.keys(RACE).map(k=>'<button data-race="'+k+'"><b>'+RACE[k].g+'</b>'+RACE[k].n
     +'<i>'+RACE[k].b+'</i></button>').join('');
   $('pkClass').innerHTML=Object.keys(CLASSE).map(k=>{const c=CLASSE[k];
@@ -45,7 +85,9 @@ function applyBirth(){
   EL_DOM[cr.el].concat(ANIMALS[cr.an].s).forEach(id=>setPot(id,90));
   for(const k in (C.sk||{}))if(S.sk[k])S.sk[k].lv=C.sk[k];
   S.race=cr.race;S.classe=cr.classe;S.born=[cr.el,cr.an];
+  S.pos=(cr.pos||defaultStart()).slice();here().seen=true;
   S.nom=cultName(pick(R.cult));
   S.or=(C.or||30);
+  S.day=7/24;                                   /* on naît à l'aube, pas à minuit */
   S.hp=maxHp();S.mana=maxMana();
 }

@@ -14,10 +14,9 @@ const ORDERS=[
   {k:'repli',g:'退',n:'Repli',dmg:.35,aggro:.2,d:'reste en retrait, harcèle de loin'},
 ];
 const ORDK=ORDERS.map(o=>o.k);
-const BEASTN=['Loup','Ourse','Rapace','Sanglier','Lynx','Corbeau','Cerf','Serpent'];
 /* E.17 : places_escorte = 1 + Charisme/5 + Leadership/10 */
 const escortMax=()=>1+Math.floor(st('cha')/5)+Math.floor(lv('leadership')/10);
-const escortList=()=>S.comps.filter(c=>c.esc&&!c.dead
+const escortList=()=>S.comps.filter(c=>c.esc&&!c.dead&&c.mode!=='betail'
   &&(c.mode!=='territorial'||S.claims.includes(key(S.pos[0],S.pos[1]))));
 /* le suiveur territorial ne compte pas dans les places d'escorte (E.17) */
 const escortUsed=()=>S.comps.filter(c=>c.esc&&!c.dead&&c.mode!=='territorial').length;
@@ -27,6 +26,7 @@ function compFromNpc(n){
 }
 function tameBeast(){
   if(!E)return toast('Aucune créature');
+  if(E.cre&&CREATURE[E.cre]&&!CREATURE[E.cre].tame)return toast(E.nom+' ne s\'apprivoise pas');
   /* DD = 10 + niveau de combat de la cible / 2 ; une cible affaiblie donne un bonus */
   const power=1+here().corr/26+here().depth*.6;
   const lvCible=Math.round(power*5)+(E.rare?8:0);
@@ -40,7 +40,7 @@ function tameBeast(){
   gainXp('dressage',60+dd*5);
   if(S.comps.length>=12)return toast('Trop de bêtes — libères-en une');
   const el=domi(E.vec),l=Math.max(1,lvCible);
-  S.comps.push({id:'c'+(S.nid++),type:'bete',nom:pick(BEASTN)+' '+EL[el].n.toLowerCase(),
+  S.comps.push({id:'c'+(S.nid++),type:'bete',nom:(E.cre&&CREATURE[E.cre]?CREATURE[E.cre].n:pick(BEASTN))+' '+EL[el].n.toLowerCase(),cre:E.cre||null,
     el,lv:l,hp:36+l*8,max:36+l*8,xp:0,mood:70,order:'attaquer',esc:false,dead:0,mode:'permanent',eq:null,pot:90});
   E=null;respawnT=1.4;
   cutIn('馴','Apprivoisée','niveau '+l+' · '+EL[el].n);
@@ -79,7 +79,7 @@ function compTick(dt){
     const iv=2.8-Math.min(1.4,c.lv*.02);
     if(c.t<iv)return;
     c.t=0;
-    const d=Math.max(1,compDmg(c)-E.arm*.5);
+    const d=Math.max(1,compDmg(c)*(1-E.arm*.5/(E.arm*.5+10)));
     const applied=Math.min(d,E.hp);
     E.hp-=d;dpsA+=d;
     float(Math.round(d),EL[compEl(c)].c);

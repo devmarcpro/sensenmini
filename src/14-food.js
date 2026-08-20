@@ -8,12 +8,9 @@
    ses ingrédients crus. Un plat couvrant les cinq éléments gagne ×1.2.
    ================================================================== */
 const GROUPS=['Armes','Défense','Éléments','Magie','Récolte','Artisanat','Vie'];
-/* ingrédients végétaux : issus des matériaux comestibles */
-const PLANTE={
-  baies:{nutr:10,grp:'Vie'},racines:{nutr:16,grp:'Récolte'},champignons:{nutr:13,grp:'Magie'},
-  herbes:{nutr:6,grp:'Magie'},eaupure:{nutr:4,grp:'Vie'},sel:{nutr:3,grp:'Artisanat'},
-  glace:{nutr:3,grp:'Éléments'},ambre:{nutr:0,grp:'Magie'},
-};
+/* ingrédients végétaux : tout matériau du catalogue qui porte une nutrition (F.1 / F.8) */
+const PLANTE={};
+Object.keys(MAT).forEach(k=>{if(MAT[k].nutr!==undefined)PLANTE[k]={nutr:MAT[k].nutr,grp:MAT[k].grp||'Vie',tox:MAT[k].tox};});
 /* viandes et parties : paramétriques, dérivées de la créature (A.9.1) */
 const PARTS=[
   {k:'viande',n:'Viande',nutr:22,grp:null},          /* le groupe vient de la créature */
@@ -42,12 +39,29 @@ function creatureDrops(){
   if(Math.random()<.35){const d=pick(PARTS.slice(1));
     addFood(foodKey(d.k,d.el,d.grp),1);}
 }
+/* manger cru depuis le garde-manger : moitié de la nutrition, aucun potentiel.
+   Indispensable loin de toute cuisine — sinon la faim est une impasse. */
+function eatFood(k){
+  if(!(S.food[k]>0))return;
+  const i=foodInfo(k);
+  useFood(k,1);
+  if(PLANTE[k]&&PLANTE[k].tox){poisonBy(k);return;}
+  S.faim=Math.min(100,S.faim+i.nutr*.5);
+  log('Tu manges '+i.n+' cru'+(i.part==='viande'||i.plante?'':'e')+'. Une cuisine ferait bien mieux.');
+}
+/* belladone, amanite : crues, elles empoisonnent — et la cuisine les refuse */
+function poisonBy(k){
+  addStatus(S,'poison',10,Math.max(1,maxHp()*.012));
+  cutIn('毒',matName(k)+' — empoisonné','le poison ronge pendant 10 s ; une cuisine ne l\'aurait pas servi');
+}
 /* ===== CUISINE ===== */
 function cook(sel2){
   if(!hasStation('cuisine'))return toast('Il faut une cuisine');
   if(!sel2.length)return toast('Choisis des ingrédients');
   const infos=sel2.map(foodInfo);
   if(!sel2.every(k=>(S.food[k]||0)>0))return toast('Ingrédient manquant');
+  const tox=sel2.find(k=>PLANTE[k]&&PLANTE[k].tox);
+  if(tox)return toast(matName(tox)+' : toxique, bon pour l\'alambic, pas pour la marmite');
   sel2.forEach(k=>useFood(k,1));
   const q=quality(lv('cuisine'));
   const els=new Set(infos.map(i=>i.el));

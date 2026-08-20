@@ -39,6 +39,7 @@ function pPnj(){
      +(am!==1?' · affinité astrologique ×'+am:'')+(n.rec?' · te suit':'')+'</div>'
      +'<div class="row"><button class="btn" data-talk="'+n.id+'">Parler</button>'
      +'<button class="btn" data-gift="'+n.id+'">Offrir · '+c+' or</button>'
+     +(t>=1&&lv(trainSkill(n))<n.lv+5?'<button class="btn" data-train="'+n.id+'">S\'entraîner · '+SKILLS[trainSkill(n)].n+' · '+trainCost(n)+' or</button>':'')
      +(n.rel>=50&&!n.rec?'<button class="btn pri" data-rec="'+n.id+'">Engager</button>':'')
      +'</div></div>';}).join('');
   /* commerce */

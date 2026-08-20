@@ -8,6 +8,16 @@
    s'évalue à la demande, elle est déterministe et reproductible.
    ================================================================== */
 const HOUR=()=>(S.day%1)*24;
+/* saisons : l'année fait 120 jours, quatre saisons de 30. Une modulation de la
+   météo, de la pousse et des gisements — l'architecture les accueillait (E.28). */
+const SEASON=[
+  {k:'printemps',n:'Printemps',g:'春',t:0,pousse:.15,veg:1.2},
+  {k:'ete',n:'Été',g:'夏',t:7,pousse:0,veg:1},
+  {k:'automne',n:'Automne',g:'秋',t:-2,pousse:-.05,veg:1},
+  {k:'hiver',n:'Hiver',g:'冬',t:-11,pousse:-.35,veg:.5},
+];
+const seasonIdx=day=>Math.floor(((day===undefined?S.day:day)%120+120)%120/30);
+const season=day=>SEASON[seasonIdx(day)];
 function phase(){const h=HOUR();
   return h<5?'nuit':h<7?'aube':h<19?'jour':h<21?'crépuscule':'nuit';}
 const isNight=()=>{const h=HOUR();return h<5||h>=21;};
@@ -26,7 +36,8 @@ const METEO={
 function meteo(c,day){
   const t=Math.floor((day===undefined?S.day:day)*3);      /* un front tient ~8 h */
   const sp=noise(c.x,c.y,S.seed+t,31,6);                   /* bruit spatial lent */
-  const froid=c.temp<.32,chaud=c.temp>.7,humide=c.hum>.55;
+  const si=seasonIdx(day);
+  const froid=c.temp<(si===3?.45:si===1?.2:.32),chaud=c.temp>(si===1?.6:.7),humide=c.hum>.55;
   if(sp>.905)return froid?'blizzard':chaud?'canicule':'tempete';
   if(sp>.80)return froid?'neige':humide?'orage':'vent';
   if(sp>.66)return humide?'pluie':froid?'neige':'nuageux';
@@ -36,7 +47,7 @@ function meteo(c,day){
 /* température ressentie (E.28) */
 function tempC(c){
   let T=-8+c.temp*46;
-  T+=METEO[meteo(c)].t;
+  T+=METEO[meteo(c)].t+season().t;
   if(isNight())T-=8;
   T-=Math.max(0,c.alt-.5)*14;                              /* altitude */
   if(c.depth)T=T*(1-Math.min(.8,c.depth*.18))+12*Math.min(.8,c.depth*.18); /* les strates lissent */
@@ -49,7 +60,7 @@ function armorIso(){
   ZK.forEach(zk=>{const sl=SLOTS.find(x=>x.zone===zk),it=eqOf(sl.k);
     if(!it)return;
     const wsum=it.parts.reduce((a,p)=>a+COMP[p.ct].w,0);
-    const m=it.parts.reduce((a,p)=>a+(ISO[MAT[p.mk].c]||2)*COMP[p.ct].w,0)/wsum;
+    const m=it.parts.reduce((a,p)=>a+(MAT[p.mk].iso!==undefined?MAT[p.mk].iso:(ISO[MAT[p.mk].c]||2))*COMP[p.ct].w,0)/wsum;
     iso+=m*ZONE[zk].avg*Math.min(1.6,it.q);});
   const it2=eqOf('dos');
   if(it2)iso+=2;

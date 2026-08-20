@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#0B0D0C"/>
+  <rect x="0" y="0" width="9" height="64" fill="#C8332B"/>
+  <text x="37" y="35" text-anchor="middle" dominant-baseline="central" font-family="'Ma Shan Zheng','Noto Serif CJK SC','Songti SC','SimSun',serif" font-size="38" fill="#F4F1E8">森</text>
+  <rect x="14" y="55" width="44" height="3" fill="#C8332B"/>
+</svg>

@@ -76,6 +76,58 @@ function placeSlot(pi,si,kind,k){
   questTick('build',1);
   log('Installé : '+(kind==='station'?STATION[k].n:MEUBLE[k].n));
 }
+/* ===== AGRICULTURE ET ÉLEVAGE (7.4 / E.6) =====
+   Un champ se sème avec deux unités d'une plante ; il produit chaque semaine,
+   par formule : fertilité du biome × pluie × saison × fermier présent. La
+   canicule flétrit, l'hiver endort. Le bétail — bêtes apprivoisées mises en
+   enclos — rend viande et parties à la même cadence. */
+const SEEDABLE=()=>Object.keys(MAT).filter(k=>MAT[k].crop);
+function plantCrop(i,mk){
+  const c=here(),P=plots(c),p=P[i];
+  if(!p||p.t!=='champ')return toast('Il faut un champ');
+  if(!SEEDABLE().includes(mk))return toast('Ça ne se sème pas');
+  if((S.mat[mk]||0)<2)return toast('Il faut 2 × '+matName(mk)+' pour semer');
+  S.mat[mk]-=2;if(!S.mat[mk])delete S.mat[mk];
+  p.crop={mk,w:S.week};
+  gainXp('agriculture',60);
+  log('Semé : '+matName(mk)+' (parcelle '+(i+1)+') — première récolte à la semaine');
+}
+function cropYield(c,p){
+  const si=seasonIdx();
+  if(si===3)return 0;                                         /* l'hiver endort */
+  const m=meteo(c),pluie=(METEO[m].pousse||0)+season().pousse;
+  const fermier=S.npcs.some(n=>n.rec&&n.assign==='fermier'&&n.cell===key(c.x,c.y));
+  let y=6*(BIOME[c.b].fert+.15)*(1+pluie)*(fermier?1.5:1)*(1+lv('agriculture')*.02);
+  if(m==='canicule')y*=.3;
+  return Math.max(1,Math.round(y));
+}
+function weeklyFarms(r){
+  if(!S.claims.length)return;
+  const prod={};let n=0;
+  S.claims.forEach(k=>{const c=S.world[k];if(!c||!c.plots)return;
+    c.plots.forEach(p=>{if(!p||p.t!=='champ'||!p.crop)return;
+      const y=cropYield(c,p);if(!y)return;
+      S.mat[p.crop.mk]=(S.mat[p.crop.mk]||0)+y;if(PLANTE[p.crop.mk])addFood(p.crop.mk,y);
+      prod[p.crop.mk]=(prod[p.crop.mk]||0)+y;n++;
+      gainXp('agriculture',y*3);});});
+  if(n)r.push('champs : '+Object.keys(prod).map(k=>'+'+prod[k]+' '+matName(k)).join(', '));
+  /* bétail */
+  const enclos=countPlot('champ');
+  const betail=S.comps.filter(c=>c.type==='bete'&&c.mode==='betail'&&!c.dead);
+  if(betail.length){
+    if(!enclos){r.push('<span class="bd">le bétail n\'a pas d\'enclos — rien ne vient</span>');return;}
+    let viande=0,parts=0;
+    betail.slice(0,enclos*3).forEach(b=>{                      /* trois bêtes par champ */
+      const q=1+Math.floor(b.lv/6);
+      addFood(foodKey('viande',b.el,MEATGRP[b.el]),q);viande+=q;
+      if(Math.random()<.35){const d=pick(PARTS.slice(1));addFood(foodKey(d.k,d.el,d.grp),1);parts++;}
+      b.mood=Math.min(100,b.mood+2);
+      compXp(b,20);});
+    gainXp('dressage',betail.length*15);
+    r.push('élevage : +'+viande+' viande'+(parts?', +'+parts+' partie'+(parts>1?'s':''):''));
+    if(betail.length>enclos*3)r.push('<span class="bd">'+(betail.length-enclos*3)+' bête(s) sans enclos</span>');
+  }
+}
 /* --- lecture du bâti --- */
 function eachBuilding(fn){
   S.claims.forEach(kk=>{const c=S.world[kk];if(!c||!c.plots)return;

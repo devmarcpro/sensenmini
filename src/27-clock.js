@@ -13,9 +13,14 @@ function tickClock(dt){
   }
   const w=Math.floor(S.day/WEEK);
   if(w>S.week){S.week=w;weekly();}
+  const si=seasonIdx();
+  if(S.season===undefined)S.season=si;
+  else if(si!==S.season){S.season=si;const s=SEASON[si];
+    cutIn(s.g,s.n,si===3?'le froid mord, le vivant se raréfie':si===0?'tout repousse plus vite':si===1?'chaleur — la canicule guette':'les récoltes déclinent');}
 }
 function weekly(){
   let inf=0,calm=0;
+  regenStocks();                                    /* les gisements se reconstituent (3.3) */
   for(const k in S.world){
     const c=S.world[k];
     if((c.poi==='donjon'||c.poi==='camp')&&c.cleared<3){
@@ -49,6 +54,6 @@ function weekly(){
       else c.mood=Math.max(15,c.mood-6);
       c.hp=Math.min(c.max,c.hp+c.max*.4);
     }});
-  weeklyTowns(r);weeklyKingdom(r);weeklyGuild(r);
+  weeklyTowns(r);weeklyFarms(r);weeklyKingdom(r);weeklyGuild(r);
   log('<span class="in">Semaine '+S.week+'</span>'+(r.length?' · '+r.join(' · '):' · rien à signaler'));
 }

@@ -13,12 +13,14 @@ function pRecolte(){
   }).join('')+'</div>';
   h+=grp('掘','SUR PLACE',BIOME[c.b].n+' · strate '+c.depth);
   h+='<div class="matlist">'+cellMats(c).map(mk=>{
-    const m=MAT[mk],ok=canHarvest(mk),t=harvestTime(mk);
-    return '<button class="mat'+(S.target===mk?' sel':'')+'" data-harv="'+mk+'" '+(ok?'':'disabled')+'>'
-     +'<b style="color:'+EL[domi(matVec(mk))].c+'">'+CAT[m.c].g+'</b>'+m.n
+    const m=MAT[mk],ok=canHarvest(mk),t=harvestTime(mk),st2=stockOf(c,mk),sm=stockMax(c,mk);
+    return '<button class="mat'+(S.target===mk?' sel':'')+'" data-harv="'+mk+'" '+(ok&&st2>0?'':'disabled')+'>'
+     +'<b style="color:'+EL[domi(matVec(mk))].c+'">'+CAT[m.c].g+'</b>'+(m.col?'<span class="matsw" style="background:'+m.col+'"></span>':'')+m.n
      +'<small>'+CAT[m.c].n+' · dureté '+m.d+' · '+SKILLS[CAT[m.c].sk].n+'</small>'
+     +'<small style="color:'+(st2>0?'var(--dim)':'var(--zhu)')+'">'+(st2>0?'gisement '+st2+' / '+sm:'épuisé — revient la semaine prochaine')+'</small>'
      +'<small style="color:'+(ok?'var(--jade)':'var(--zhu)')+'">'+(ok?t.toFixed(2)+' s / coup · '+m.v+' or l\'unité':'l\'outil rebondit')+'</small></button>';
   }).join('')+'</div>';
+  h+='<div class="meta">Un gisement pris ne revient qu\'à la semaine : les cases sauvages et les claims « ressources naturelles » se régénèrent, les autres claims gardent ce qu\'on leur a pris.</div>';
   return h;
 }
 

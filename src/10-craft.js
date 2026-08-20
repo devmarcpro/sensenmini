@@ -53,6 +53,7 @@ function assembleFrom(kind,fn,picks){
   const facteur=Math.max(.5,Math.min(1.5,.5+jet/2));   // le maître tire le meilleur, le débutant gâche
   const q=+(qmoy*facteur).toFixed(2);
   const it=mkItem(kind,fn,parts,q);
+  it.slots=kind==='arme'?craftSlots(q):0;
   S.items.push(it);
   gainXp('assemblage',parts.reduce((a,p)=>a+MAT[p.mk].d,0)*20);questTick('craft',1);
   cutIn('鍛',it.nom,QNAME(q)+' · qualité '+q.toFixed(2));
@@ -69,7 +70,8 @@ function assembleArmor(slotK,picks){
   const q=+(qmoy*Math.max(.5,Math.min(1.5,.5+jet/2))).toFixed(2);
   const it=mkItem('armure',slotK,parts,q);
   it.cons=COMP[major.ct].cons;
-  it.nom=SLOTS.find(s2=>s2.k===slotK).n+' — '+CONS[it.cons].n+' de '+matName(major.mk);
+  it.nom=armorName(slotK,it.cons,major.mk);
+  it.slots=craftSlots(q);
   S.items.push(it);
   gainXp('assemblage',parts.reduce((a,p)=>a+MAT[p.mk].d,0)*20);questTick('craft',1);
   cutIn('鍛',it.nom,QNAME(q)+' · qualité '+q.toFixed(2));
@@ -92,7 +94,46 @@ function mkItem(kind,fn,parts,q){
     nom:(def?def.n:'Pièce')+' de '+matName(parts[0].mk)};
 }
 const itemVec=it=>it.vec||[.2,.2,.2,.2,.2];
+/* « Cuirasse — Mailles de Fer », mais « Brassards — Cuir » quand la construction est le matériau */
+const armorName=(sl,cons,mk)=>SLOTS.find(s2=>s2.k===sl).n+' — '+(CONS[cons].n===matName(mk)?CONS[cons].n:CONS[cons].n+' de '+matName(mk));
+/* pour un composant, une pièce valide tirée parmi des matériaux candidats — mêmes règles que l'atelier.
+   Sans candidat valide, on retombe sur la matière de base du composant. */
+function partFor(ct,mats){
+  const C=COMP[ct],ok=[];
+  (mats||[]).forEach(mk=>{
+    if(!MAT[mk])return;
+    if(C.forms.includes('brut')&&C.raw.includes(mk)){ok.push({ct,f:'brut',mk});return;}
+    const f=C.forms.find(f2=>f2!=='brut'&&FORM[f2]&&formOk(f2,mk));
+    if(f)ok.push({ct,f,mk});});
+  if(ok.length)return pick(ok);
+  const f=C.forms.find(f2=>f2!=='brut'&&FORM[f2])||'brut';
+  const base=f==='brut'?(C.raw[0]||'os'):f==='lingot'?'fer':f==='planche'?'chene':f==='taillee'?'pierre':f==='tissu'?'lin':f==='tanne'?'cuir':f==='brique'?'argile':'gres';
+  return {ct,f,mk:base};
+}
+/* sertissures d'un objet d'atelier : l'atelier améliore, modestement (A.12) */
+const craftSlots=q=>q>=1.6?2:q>=1?1:0;
+/* valeur d'usage approximative, pour comparer deux objets du même genre */
+function itemScore(it){
+  if(it.kind==='arme'){const F=FUNC[it.fn];return F.d[0]*(F.d[1]+1)/2*F.spd*(it.durBase/20)*it.q*(1+(it.aff||[]).length*.12);}
+  if(it.kind==='armure')return it.durBase*it.q*(1+(it.aff||[]).length*.12);
+  return it.dur;
+}
+/* fond un objet : un tiers de sa valeur */
+function scrapItem(i){const it=S.items[i];if(!it)return 0;const g=Math.round(itemValue(it)/3);S.or+=g;S.items.splice(i,1);return g;}
+/* le Fondeur : fond le butin banal qui ne bat pas ce qu'on porte (ni les artefacts, ni le rare) */
+function autoScrap(){
+  let g=0,n=0;
+  for(let i=S.items.length-1;i>=0;i--){const it=S.items[i];
+    if(it.artefact||(it.rar||0)>=2||it.kind==='outil'||it.kind==='statue')continue;
+    const worn=it.kind==='arme'?weapon():S.eq[it.slot];
+    if(worn&&itemScore(it)<=itemScore(worn)){g+=scrapItem(i);n++;}
+    else if(!worn&&S.items.filter(x=>x.kind===it.kind&&x.slot===it.slot).length>3){g+=scrapItem(i);n++;}
+  }
+  if(n)log('Fondeur : '+n+' objet'+(n>1?'s':'')+' fondu'+(n>1?'s':'')+', +'+g+' or');
+}
 function itemValue(it){
+  if(it.val)return it.val;
+  if(!it.parts||!it.parts.length)return 1;
   const wsum=it.parts.reduce((a,p)=>a+COMP[p.ct].w,0);
   const base=it.parts.reduce((a,p)=>a+MAT[p.mk].v*(COMP[p.ct].w/wsum)*3,0);
   return Math.round(base*1.5*it.q);
@@ -100,6 +141,7 @@ function itemValue(it){
 /* équipement */
 function equipItem(i){
   const it=S.items[i];if(!it)return;
+  if(it.kind==='statue')return toast('Une statue se pose, ne se porte pas — vends-la, ou garde-la pour le prestige');
   let slot=it.slot;
   if(it.kind==='outil'||it.kind==='arme'){
     if(S.eq.main1&&!S.eq.main2)slot='main2';else slot='main1';

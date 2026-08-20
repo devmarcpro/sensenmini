@@ -93,15 +93,90 @@ function giveGift(n){
   if(t>=4&&!n.recipe)teachRecipe(n);
   log(n.nom+' accepte le présent — relation '+Math.round(n.rel)+' ('+TIERN[t]+')');
 }
+/* ===== DIALOGUE (E.23) : un menu contextuel, pas un arbre =====
+   La réplique d'ambiance sort d'un pool de gabarits à conditions (métier,
+   humeur, heure, météo à venir, réputation, relation, événements récents),
+   tirage pondéré et anti-répétition. La profondeur vient des conditions. */
+const DIAL=[
+  /* réputation et relation */
+  {id:'hostile',w:5,c:n=>repTier(repLocale())<=1,t:n=>pick(['Passe ton chemin.','On sait qui tu es. Fais vite.','Je n\'ai rien à te dire.'])},
+  {id:'honore',w:3,c:n=>repTier(repLocale())>=4,t:n=>pick(['C\'est un honneur. Tout le village parle de toi.','Si tu as besoin de quoi que ce soit…','Les enfants veulent savoir si tu as vraiment vidé la faille.'])},
+  {id:'intime',w:4,c:n=>relTier(n.rel)>=4,t:n=>pick(['Entre, tu es chez toi.','Je gardais ça pour toi.','Tu sais que tu peux compter sur moi.'])},
+  {id:'inconnu',w:2,c:n=>relTier(n.rel)<=1,t:n=>pick(['On ne se connaît pas, je crois.','Encore un voyageur.','Hm.'])},
+  /* humeur */
+  {id:'maussade',w:3,c:n=>n.mood<35,t:n=>pick(['Mauvaise journée. Ne me demande pas.','Tout va de travers en ce moment.','Laisse-moi.'])},
+  {id:'chaleureux',w:3,c:n=>n.mood>80,t:n=>pick(['Quelle belle journée !','Je ne me suis jamais senti aussi bien.','Viens, assieds-toi.'])},
+  /* heure et météo */
+  {id:'aube',w:2,c:n=>phase()==='aube',t:n=>pick(['Tu es matinal.','Le jour se lève à peine et tu es déjà là.'])},
+  {id:'crepuscule',w:2,c:n=>phase()==='crépuscule',t:n=>pick(['Rentre avant la nuit, les bêtes sortent.','Le soir tombe. On ferme bientôt.'])},
+  {id:'extreme',w:6,c:n=>METEO[meteo(here(),S.day+1)].extreme,t:n=>'Le ciel se prépare : '+METEO[meteo(here(),S.day+1)].n.toLowerCase()+' demain. Abrite-toi.'},
+  {id:'pluie',w:2,c:n=>['pluie','orage'].includes(meteo(here())),t:n=>pick(['Cette pluie fait du bien aux champs.','Encore un jour de pluie.'])},
+  {id:'froid',w:3,c:n=>tempC(here())<3,t:n=>pick(['Quel froid. Couvre-toi.','Par ce froid, un foyer vaut de l\'or.'])},
+  {id:'hiver',w:2,c:n=>seasonIdx()===3,t:n=>pick(['Rien ne pousse l\'hiver. On vit sur les réserves.','Encore deux lunes et le printemps.'])},
+  /* lieu et monde */
+  {id:'corr',w:3,c:n=>here().corr>60,t:n=>pick(['La corruption monte. On entend des choses, la nuit.','Personne ne va plus vers les ruines.'])},
+  {id:'calme',w:2,c:n=>here().cleared>=3,t:n=>pick(['Depuis que tu nettoies les environs, on dort mieux.','Les routes sont plus sûres qu\'avant.'])},
+  {id:'vacance',w:5,c:n=>{const k=kingdomAt(S.pos[0],S.pos[1]);return k&&k.transition>0;},t:n=>pick(['Le trône est vide. Tout le monde retient son souffle.','Sans souverain, les gardes font ce qu\'ils veulent.'])},
+  {id:'loi',w:2,c:n=>lawsHere().laws.length>0,t:n=>'Ici, '+pick(lawsHere().laws).txt+' est interdit. Je dis ça pour toi.'},
+  /* métiers */
+  {id:'forgeron',w:3,c:n=>n.job==='forgeron',t:n=>pick(['Le fer chante quand il est bien chauffé.','Un bon lingot, c\'est la moitié de la lame.','Apporte-moi de l\'argent et je te montrerai quelque chose.'])},
+  {id:'mineur',w:3,c:n=>n.job==='mineur',t:n=>pick(['Plus on creuse, plus la roche durcit. Et plus elle paie.','Sous le calcaire, il y a de la pierre. Sous la pierre, le basalte.'])},
+  {id:'vendeur',w:3,c:n=>n.job==='vendeur',t:n=>pick(['Les prix, c\'est la réputation qui les fait.','Ma bourse se vide vite. Reviens la semaine prochaine.'])},
+  {id:'garde',w:3,c:n=>n.job==='garde',t:n=>pick(['Pas de grabuge.','La nuit, on double les rondes.'])},
+  {id:'fermier',w:3,c:n=>n.job==='fermier',t:n=>pick(['Ici la terre est '+(BIOME[here().b].fert>.7?'généreuse':'ingrate')+'.','Deux graines, un champ, une semaine : c\'est tout le secret.'])},
+  {id:'cuisinier',w:3,c:n=>n.job==='cuisinier',t:n=>pick(['Cinq éléments dans l\'assiette, et le corps s\'en souvient.','La viande du marécage a un goût de fer.'])},
+  {id:'herboriste',w:3,c:n=>n.job==='herboriste',t:n=>pick(['Les herbes se cueillent à l\'aube.','Un œil de bête et trois herbes : de quoi voir la nuit.'])},
+  {id:'bucheron',w:3,c:n=>n.job==='bucheron',t:n=>pick(['Le chêne, c\'est le manche. L\'ébène, c\'est le luxe.','On ne coupe pas une forêt de mana sans y laisser quelque chose.'])},
+  {id:'eleveur',w:3,c:n=>n.job==='eleveur',t:n=>pick(['Une bête apprivoisée mange autant qu\'un homme.','Mets-les dans un enclos, elles te le rendront.'])},
+  {id:'transporteur',w:3,c:n=>n.job==='transporteur',t:n=>pick(['Une heure par cellule, à pied. Les routes aident.','J\'ai vu des royaumes que tu n\'imagines pas.'])},
+  {id:'couturier',w:3,c:n=>n.job==='couturier',t:n=>pick(['Le lin respire, la laine tient chaud.','La soie, c\'est la forêt de mana qui la donne.'])},
+  /* générique */
+  {id:'poli',w:1,c:n=>true,t:n=>pick(['Bonne journée.','Que les cinq te gardent.','On fait aller.','Tu as vu le ciel, ce matin ?'])},
+];
+/* rumeur : à partir de « familier », un PNJ révèle parfois un lieu proche encore inconnu */
+function rumeur(n){
+  if(relTier(n.rel)<2||n.rumW===S.week||Math.random()>.25)return null;
+  let best=null,bd=99;
+  for(let dx=-6;dx<=6;dx++)for(let dy=-6;dy<=6;dy++){const c=cell(S.pos[0]+dx,S.pos[1]+dy);
+    if(c.seen||!c.poi)continue;const d=Math.abs(dx)+Math.abs(dy);if(d<bd){bd=d;best=c;}}
+  if(!best)return null;
+  best.seen=true;n.rumW=S.week;
+  const ns=best.y<S.pos[1]?'nord':best.y>S.pos[1]?'sud':'',eo=best.x>S.pos[0]?'est':best.x<S.pos[0]?'ouest':'';
+  const dir=ns&&eo?'au '+ns+'-'+eo:ns?'au '+ns:'à l\''+eo;
+  return 'On dit qu\'il y a '+(best.poi==='village'?'un village':best.poi==='donjon'?'une ruine qu\'on évite':best.poi==='camp'?'un camp de maraudeurs':best.poi==='sanctuaire'?'un vieil autel':'un filon')+' '+dir+', à '+bd+' cellule'+(bd>1?'s':'')+'. — '+POI[best.poi].n+' révélé sur la carte.';
+}
 function talkTo(n){
   const day=Math.floor(S.day);
   if(n.talk===day)return toast('Vous avez déjà parlé aujourd\'hui');
   n.talk=day;
-  const g=(1.2+st('cha')*.15)*astroMul(n);
+  const g=(1.2+st('cha')*.15)*astroMul(n)*(d20()+st('cha')/2>=14?1.5:1);   /* jet de Charisme pour bonus */
   n.rel=Math.min(100,n.rel+g);
   gainXp('negociation',5);
-  const k=npcKnows(n);
-  log(n.nom+' : '+(k||'quelques mots polis.'));
+  n.said=n.said||[];
+  let pool=DIAL.filter(d=>!n.said.includes(d.id)&&d.c(n));
+  if(!pool.length)pool=DIAL.filter(d=>d.c(n));            /* plutôt se répéter que se taire */
+  const tot=pool.reduce((a,d)=>a+d.w,0);let r=Math.random()*tot,d=pool[0];
+  for(const x of pool){r-=x.w;if(r<=0){d=x;break;}}
+  if(d){n.said.push(d.id);if(n.said.length>3)n.said.shift();}
+  const k=npcKnows(n),ru=rumeur(n);
+  log('<b>'+n.nom+'</b> : « '+(d?d.t(n):'…')+' »'+(ru?' '+ru:k&&Math.random()<.5?' '+k:''));
+}
+/* entraîneur (A.1 / 6.4) : 20 or × niveau actuel → +10 de potentiel dans la compétence de son métier.
+   Un PNJ ne forme que qui il connaît un peu, et jamais au-delà de ce qu'il sait lui-même. */
+const trainSkill=n=>JOBS[n.job].sk;
+const trainCost=n=>Math.max(20,20*lv(trainSkill(n)))*(repMulPrix()||1)|0;
+function trainWith(n){
+  if(relTier(n.rel)<1)return toast('Il ne te connaît pas assez pour t\'apprendre quoi que ce soit');
+  const sk=trainSkill(n);
+  if(lv(sk)>=n.lv+5)return toast(n.nom+' n\'a plus rien à t\'apprendre en '+SKILLS[sk].n);
+  const c=trainCost(n);
+  if(S.or<c)return toast('Il faut '+c+' or');
+  if(S.sk[sk].pot>=200)return toast('Potentiel déjà au maximum');
+  S.or-=c;n.or=Math.min(n.orMax*2,n.or+c);
+  S.sk[sk].pot=Math.min(200,S.sk[sk].pot+10);
+  n.rel=Math.min(100,n.rel+1);
+  gainXp(sk,c*.5);
+  log(n.nom+' t\'entraîne : '+SKILLS[sk].n+' — potentiel '+Math.round(S.sk[sk].pot)+' (−'+c+' or)');
 }
 /* 75+ : l'artisan enseigne une recette exotique — 3e source du craft (4.2.1) */
 function teachRecipe(n){

@@ -24,7 +24,7 @@ function starterKit(){
 /* ===== PARCHEMINS DE RECETTE (placeholder du loot de donjon) ===== */
 function maybeScroll(mk){
   if(BASEMAT.includes(mk))return;
-  if(Math.random()>0.012)return;
+  if(Math.random()>0.004)return;
   const cts=Object.keys(COMP).filter(ct=>
     COMP[ct].raw.includes(mk)||COMP[ct].forms.some(f=>f!=='brut'&&FORM[f]&&formOk(f,mk)));
   if(!cts.length)return;

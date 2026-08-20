@@ -1,6 +1,8 @@
 /* Sensen Mini — 35-panel-magie.js
    Onglet pMagie */
 
+function passifTxt(p,lvl){return Object.keys(p).map(k=>{const v=p[k]*sf(lvl||1),sg=v>0?'+':'';
+  return (PASSIF_TXT[k]||k).replace('{p}',sg+Math.round(v*100)).replace('{v}',sg+(+v.toFixed(1)));}).join(' · ');}
 function pMagie(){
   const w=weapon(),lvw=lv(w?w.fn:'epee');
   let h='<p class="hint">Les modules ne se craftent pas : ils se lisent. Un livre est consommé à la lecture, réussite ou échec. Les modificateurs altèrent le module suivant, façon Noita — et tout module lancé pose un segment dans la chaîne, exactement comme un coup d\'arme.</p>';
@@ -68,7 +70,8 @@ function pMagie(){
     return '<div class="mat"><b style="color:'+(DOMAIN[m.dom].v&&Object.keys(DOMAIN[m.dom].v).length?EL[domi(domVec(m.dom))].c:'#B9A7D6')+'">'
      +DOMAIN[m.dom].g+'</b>'+d.n+'<small>'+DOMAIN[m.dom].n+' · '+d.t+' · niveau '+m.lv+'</small>'
      +'<small>'+(d.mana!==undefined?'mana '+Math.round(d.mana/sf(m.lv)):'passif')
-     +(d.pow?' · puissance '+Math.round(d.pow*sf(m.lv)):'')+'</small></div>';}).join('')+'</div>'
+     +(d.pow?' · puissance '+Math.round(d.pow*sf(m.lv)):'')+(d.heal?' · soin '+Math.round(d.heal*sf(m.lv)):'')+(d.shield?' · endurance +'+Math.round(d.shield*sf(m.lv)):'')
+     +(d.x?' · '+d.x:'')+(d.p?' · '+passifTxt(d.p,m.lv):'')+'</small></div>';}).join('')+'</div>'
    :'<p class="hint">Aucun module. Lis un livre.</p>';
   return h;
 }

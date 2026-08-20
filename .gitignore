@@ -1,3 +1,8 @@
 node_modules/
 dist/
 .DS_Store
+.shots/
+
+# archives locales du prototype Claude web (dist/ les remplace)
+sensen-mini.zip
+sensen-mini.html

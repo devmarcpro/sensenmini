@@ -58,8 +58,8 @@ const nStruct=()=>PK.reduce((a,k)=>a+countPlot(k),0)+MK2.reduce((a,k)=>a+countSl
 const nSpecial=()=>countSlot('etal')+countSlot('hall')+countPlot('tourelle')
   +Object.keys(STATION).reduce((a,k)=>a+countSlot(k),0);
 const upkeep=()=>Math.round((nAssign()*10+nSpecial()*25)*(S.gov?GOV[S.gov].tax:1));
-const defense=()=>S.npcs.filter(n=>n.rec&&n.assign==='garde').reduce((a,n)=>a+n.lv*6,0)
-  +(S.dette>200?0:countPlot('tourelle')*24)+countPlot('mur')*15
+const defense=()=>((S.detteW||0)>=4?0:S.npcs.filter(n=>n.rec&&n.assign==='garde').reduce((a,n)=>a+n.lv*6,0))
+  +((S.detteW||0)>=2?0:countPlot('tourelle')*24)+countPlot('mur')*15
   +Math.min(20,countPlot('route')*3);
 /* --- résolution hors-site par FORMULES, jamais par simulation (E.6) --- */
 function weeklyKingdom(r){
@@ -73,7 +73,7 @@ function weeklyKingdom(r){
     const moodF=Math.max(.4,Math.min(1.2,n.mood/100*1.5));
     const zone=S.world[n.cell]||here();
     const rich=zone.res||.5;
-    const rend=(1+n.lv*.35)*moodF*7;
+    const rend=(1+n.lv*.35)*moodF*7*((S.detteW||0)>=2?.75:1);   /* 2 semaines impayées : productivité −25 % (14.6) */
     if(n.assign==='mineur'||n.assign==='bucheron'||n.assign==='herboriste'){
       const cats=n.assign==='mineur'?['metal','roche','mineral','gemme','fossile']:n.assign==='bucheron'?['bois']:['vegetal'];
       const pool=cellMats(zone).filter(m=>cats.includes(MAT[m].c));
@@ -81,7 +81,7 @@ function weeklyKingdom(r){
         S.mat[m]=(S.mat[m]||0)+q;prod.mat+=q;}
     } else if(n.assign==='fermier'||n.assign==='eleveur'||n.assign==='cuisinier'){
       const champs=(zone.plots||[]).filter(p=>p&&p.t==='champ').length;
-      const pluie=METEO[meteo(zone)].pousse||0;
+      const pluie=(METEO[meteo(zone)].pousse||0)+season().pousse;
       const q=Math.max(1,Math.round(rend*2*(BIOME[zone.b].fert+.2)*(1+champs*.18)*(1+pluie)));
       S.vivres=(S.vivres||0)+q;prod.vivres+=q;
     } else if(n.assign==='forgeron'||n.assign==='couturier'){
@@ -119,11 +119,16 @@ function weeklyKingdom(r){
     if(S.tresor>=up){S.tresor-=up;r.push('entretien −'+up+' or');}
     else{S.dette+=up-S.tresor;S.tresor=0;r.push('<span class="bd">entretien impayé — dette '+Math.round(S.dette)+'</span>');}
   }
+  /* paliers de dette (14.6) : 1 semaine humeur −5 · 2 semaines productivité −25 %, tourelles hors service ·
+     4+ semaines les gardes cessent, un PNJ peut partir chaque semaine. Tout se rétablit à la régularisation. */
   if(S.dette>0){
+    S.detteW=(S.detteW||0)+1;
     S.npcs.filter(n=>n.rec).forEach(n=>n.mood-=5);
-    if(S.dette>400){const f=S.npcs.filter(n=>n.rec).sort((a,b)=>a.rel-b.rel)[0];
-      if(f){f.rec=false;f.assign=null;r.push('<span class="bd">'+f.nom+' quitte le territoire</span>');}}
-  }
+    if(S.detteW===2)r.push('<span class="bd">deux semaines de dette : productivité −25 %, tourelles hors service</span>');
+    if(S.detteW>=4){const f=S.npcs.filter(n=>n.rec).sort((a,b)=>a.rel-b.rel)[0];
+      if(f&&Math.random()<.6){f.rec=false;f.assign=null;r.push('<span class="bd">'+f.nom+' quitte le territoire</span>');}}
+    r.push('<span class="bd">régularise le trésor (国 ROYAUME → déposer) avant que ça n\'empire</span>');
+  } else if(S.detteW){S.detteW=0;r.push('<span class="gd">dette réglée — le territoire respire</span>');}
   /* raid (E.7) : jet hebdomadaire, force ∝ valeur du territoire, jamais scalée sur le joueur */
   const corrMoy=S.claims.reduce((a,k2)=>a+(S.world[k2]?S.world[k2].corr:0),0)/S.claims.length;
   if(Math.random()<Math.min(.45,corrMoy/300+S.claims.length*.018)){
@@ -197,6 +202,14 @@ function diplo(i,type){
   if(jet>=dd){k.diplo=type;k.rep=Math.min(100,k.rep+10);
     cutIn('盟',DIPLO[type],'signé avec '+k.nom);}
   else{k.rep-=5;log('<span class="bd">'+k.nom+' refuse : '+DIPLO[type]+' (jet '+jet.toFixed(1)+' contre DD '+dd+')</span>');}
+}
+/* trésor : dépôts et retraits libres (7.6 / 14.6) — constituer une réserve est encouragé */
+function deposit(n){
+  n=Math.min(S.or,Math.max(0,Math.floor(n)));if(!n)return;
+  S.or-=n;
+  if(S.dette>0){const d=Math.min(S.dette,n);S.dette-=d;n-=d;if(d)log('Dette remboursée : −'+d+' or'+(S.dette>0?' (reste '+Math.round(S.dette)+')':''));}
+  S.tresor+=n;
+  if(n)log('Déposé '+n+' or au trésor');
 }
 function eatVivres(){
   if(!(S.vivres>0))return toast('Aucun vivre');

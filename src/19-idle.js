@@ -21,6 +21,8 @@ const AUTOS={
     d:'vend seule les matériaux excédentaires quand tu passes dans un village ouvert'},
   veilleur:{g:'眠',n:'Veilleur',max:1,cost:1200,r:1,
     d:'te fait dormir quand la nuit tombe sur une cellule où tu as un lit'},
+  fondeur:{g:'熔',n:'Fondeur',max:1,cost:700,r:1,
+    d:'fond seul le butin commun et inhabituel qui ne vaut pas ce que tu portes — un tiers de sa valeur en or'},
 };
 const AK=Object.keys(AUTOS);
 const auto=k=>(S.auto&&S.auto[k])||0;
@@ -91,7 +93,7 @@ function offline(sec){
       r.push(n+' créatures abattues, +'+g+' or');
     }
   } else if(S.occ==='recolte'&&S.target&&rt.harv>0){
-    const n=Math.round(rt.harv*min*eff);
+    const n=takeStock(c,S.target,Math.round(rt.harv*min*eff));
     if(n>0){const m=MAT[S.target];
       S.mat[S.target]=(S.mat[S.target]||0)+n;
       if(PLANTE[S.target])addFood(S.target,n);

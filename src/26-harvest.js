@@ -13,7 +13,8 @@ function toolFor(cat){
   return best;
 }
 const canHarvest=mk=>{const m=MAT[mk],t=toolFor(m.c);return t.dur*t.q>=m.d*.5;};
-function harvestTime(mk){const m=MAT[mk],t=toolFor(m.c);return m.d/(t.dur*t.q*sf(lv(CAT[m.c].sk)));}
+/* A.2, plus un temps de geste incompressible : l'outil le plus dur ne fait pas disparaître le coup */
+function harvestTime(mk){const m=MAT[mk],t=toolFor(m.c);return .6+m.d/(t.dur*t.q*sf(lv(CAT[m.c].sk)));}
 function harvestTick(dt){
   const mk=S.target;if(!mk)return;
   const m=MAT[mk];
@@ -22,7 +23,11 @@ function harvestTick(dt){
   const t=harvestTime(mk);
   if(harvT>=t){
     harvT-=t;
-    const qte=1+Math.floor(lv(CAT[m.c].sk)/10);
+    const c=here();
+    if(stockOf(c,mk)<=0){
+      log('<span class="bd">'+m.n+' : le gisement est épuisé ici — il se reconstitue la semaine prochaine.</span>');
+      S.occ='repos';S.target=null;S.resume=null;return;}
+    const qte=takeStock(c,mk,1+Math.floor(lv(CAT[m.c].sk)/10));
     S.mat[mk]=(S.mat[mk]||0)+qte;
     if(PLANTE[mk])addFood(mk,qte);
     gainXp(CAT[m.c].sk,m.d);questTick('harvest',qte,mk);noteRate('harv');
@@ -48,8 +53,10 @@ function pierce(dt){
   }
 }
 function eat(mk){
-  const m=MAT[mk];if(!m.nutr||!(S.mat[mk]>0))return;
+  const m=MAT[mk];if(m.nutr===undefined||!(S.mat[mk]>0))return;
   S.mat[mk]--;if(!S.mat[mk])delete S.mat[mk];
+  if(S.food[mk])useFood(mk,1);
+  if(m.tox){poisonBy(mk);paint();return;}
   S.faim=Math.min(100,S.faim+m.nutr*.5);
   log('Tu manges '+m.n+' cru. Une cuisine ferait bien mieux.');
   paint();

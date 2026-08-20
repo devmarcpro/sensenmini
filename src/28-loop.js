@@ -8,6 +8,7 @@ function step(dt){
   tickClock(dt);
   S.faim=Math.max(0,S.faim-dt/90*(S.race==='sylvide'?.5:1));
   tickBuffs(dt);
+  if(buffOf('regenhp'))S.hp=Math.min(maxHp(),S.hp+buffOf('regenhp')*dt);
   /* stress thermique : malus progressifs, puis dégâts (E.28) */
   const ts=tempStress();
   if(ts){
@@ -18,11 +19,14 @@ function step(dt){
   manaT+=dt;
   if(manaT>=1){manaT=0;
     const chance=S.occ==='repos'?.5:.125;
+    /* l'XP est fixe par proc : sinon le rendement croît avec le niveau et la courbe s'emballe.
+       On ne médite pas affamé : sous 25 de faim, le mana revient mais n'apprend rien. */
     if(Math.random()<chance*(S.race==='elfe'?1.2:1)){const r=1+lv('meditation')*.2;
-      S.mana=Math.min(maxMana(),S.mana+r);gainXp('meditation',r*45);}}
+      S.mana=Math.min(maxMana(),S.mana+r);if(S.faim>25)gainXp('meditation',30);}}
   if(S.mana>maxMana())S.mana=maxMana();
   if(S.faim<=0&&Math.random()<dt/30)S.hp=Math.max(1,S.hp-maxHp()*.01);
   if(S.occ==='repos'){
+    if(S.st&&S.st.length)tickStatus(S,dt,true);
     S.end=Math.min(100,S.end+9*dt);
     if(S.faim>25)S.hp=Math.min(maxHp(),S.hp+maxHp()*.015*dt*(S.thermal||1));
     if(S.resume&&S.end>=98&&((S.resume!=='combat'&&S.resume!=='donjon')||S.hp>=maxHp()*.9)){S.occ=S.resume;S.resume=null;sceneMode='';}
@@ -35,6 +39,7 @@ function step(dt){
   } else if(S.occ==='combat'||S.occ==='donjon'){
     combatTick(dt);
   } else {
+    if(S.st&&S.st.length)tickStatus(S,dt,true);          /* poison et saignement courent aussi hors combat */
     S.end=Math.min(100,S.end+1.2*dt);
     if(S.occ==='recolte')harvestTick(dt);
     else if(S.occ==='atelier')craftTick(dt);
@@ -46,19 +51,23 @@ function step(dt){
   if(auto('marmite')&&(S.faim<40||avgPot()<70)){
     const p2={};Object.keys(S.food).forEach(k=>{const i=foodInfo(k);if(!p2[i.el]&&S.food[k]>0)p2[i.el]=k;});
     const c5=Object.values(p2);
-    if(c5.length>=3&&hasStation('cuisine'))cook(c5.slice(0,5));}
+    if(c5.length>=3&&hasStation('cuisine'))cook(c5.slice(0,5));
+    else if(S.faim<40){                          /* sans cuisine, elle sert cru plutôt que de laisser jeûner */
+      const k=Object.keys(S.food).find(x=>S.food[x]>0);
+      if(k)eatFood(k);else{const m=Object.keys(S.mat).find(x=>MAT[x].nutr&&S.mat[x]>0);if(m)eat(m);}}}
+  if(auto('fondeur')&&rateT<dt)autoScrap();     /* une fois par minute, juste après rollRates */
   if(auto('intendance')&&npcsHere().length){
     const gros=Object.keys(S.mat).filter(k=>S.mat[k]>=120&&MAT[k].v<=40);
     if(gros.length)sellMat(gros[0]);}
   if(auto('veilleur')&&isNight()&&S.occ!=='dormir'&&S.occ!=='donjon'&&litIci())dormir(false);
   uiT+=dt;
-  if(uiT>1){uiT=0;if(!ptrDown&&['recolte','sac','skills','cell','atelier','equip','pnj','royaume','guilde','table','comps','batir','autos','ville'].includes(tab))paint();}
+  if(uiT>1){uiT=0;tickTips();if(!ptrDown&&['recolte','sac','skills','cell','atelier','equip','pnj','royaume','guilde','table','comps','batir','autos','ville'].includes(tab))paint();}
 }
 
 function combatTick(dt){
   /* endurance : longue et lente, régénération après 1.5 s sans dépense (A.6.1) */
   if(endLock>0)endLock-=dt;
-  else S.end=Math.min(100,S.end+((S.guard?2:6)+passives().regen+buffOf('regen'))*dt);
+  else S.end=Math.min(100,S.end+((S.guard?2:6)+passives().regen+buffOf('regen')+gemEndurance())*dt);
   if(S.hp<maxHp()*.25&&E&&!hasStatus(S,'enracine')){
     S.resume=S.occ;S.occ='repos';E=null;S.seg=[];S.bonus=0;sceneMode='';
     log('<span class="bd">Tu romps le contact et te replies.</span>');return;}
@@ -78,7 +87,10 @@ function combatTick(dt){
       S.bonus=Math.max(0,S.bonus-transBonus(prev,last));}}
   tickStatus(E,dt,false);
   tickStatus(S,dt,true);
-  if(E&&hasStatus(E,'etourdi')){wind=-1;teleT=0;}
+  if(E&&(hasStatus(E,'etourdi')||hasStatus(E,'terreur'))){wind=-1;teleT=0;}
+  /* créature invoquée : elle frappe seule, un temps */
+  if(S.summon&&E){S.summon.t-=dt;const d=S.summon.dps*dt;E.hp-=d;dpsA+=d;
+    if(S.summon.t<=0){S.summon=null;}if(E.hp<=0){kill();return;}}
   if(E&&stagger<=0&&!hasStatus(E,'etourdi')){
     const lent=(hasStatus(E,'ralenti')?.6:1)*(hasStatus(E,'enracine')?.75:1);
     if(wind<0){teleT+=dt*lent;if(teleT>=E.delay)wind=0;}
@@ -125,7 +137,7 @@ function travel(x,y){
   const d=Math.abs(x-S.pos[0])+Math.abs(y-S.pos[1]);if(!d)return;
   const c=cell(x,y);
   if(!c.seen&&d>1)return toast('Cellule inconnue — approche-toi d\'abord');
-  S.day+=d*.25;S.pos=[x,y];c.seen=true;S.target=null;
+  S.day+=d/24;S.pos=[x,y];c.seen=true;S.target=null;   /* une heure de marche par cellule */
   if(S.occ!=='repos')S.occ='repos';
   gainXp('athletisme',5*d);
   log('Voyage vers '+(c.town||BIOME[c.b].n)+' ('+x+','+y+')');

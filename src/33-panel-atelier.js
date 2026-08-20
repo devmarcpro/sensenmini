@@ -76,6 +76,15 @@ function pAtelier(){
     } else h+='<div class="meta" style="color:var(--zhu)">il faut une pièce majeure, des sangles et des fixations</div>';
     h+='</div>';
   });
+  /* gemmes */
+  const gm=GEMK.filter(k=>S.mat[k]>0);
+  h+=grp('玉','GEMMES',hasStation('tailleur')?'Taille de pierre niv '+lv('taille')+' → '+QNAME(quality(lv('taille'))):'il faut un tailleur de pierre');
+  h+='<div class="meta" style="margin-bottom:6px">Tailler choisit la spécialisation ; la qualité de taille place la valeur dans la fourchette. L\'affinité n\'a pas de nombre : elle déplace le vecteur. Plafond +15 par compétence.</div>';
+  if(gm.length)h+=gm.map(mk=>'<div class="card"><h3><span>'+CAT[MAT[mk].c].g+' '+matName(mk)+' × '+S.mat[mk]+'</span><i>'+(GEMDEF[mk].el!==undefined?EL[GEMDEF[mk].el].g+' '+EL[GEMDEF[mk].el].n:GEMSPEC[GEMDEF[mk].spec].n)+'</i></h3>'
+    +'<div class="row">'+gemSpecs(mk).map(sp=>'<button class="btn" data-cutgem="'+mk+':'+sp+'" '+(hasStation('tailleur')?'':'disabled')+' title="'+GEMSPEC[sp].d+'">'+GEMSPEC[sp].g+' '+GEMSPEC[sp].n+' · '+(sp==='affinite'?'+'+Math.round(gemValue(sp,quality(lv('taille')))*100)+'%':'+'+gemValue(sp,quality(lv('taille'))))+'</button>').join('')+'</div>'
+    +'<div class="meta">'+gemSpecs(mk).map(sp=>GEMSPEC[sp].n+' : '+GEMSPEC[sp].d).join(' · ')+'</div></div>').join('');
+  else h+='<p class="hint">Aucune gemme brute. Les montagnes cristallines, les cendres et les joailliers en ont.</p>';
+  if(S.gems&&S.gems.length)h+='<div class="matlist">'+S.gems.map(g=>'<div class="mat"><b>玉</b>'+gemLabel(g)+'<small>à sertir dans 装 ÉQUIPEMENT</small></div>').join('')+'</div>';
   /* recettes */
   const rk=Object.keys(S.recipes);
   if(rk.length){

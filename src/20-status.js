@@ -14,6 +14,8 @@ const STATUS={
   enracine:{n:'Enracinement',g:'根',c:'#4FA96B',dur:1},
   ralenti:{n:'Ralentissement',g:'鈍',c:'#3E7CB1'},
   affaibli:{n:'Affaiblissement',g:'弱',c:'#7E9187'},
+  poison:{n:'Poison',g:'毒',c:'#7BA05B',dot:1},
+  terreur:{n:'Terreur',g:'怖',c:'#B9A7D6'},
 };
 /* quel domaine de module pose quel statut */
 const DOMSTAT={feu:'brulure',eau:'ralenti',foudre:'etourdi',terre:'enracine',
@@ -41,7 +43,9 @@ function tickStatus(tgt,dt,estJoueur){
     x.t-=dt;
     if(STATUS[x.k].dot){
       const d=x.v*dt;
-      if(estJoueur){S.hp-=d;if(S.hp<=0)down();}
+      if(estJoueur){S.hp-=d;
+        /* hors combat, un poison ou une plaie ronge jusqu'à 1 PV sans tuer — comme la faim (A.9) */
+        if(S.hp<=0){if(S.occ==='combat'||S.occ==='donjon')down();else S.hp=1;}}
       else if(E){E.hp-=d;dpsA+=d;if(E.hp<=0){kill();return;}}
     }
   });

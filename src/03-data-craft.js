@@ -75,6 +75,9 @@ const FUNC={
   lance:{n:'Lance',d:[2,8],crit:20,spd:1.5,reach:2.5,t:'percant',comp:['pointe','hampe']},
   hache:{n:"Hache d'armes",d:[2,10],crit:20,spd:1.4,reach:1.5,t:'tranchant',comp:['ferhache','manche']},
   baton:{n:'Bâton magique',d:[1,4],crit:20,spd:1.8,reach:1,t:'contondant',comp:['focus','hampe']},
+  marteau:{n:'Marteau de guerre',d:[2,12],crit:20,spd:.9,reach:1.5,t:'contondant',comp:['tetemasse','hampe']},
+  hallebarde:{n:'Hallebarde',d:[2,9],crit:20,spd:1.1,reach:2.5,t:'tranchant',comp:['ferhache','hampe']},
+  trident:{n:'Trident',d:[3,4],crit:19,spd:1.6,reach:2,t:'percant',comp:['pointe','hampe']},
 };
 const OUTIL={
   pioche:{n:'Pioche',comp:['teteoutil','manche'],cat:'roche'},
@@ -99,4 +102,5 @@ const ZONE={
   pieds:{n:'Pieds',g:'足',mult:0.7,w:10,avg:.10}};
 const ZK=Object.keys(ZONE);
 /* Recettes de base connues d'office ; les exotiques s'apprennent (4.2.1) */
-const BASEMAT=['fer','cuivre','chene','pin','lin','laine','cuir','gres','calcaire','pierre','argile','limon'];
+const BASEMAT=['fer','cuivre','etain','zinc','chene','pin','hetre','frene','bouleau','sapin','lin','laine','coton','chanvre','paille','cuir',
+  'gres','calcaire','pierre','silex','ardoise','schiste','argile','limon','sable','terre','terrefertile'];

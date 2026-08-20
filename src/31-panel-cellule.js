@@ -34,7 +34,7 @@ function pCell(){
      +((c.shrine||0)>S.week-1?'déjà fouillé cette semaine':'Fouiller l\'autel')+'</button></div></div>';
   }
   const mt=METEO[meteo(c)],T=tempC(c),Tf=feltTemp(),ts3=tempStress();
-  h+=grp('天','CIEL',phase()+' · '+Math.floor(HOUR())+' h');
+  h+=grp('天','CIEL',season().n.toLowerCase()+' · '+phase()+' · '+Math.floor(HOUR())+' h');
   h+='<div class="card"><h3><span>'+mt.g+' '+mt.n+'</span><i>'+(mt.extreme?'extrême':'')+'</i></h3>'
    +'<div class="meta">température du lieu '+Math.round(T)+'° · ressentie <b style="color:'
    +(ts3?(ts3.froid?'#3E7CB1':'#E4572E'):'var(--jade)')+'">'+Math.round(Tf)+'°</b>'

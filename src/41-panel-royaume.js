@@ -14,6 +14,8 @@ function pRoyaume(){
    +'<div class="row"><button class="btn pri" data-claim="1" '+(c.claim?'disabled':'')+'>'
    +(c.claim?'cellule déjà revendiquée':'Revendiquer ici · '+claimCost()+' or')+'</button>'
    +'<button class="btn" data-withdraw="1" '+(S.tresor>=1?'':'disabled')+'>Retirer le trésor</button>'
+   +'<button class="btn" data-deposit="100" '+(S.or>=1?'':'disabled')+'>Déposer 100</button>'
+   +'<button class="btn" data-deposit="all" '+(S.or>=1?'':'disabled')+'>Tout déposer</button>'
    +'<button class="btn" data-eatv="1" '+(S.vivres>0?'':'disabled')+'>Manger un vivre</button></div></div>';
   if(myTowns().length){
     const pop=myTowns().reduce((a,t)=>a+t.pop,0);

@@ -20,10 +20,15 @@ function pSac(){
       return '<div class="mat"><b>'+COMP[c.ct].g+'</b>'+COMP[c.ct].n+' × '+c.n
        +'<small>'+(c.f==='brut'?'brut':FORM[c.f].n)+' de '+matName(c.mk)+' · q'+c.q.toFixed(2)+' '+QNAME(c.q)+'</small></div>';}).join('')+'</div>';
   }
-  h+='<div class="matlist">'+ks.map(k=>{const m=MAT[k];
-    return '<div class="mat"><b style="color:'+EL[domi(matVec(k))].c+'">'+CAT[m.c].g+'</b>'+m.n+' × '+S.mat[k]
-     +'<small>dureté '+m.d+' · densité '+m.de+' · '+m.v+' or'+(m.m?' · mana '+m.m:'')+'</small>'
-     +(m.nutr?'<small><button class="btn" data-eat="'+k+'" style="padding:3px 7px">manger cru (+'+Math.round(m.nutr*.5)+')</button></small>':'')
-     +'</div>';}).join('')+'</div>';
+  /* par catégorie, du plus dur au plus tendre ; la pastille porte la couleur réelle du matériau */
+  const cats=[...new Set(ks.map(k=>MAT[k].c))];
+  cats.forEach(c=>{
+    const l=ks.filter(k=>MAT[k].c===c);
+    h+='<div class="meta" style="margin:8px 0 3px;letter-spacing:.15em">'+CAT[c].g+' '+CAT[c].n.toUpperCase()+' · '+l.length+'</div>';
+    h+='<div class="matlist">'+l.map(k=>{const m=MAT[k];
+      return '<div class="mat"><b style="color:'+EL[domi(matVec(k))].c+'">'+CAT[m.c].g+'</b>'+(m.col?'<span class="matsw" style="background:'+m.col+'"></span>':'')+m.n+' × '+S.mat[k]
+       +'<small>dureté '+m.d+' · densité '+m.de+' · '+m.v+' or'+(m.m?' · mana '+m.m:'')+(m.iso>=6?' · isolant':'')+(m.lum?' · lumineux':'')+'</small>'
+       +(m.nutr?'<small><button class="btn" data-eat="'+k+'" style="padding:3px 7px">manger cru (+'+Math.round(m.nutr*.5)+')'+(m.tox?' — toxique':'')+'</button></small>':'')
+       +'</div>';}).join('')+'</div>';});
   return h;
 }

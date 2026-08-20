@@ -49,6 +49,16 @@ function pVille(){
      +'<div class="meta">L\'assaut décime : chaque mort réduit la population. Sous 25 % de garnison, la ville peut céder — '
      +'jet 1d20 + Leadership/2 + Charisme/4 contre DD '+Math.max(6,t.pop*2)+'.</div>';
   }
+  /* boutiques */
+  if(t.shops&&t.shops.length){
+    const open=shopsOpen(t),st=shopStock(t);
+    t.shops.forEach(sk=>{const d=SHOPDEF[sk];if(!d)return;const list=st[sk]||[];
+      h+=grp(d.g,d.n.toUpperCase(),open?(list.length?'arrivage de la semaine':'étal vide jusqu\'à la semaine prochaine'):(isNight()?'fermé la nuit':'on ne te sert pas'));
+      h+='<div class="meta" style="margin-bottom:6px">'+d.d+'</div>';
+      if(list.length)h+='<div class="matlist">'+list.map((o,i)=>'<button class="mat" data-buy="'+sk+':'+i+'" '+(open&&S.or>=o.p?'':'disabled')+'>'
+        +'<b>'+d.g+'</b>'+o.label+'<small>'+o.sub+'</small><small style="color:'+(S.or>=o.p?'var(--terre)':'var(--zhu)')+'">'+o.p+' or</small></button>').join('')+'</div>';
+    });
+  }
   /* marché local */
   h+=grp('市','MARCHÉ',isNight()?'fermé pour la nuit':'ce qui abonde ici vaut moins');
   const ks=Object.keys(S.mat);

@@ -17,7 +17,7 @@ function pBatir(){
     if(p.t==='batiment'){
       const n=p.slots.filter(x=>x).length;
       return '<button class="plot bat'+(sel2?' sel':'')+'" data-plot="'+i+'"><b>館</b><small>'+n+'/16</small></button>';}
-    return '<button class="plot'+(sel2?' sel':'')+'" data-plot="'+i+'"><b>'+PLOT[p.t].g+'</b><small>'+PLOT[p.t].n+'</small></button>';
+    return '<button class="plot'+(sel2?' sel':'')+'" data-plot="'+i+'"><b>'+PLOT[p.t].g+'</b><small>'+(p.t==='champ'&&p.crop?matName(p.crop.mk):PLOT[p.t].n)+'</small></button>';
   }).join('')+'</div>';
   /* parcelle ouverte */
   if(openPlot!==null){
@@ -29,6 +29,16 @@ function pBatir(){
         return '<button class="mat" data-newplot="'+k+'"><b>'+PLOT[k].g+'</b>'+PLOT[k].n
          +'<small>'+PLOT[k].d+'</small><small style="color:var(--terre)">'+costTxt(PLOT[k].cost)+'</small></button>';
       }).join('')+'</div>';
+    } else if(p.t==='champ'){
+      const seeds=SEEDABLE().filter(k=>(S.mat[k]||0)>=2);
+      h+='<div class="card"><div class="meta">'+PLOT[p.t].d+'</div>'
+       +(p.crop?'<div class="meta">semé : <b>'+matName(p.crop.mk)+'</b> — rendement estimé '+cropYield(c,p)+' par semaine'
+          +(seasonIdx()===3?' · <span style="color:var(--eau)">rien ne pousse l\'hiver</span>':'')+(meteo(c)==='canicule'?' · <span style="color:var(--zhu)">la canicule flétrit</span>':'')+'</div>'
+         :'<div class="meta">en friche — sème deux unités d\'une plante</div>')
+       +'<div class="row">'+seeds.map(k=>'<button class="btn" data-sow="'+k+'">Semer '+matName(k)+' ('+S.mat[k]+')</button>').join('')
+       +(seeds.length?'':'<span class="meta">il faut 2 unités d\'une plante (baies, racines, champignons, herbes, lin…)</span>')+'</div>'
+       +'<div class="meta">Rendement = 6 × fertilité × pluie × saison, ×1,5 avec un fermier assigné ici. Trois bêtes en bétail par champ.</div>'
+       +'<div class="row"><button class="btn" data-raze="'+openPlot+'">Raser</button></div></div>';
     } else if(p.t!=='batiment'){
       h+='<div class="card"><div class="meta">'+PLOT[p.t].d+'</div>'
        +'<div class="row"><button class="btn" data-raze="'+openPlot+'">Raser</button></div></div>';

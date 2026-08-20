@@ -9,7 +9,8 @@ function pTable(){
   else h+='<div class="matlist">'+ks.map(k=>{const i=foodInfo(k);
     return '<button class="mat'+(selFood.includes(k)?' sel':'')+'" data-food="'+k+'">'
      +'<b style="color:'+EL[i.el].c+'">'+EL[i.el].g+'</b>'+i.n+' × '+S.food[k]
-     +'<small>nutrition '+i.nutr+(i.grp?' · potentiel '+i.grp:'')+(i.alch?' · alchimie : '+BUFFN[i.alch]:'')+'</small></button>';
+     +'<small>nutrition '+i.nutr+(i.grp?' · potentiel '+i.grp:'')+(i.alch?' · alchimie : '+BUFFN[i.alch]:'')+'</small>'
+     +'<small><span class="btn" data-eatfood="'+k+'" style="padding:3px 7px;display:inline-block">manger cru (+'+Math.round(i.nutr*.5)+')</span></small></button>';
     }).join('')+'</div>';
   /* préparation */
   const infos=selFood.map(foodInfo);

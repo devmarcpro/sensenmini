@@ -45,6 +45,28 @@ function cellVec(c){
   return norm([c.veg*c.hum*1.4,Math.max(c.temp-.55,0)*2.2+(c.b==='cendres'?.6:0),
     .35+c.alt*.5,c.res*1.2,Math.max(c.hum-.4,0)*1.8]);
 }
+/* stock hebdomadaire d'un matériau sur une cellule (3.3) : ce qui est pris manque
+   jusqu'à la régénération. Les matériaux du biome abondent, ceux des strates et
+   des filons sont plus comptés. */
+function stockMax(c,mk){
+  const local=BIOME[c.b].mats.includes(mk);
+  const veg=(MAT[mk].c==='vegetal'||MAT[mk].c==='bois')?season().veg:1;    /* l'hiver appauvrit le vivant */
+  const base=Math.round((90+c.res*360)*(local?1:.45)*veg*(c.poi==='filon'&&['fer','argent','or'].includes(mk)?2:1));
+  return Math.max(20,base);
+}
+function stockOf(c,mk){
+  c.stock=c.stock||{};
+  if(c.stock[mk]===undefined)c.stock[mk]=stockMax(c,mk);
+  return c.stock[mk];
+}
+function takeStock(c,mk,n){const s=stockOf(c,mk);const t=Math.min(s,n);c.stock[mk]=s-t;return t;}
+/* régénération hebdomadaire : cases sauvages et claims « ressources naturelles » */
+function regenStocks(){
+  let n=0;
+  for(const k in S.world){const c=S.world[k];
+    if(c.stock&&(!c.claim||c.claim==='ressources')){delete c.stock;n++;}}
+  return n;
+}
 function cellMats(c){
   const l=BIOME[c.b].mats.slice();
   for(let i=1;i<=c.depth;i++)STRAT_MATS[i].forEach(m=>l.push(m));

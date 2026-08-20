@@ -6,7 +6,7 @@ function pComps(){
   h+=grp('率','ESCORTE',escortUsed()+' / '+escortMax()+' places');
   h+='<div class="card"><div class="meta">Places d\'escorte = 1 + Charisme/5 + Leadership/10 = 1 + '
    +Math.floor(st('cha')/5)+' + '+Math.floor(lv('leadership')/10)+'. Le Leadership monte en menant.</div>'
-   +'<div class="meta">Un <b>suiveur territorial</b> ne prend aucune place mais refuse de quitter tes cellules revendiquées.</div>'
+   +'<div class="meta">Un <b>suiveur territorial</b> ne prend aucune place mais refuse de quitter tes cellules revendiquées. Une bête en <b>bétail</b> ne combat plus : dans un enclos (un champ, trois bêtes), elle rend viande et parties chaque semaine.</div>'
    +'<div class="meta">'+ORDERS.map(o=>o.g+' <b>'+o.n+'</b> — '+o.d).join('<br>')+'</div></div>';
   if(!S.comps.length)h+='<p class="hint">Personne. Engage un PNJ dont la relation atteint 50, ou descends une créature sous 25 % de ses PV et tente un jet de Dressage.</p>';
   h+=S.comps.map((c,i)=>{
@@ -23,7 +23,7 @@ function pComps(){
       :'<div class="row"><button class="btn'+(c.esc?' pri':'')+'" data-esc="'+i+'">'
        +(c.esc?'en escorte':'escorter')+'</button>'
        +'<button class="btn" data-ord="'+i+'">'+o.g+' '+o.n+'</button>'
-       +'<button class="btn" data-mode="'+i+'">'+(c.mode==='territorial'?'territorial':'permanent')+'</button>'
+       +'<button class="btn" data-mode="'+i+'">'+(c.mode==='territorial'?'territorial':c.mode==='betail'?'bétail':'permanent')+'</button>'
        +(Object.keys(S.food).length?'<button class="btn" data-feed="'+i+'">Nourrir</button>':'')
        +'<button class="btn" data-free="'+i+'">Libérer</button></div>'
        +(c.type!=='bete'&&S.items.some(x=>x.kind==='arme')

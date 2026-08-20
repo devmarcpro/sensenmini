@@ -169,9 +169,10 @@ body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
 .mob .cam{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;
   transform:rotateX(-20deg) rotateY(-32deg);animation:bob 2.6s ease-in-out infinite}
 .mob .bx{position:absolute;transform-style:preserve-3d}
-.mob i{position:absolute;inset:0;background:var(--e);border:1px solid rgba(0,0,0,.4)}
-.mob .rt{filter:brightness(.58);transform-origin:left}
-.mob .tp{filter:brightness(1.3);transform-origin:top}
+/* Aucun filtre ici, jamais : filter aplatit le contexte 3D et les pavés
+   perdent leur ordre de profondeur. Les trois faces recoivent des couleurs
+   deja calculees par voxelHtml(). */
+.mob i{position:absolute;inset:0;border:1px solid rgba(0,0,0,.32);transform-origin:left top}
 /* l'ombre portée ancre la bête au sol : sans elle tout flotte */
 .mob::after{content:"";position:absolute;left:-40px;top:22px;width:80px;height:20px;
   border-radius:50%;background:rgba(0,0,0,.15);filter:blur(4px)}
@@ -187,8 +188,10 @@ body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
 .gauge.flash .bar{animation:flash .35s ease-out}
 .matsw{display:inline-block;width:10px;height:10px;border:1px solid rgba(0,0,0,.5);vertical-align:-1px;margin-right:4px}
 .mob.stag i{filter:brightness(.5) saturate(.3)}
-/* l'aura d'une rare : une lueur sur la silhouette entière, pas sur chaque pavé */
-.mob.rare .cam{filter:drop-shadow(0 0 7px var(--e)) drop-shadow(0 0 14px var(--e))}
+/* L'aura d'une rare : un halo pose DERRIERE la silhouette. Un drop-shadow
+   sur la camera aplatirait la scene entiere. */
+.mob.rare::before{content:"";position:absolute;left:-52px;top:-56px;width:104px;height:104px;
+  border-radius:50%;background:radial-gradient(circle,var(--e) 0%,transparent 68%);opacity:.5}
 @keyframes bob{0%,100%{transform:rotateX(-20deg) rotateY(-32deg) translateY(0)}
   50%{transform:rotateX(-20deg) rotateY(-32deg) translateY(-5px)}}
 .eName{position:absolute;top:2px;left:0;right:0;text-align:center;font-family:var(--px);font-size:12px;z-index:3}

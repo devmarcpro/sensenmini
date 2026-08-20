@@ -58,34 +58,53 @@ const VOX={
     [.8,-2.6,2.2,.7,1.6,.7,.8],[.8,-2.6,-2.2,.7,1.6,.7,.8],
     [-.6,-2.6,2.4,.7,1.6,.7,.8],[-.6,-2.6,-2.4,.7,1.6,.7,.8],
     [1.8,-2.6,2,.7,1.6,.7,.8],[1.8,-2.6,-2,.7,1.6,.7,.8]],
-  /* volants : ailes déployées, corps compact, serres repliées */
-  volant:[[0,0,0,3.2,3,2.8],[2.2,1.6,0,2.2,2.2,2.2],
-    [3.8,1.4,0,1.4,.9,.9,1.2],
-    [-.2,1,3.2,5.4,.9,3.6,.9],[-.2,1,-3.2,5.4,.9,3.6,.9],
-    [-.2,1.8,5.8,3.4,.8,2.6,.8],[-.2,1.8,-5.8,3.4,.8,2.6,.8],
-    [-2.6,-.4,0,2.6,1,1.2,.85],
-    [.8,-2.4,.8,.8,1.6,.8,.8],[.8,-2.4,-.8,.8,1.6,.8,.8]],
+  /* volants : perchés, pas en vol. Une aile déployée part sur l'axe des z,
+     perpendiculaire à la caméra — la perspective l'écrase en une lame
+     illisible. Repliée le long du corps, elle se lit d'un coup d'œil. */
+  volant:[[0,0,0,3.4,4,3],
+    [.6,3,0,2.4,2.2,2.4],[2,3,0,1.2,1,.9,1.25],[1.5,3.9,0,1.1,.6,2.2,.8],
+    [-.4,.6,1.9,2.8,3.4,1.1,.92],[-.4,.6,-1.9,2.8,3.4,1.1,.92],
+    [-1.8,-.4,1.9,2.2,2.4,1,.78],[-1.8,-.4,-1.9,2.2,2.4,1,.78],
+    [-3,-1.8,0,3.4,1,2.2,.85],[-4.8,-2.8,0,2.6,.8,1.6,.75],
+    [.8,-2.8,1,1,1.6,1,.8],[.8,-2.8,-1,1,1.6,1,.8],
+    [1.4,-3.5,1,1.8,.7,1.2,.7],[1.4,-3.5,-1,1.8,.7,1.2,.7]],
   /* nuées : pas de corps, une constellation de points qui dérive */
   nuee:[[0,.4,0,1.2,1.2,1.2],[2.4,1.6,1,.9,.9,.9],[-2,2,-1.4,.9,.9,.9,.85],
     [1.4,-1.4,-2,.8,.8,.8,.85],[-1.8,-.8,2,1,1,1],[.6,3.2,-.6,.8,.8,.8,1.2],
     [-3,1,1.4,.7,.7,.7,.85],[2.8,-.4,-2.4,.7,.7,.7],[-.8,-2.4,.6,.8,.8,.8,.85],
     [3.2,2.6,.2,.6,.6,.6,1.2],[-2.6,-1.8,-1,.6,.6,.6,.85],[1,1.2,2.8,.7,.7,.7]],
-  /* humains : torse, tête, deux bras, deux jambes — le squelette du GDD */
-  humanoide:[[0,.6,0,3,4.2,2.2],[0,3.8,0,2.4,2.4,2.4],
-    [0,-2.8,.9,1.4,3.6,1.4,.85],[0,-2.8,-.9,1.4,3.6,1.4,.85],
-    [.4,.6,1.9,1.1,3.6,1.1,.9],[.4,.6,-1.9,1.1,3.6,1.1,.9]],
-  /* humains coiffés : capuche, chapeau de paille, heaume */
-  encapuchonne:[[0,.6,0,3,4.2,2.2],[0,3.8,0,2.4,2.4,2.4,.8],
-    [0,5.2,0,3.2,.8,3.2,1.15],[-.6,4,0,1.4,2.6,2.8,1.1],
-    [0,-2.8,.9,1.4,3.6,1.4,.85],[0,-2.8,-.9,1.4,3.6,1.4,.85],
-    [.4,.6,1.9,1.1,3.6,1.1,.9],[.4,.6,-1.9,1.1,3.6,1.1,.9]],
+  /* humains : le squelette humanoïde du GDD — torse, épaules, cou, tête,
+     bras coudés, jambes et pieds, et la lame que tout bandit porte bas */
+  humanoide:[[0,.4,0,2.6,3.6,2.6],[0,2.6,0,2.4,1.2,3.8,.9],
+    [0,3.6,0,1,.8,1,.78],[.2,5,0,2.2,2,2.2],[-.4,5.4,0,2.6,.9,2.6,.82],
+    [.2,.2,1.7,1.2,1.4,1.2,.94],[.2,.2,-1.7,1.2,1.4,1.2,.94],
+    [.6,-1.6,1.7,1.1,2.6,1.1,.88],[.6,-1.6,-1.7,1.1,2.6,1.1,.88],
+    [0,-2.4,.7,1.3,2.4,1.3,.86],[0,-2.4,-.7,1.3,2.4,1.3,.86],
+    [0,-4.4,.7,1.2,2,1.2,.8],[0,-4.4,-.7,1.2,2,1.2,.8],
+    [.5,-5.6,.7,2,.8,1.3,.7],[.5,-5.6,-.7,2,.8,1.3,.7],
+    [1.6,-2.2,1.7,.5,4,.5,1.3],[1.4,-.2,1.7,1.2,.7,.9,1.15]],
+  /* humains coiffés : capuche rabattue, chapeau de paille, heaume —
+     et pas de lame en main : braconniers, ermites et suaires n'en portent pas */
+  encapuchonne:[[0,.4,0,2.6,3.6,2.6],[0,2.6,0,2.6,1.2,3.8,.9],
+    [0,3.6,0,1,.8,1,.78],[.2,5,0,2.2,2,2.2,.72],
+    [-.3,5.5,0,3,1,3,1.12],[-1.3,4.6,0,1.2,2.6,3,1.05],
+    [.2,.2,1.7,1.2,1.4,1.2,.94],[.2,.2,-1.7,1.2,1.4,1.2,.94],
+    [.6,-1.6,1.7,1.1,2.6,1.1,.88],[.6,-1.6,-1.7,1.1,2.6,1.1,.88],
+    [0,-2.4,.7,1.3,2.4,1.3,.86],[0,-2.4,-.7,1.3,2.4,1.3,.86],
+    [0,-4.4,.7,1.2,2,1.2,.8],[0,-4.4,-.7,1.2,2,1.2,.8],
+    [.5,-5.6,.7,2,.8,1.3,.7],[.5,-5.6,-.7,2,.8,1.3,.7]],
   /* amorphes : une masse qui n'a pas de forme arrêtée */
   amorphe:[[0,0,0,3.2,3.2,3.2],[2.6,1.8,.9,2.2,2.2,2.2],[-2.2,1.4,-1.6,1.8,1.8,1.8],
     [1.4,-2,-2.2,1.5,1.5,1.5,.85],[-1.8,-1.6,2,2,2,2,.85],[.4,3.4,-.7,1.3,1.3,1.3,1.2],
     [-3,0,1.2,1.1,1.1,1.1],[2.2,-1,2.6,1.2,1.2,1.2],[-.6,-3.2,.4,1.4,1.4,1.4,.8]],
-  /* cristallins : des prismes verticaux serrés autour d'un tronc */
-  cristal:[[0,0,0,2.6,5,2.6],[2,-1.4,1.3,1.8,3,1.8,.85],[-1.8,-1.8,-1.1,1.5,2.4,1.5,.85],
-    [.7,3,-1.5,1.3,2.2,1.3,1.2],[-1.3,1.6,1.8,1.1,2,1.1,1.2],[2.4,1.4,-1.6,1,1.6,1,1.2]],
+  /* cristallins : un tronc effilé et des prismes qui s'en détachent.
+     La pointe s'affine vers le haut — c'est ce rétrécissement, plus que
+     le nombre d'éclats, qui fait lire « cristal » et non « tas de cubes ». */
+  cristal:[[0,-2.4,0,3.4,1.6,3.4,.7],
+    [0,-.6,0,2.8,2.4,2.8,.9],[0,1.4,0,2,2.2,2,1.05],[0,3.2,0,1.1,1.8,1.1,1.2],
+    [2,-1.4,1.2,1.6,3,1.6,.82],[2.6,.4,1.2,.9,1.6,.9,1],
+    [-1.9,-1.6,-1.1,1.4,2.6,1.4,.78],[-2.3,.1,-1.1,.8,1.4,.8,.95],
+    [-1.2,-1.2,1.9,1.2,2.2,1.2,.86],[1.3,-1.8,-2,1.1,1.8,1.1,.74]],
 };
 
 /* Quelle espèce porte quel squelette, et à quelle échelle.
@@ -97,7 +116,7 @@ const ARCH={
   cerf:['cornu',1],renne:['cornu',1],bouquetin:['cornu',.8],
   oursbrun:['ursin',1.15],ourspolaire:['ursin',1.2],sanglier:['ursin',.85],morse:['ursin',1.05],
   crocodile:['reptile',1.05],serpent:['serpentin',.95],scorpion:['arthropode',.9],
-  aigle:['volant',.9],vautour:['volant',1],
+  aigle:['volant',1],vautour:['volant',1.05],
   abeilles:['nuee',1],moustiques:['nuee',.85],
   bandit:['humanoide',1],chef:['humanoide',1.15],pillard:['humanoide',1.05],
   deserteur:['humanoide',1],braconnier:['encapuchonne',1],ermite:['encapuchonne',.95],
@@ -114,20 +133,42 @@ function archOf(cre){
   return [(C&&ARCHCAT[C.cat])||'quadrupede',1];
 }
 
+/* Teinter une couleur à la main plutôt qu'avec un filtre CSS.
+
+   Ce détail décide de tout le rendu : la propriété CSS « filter » aplatit
+   le contexte 3D de l'élément qui la porte. Un pavé aplati sort de l'ordre
+   de profondeur — il se dessine à son rang dans le DOM au lieu de sa place
+   dans l'espace, et la bête part en morceaux flottants. On calcule donc
+   chaque teinte nous-mêmes, et pas un seul filtre ne touche la silhouette.
+
+   t < 1 assombrit vers le noir, t > 1 éclaircit vers le blanc. */
+function teinte(hex,t){
+  const n=parseInt(hex.slice(1),16);
+  let r=n>>16&255,v=n>>8&255,b=n&255;
+  const m=t<=1?x=>x*t:x=>x+(255-x)*Math.min(1,t-1);
+  r=Math.round(m(r));v=Math.round(m(v));b=Math.round(m(b));
+  return '#'+((1<<24)+(r<<16)+(v<<8)+b).toString(16).slice(1);
+}
+
 /* Le HTML d'une silhouette. On ne pose que les trois faces qu'on voit :
    la caméra ne bouge jamais, les trois autres seraient du DOM mort. */
-function voxelHtml(cre,mul){
+function voxelHtml(cre,mul,coul){
   const [sq,ech]=archOf(cre);
   const U=5.4*ech*(mul||1);
+  const base=coul||'#7E9187';
   return (VOX[sq]||VOX.quadrupede).map(b=>{
-    const w=b[3]*U,h=b[4]*U,d=b[5]*U,t=b[6];
+    const w=b[3]*U,h=b[4]*U,d=b[5]*U;
+    const c=b[6]?teinte(base,b[6]):base;
+    /* la face de droite est dans l'ombre, le dessus prend la lumière :
+       deux couleurs calculées, aucun filtre — voir teinte() */
     return '<div class="bx" style="width:'+w.toFixed(1)+'px;height:'+h.toFixed(1)+'px;'
-      +(t?'filter:brightness('+t+');':'')
       +'transform:translate3d('+(b[0]*U-w/2).toFixed(1)+'px,'+(-b[1]*U-h/2).toFixed(1)+'px,'
       +(b[2]*U-d/2).toFixed(1)+'px)">'
-      +'<i class="fr" style="transform:translateZ('+d.toFixed(1)+'px)"></i>'
-      +'<i class="rt" style="width:'+d.toFixed(1)+'px;transform:rotateY(90deg) translateZ('+w.toFixed(1)+'px)"></i>'
-      +'<i class="tp" style="height:'+d.toFixed(1)+'px;transform:rotateX(90deg)"></i>'
+      +'<i style="background:'+c+';transform:translateZ('+d.toFixed(1)+'px)"></i>'
+      +'<i style="background:'+teinte(c,.58)+';width:'+d.toFixed(1)+'px;'
+        +'transform:rotateY(90deg) translateZ('+w.toFixed(1)+'px)"></i>'
+      +'<i style="background:'+teinte(c,1.3)+';height:'+d.toFixed(1)+'px;'
+        +'transform:rotateX(90deg)"></i>'
       +'</div>';
   }).join('');
 }

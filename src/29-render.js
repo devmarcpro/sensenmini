@@ -157,8 +157,9 @@ function renderCombat(){
     mo.className='mob'+(E.stg>0?' stag':'')+(E.rare?' rare':'')+(hitFx>0?' hit':'')+(E.boss?' boss':'');
     /* la silhouette ne se réassemble que si l'espèce ou le gabarit a changé :
        recomposer une trentaine de pavés à chaque image serait du gâchis */
-    const cam=$('mobCam'),sig=(E.cre||'x')+':'+voxMul(E);
-    if(cam&&cam.dataset.sig!==sig){cam.dataset.sig=sig;cam.innerHTML=voxelHtml(E.cre,voxMul(E));}
+    const coul=EL[domi(E.vec)].c;
+    const cam=$('mobCam'),sig=(E.cre||'x')+':'+voxMul(E)+':'+coul;
+    if(cam&&cam.dataset.sig!==sig){cam.dataset.sig=sig;cam.innerHTML=voxelHtml(E.cre,voxMul(E),coul);}
     const pk=$('mobPack');if(pk)pk.textContent=EE.length>1?'×'+EE.length:'';}
   const t=$('tele'),P=patOf(E),fen=parryWinVs(E);
   if(E.w>=0){

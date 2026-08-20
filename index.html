@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>森森 Sensen Mini</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Ma+Shan+Zheng&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+<div class="rail"><b>森森</b><span>SENSEN MINI</span></div>
+<div class="gate" id="gate" hidden><div class="ginner">
+  <div class="gtitle"><b>森森</b><div><div class="gt1">SENSEN MINI</div><div class="gt2">le monde entier, en veille</div></div></div>
+  <div class="grp"><b>族</b><span>RACE</span></div><div class="pick" id="pkRace"></div>
+  <div class="grp"><b>職</b><span>CLASSE</span></div><div class="pick" id="pkClass"></div>
+  <div class="grp"><b>生</b><span>NAISSANCE — CYCLE SEXAGÉSIMAL</span></div>
+  <p class="hint">L'élément (cycle de 5 ans) et l'animal (cycle de 12) donnent un <b>plancher de potentiel</b>, jamais un bonus dur : une pente, pas un plafond. Les trines harmonieuses décident aussi de qui t'appréciera vite.</p>
+  <div class="pick" id="pkEl"></div><div class="pick" id="pkAn"></div>
+  <div class="grp"><b>能</b><span>STATS</span><em id="ptLeft"></em></div>
+  <div id="pkStats"></div>
+  <div id="gPrev" class="hint" style="margin-top:12px"></div>
+  <button class="go" id="goBtn" disabled>NAÎTRE DANS LE MONDE</button>
+</div></div>
+<div class="hud"><div class="wrap">
+  <div class="hudline">
+    <span class="tag z" id="hClock">—</span>
+    <span class="tag" id="hCell">—</span>
+    <span class="tag" id="hOcc">—</span>
+    <span class="tag" id="hSky">—</span>
+    <span id="hStat" style="font-family:var(--px);font-size:10px"></span>
+    <span style="margin-left:auto;color:var(--or)" id="hOr">0 or</span>
+  </div>
+  <div class="hudline" style="margin-top:5px">
+    <div class="gauge"><div class="lab"><span>PV</span><span id="gHpT"></span></div><div class="bar"><b id="gHp" style="background:#4FA96B"></b></div></div>
+    <div class="gauge"><div class="lab"><span>END</span><span id="gEnT"></span></div><div class="bar"><b id="gEn" style="background:#D9A441"></b></div></div>
+    <div class="gauge"><div class="lab"><span>MANA</span><span id="gMaT"></span></div><div class="bar"><b id="gMa" style="background:#3E7CB1"></b></div></div>
+    <div class="gauge"><div class="lab"><span>FAIM</span><span id="gFaT"></span></div><div class="bar"><b id="gFa" style="background:#C8332B"></b></div></div>
+  </div>
+</div></div>
+<div class="wrap">
+<section id="scene"></section>
+<nav id="tabs">
+  <button data-tab="monde" aria-selected="true">界 MONDE</button>
+  <button data-tab="cell" aria-selected="false">地 CELLULE</button>
+  <button data-tab="recolte" aria-selected="false">掘 RÉCOLTE</button>
+  <button data-tab="atelier" aria-selected="false">鍛 ATELIER</button>
+  <button data-tab="equip" aria-selected="false">装 ÉQUIPEMENT</button>
+  <button data-tab="magie" aria-selected="false">術 MAGIE</button>
+  <button data-tab="table" aria-selected="false">厨 TABLE</button>
+  <button data-tab="ville" aria-selected="false">市 VILLE</button>
+  <button data-tab="pnj" aria-selected="false">民 PNJ</button>
+  <button data-tab="comps" aria-selected="false">率 COMPAGNONS</button>
+  <button data-tab="batir" aria-selected="false">建 BÂTIR</button>
+  <button data-tab="royaume" aria-selected="false">国 ROYAUME</button>
+  <button data-tab="guilde" aria-selected="false">会 GUILDES</button>
+  <button data-tab="sac" aria-selected="false">袋 SAC</button>
+  <button data-tab="skills" aria-selected="false">練 COMPÉTENCES</button>
+</nav>
+<section class="panel" id="panel"></section>
+<div class="log" id="log"></div>
+</div>
+  <script src="src/01-core.js"></script>
+  <script src="src/02-data-materials.js"></script>
+  <script src="src/03-data-craft.js"></script>
+  <script src="src/04-data-magic.js"></script>
+  <script src="src/05-data-social.js"></script>
+  <script src="src/06-skills.js"></script>
+  <script src="src/07-worldgen.js"></script>
+  <script src="src/08-state.js"></script>
+  <script src="src/09-progress.js"></script>
+  <script src="src/10-craft.js"></script>
+  <script src="src/11-character.js"></script>
+  <script src="src/12-npc.js"></script>
+  <script src="src/13-kingdom.js"></script>
+  <script src="src/14-food.js"></script>
+  <script src="src/15-companions.js"></script>
+  <script src="src/16-building.js"></script>
+  <script src="src/17-dungeon.js"></script>
+  <script src="src/18-weather.js"></script>
+  <script src="src/19-idle.js"></script>
+  <script src="src/20-status.js"></script>
+  <script src="src/21-reputation.js"></script>
+  <script src="src/22-realms.js"></script>
+  <script src="src/23-starter.js"></script>
+  <script src="src/24-combat.js"></script>
+  <script src="src/25-modules.js"></script>
+  <script src="src/26-harvest.js"></script>
+  <script src="src/27-clock.js"></script>
+  <script src="src/28-loop.js"></script>
+  <script src="src/29-render.js"></script>
+  <script src="src/29b-panels-core.js"></script>
+  <script src="src/30-panel-monde.js"></script>
+  <script src="src/31-panel-cellule.js"></script>
+  <script src="src/32-panel-recolte.js"></script>
+  <script src="src/33-panel-atelier.js"></script>
+  <script src="src/34-panel-equipement.js"></script>
+  <script src="src/35-panel-magie.js"></script>
+  <script src="src/36-panel-table.js"></script>
+  <script src="src/37-panel-ville.js"></script>
+  <script src="src/38-panel-pnj.js"></script>
+  <script src="src/39-panel-compagnons.js"></script>
+  <script src="src/40-panel-batir.js"></script>
+  <script src="src/41-panel-royaume.js"></script>
+  <script src="src/42-panel-guildes.js"></script>
+  <script src="src/43-panel-sac.js"></script>
+  <script src="src/44-panel-veille.js"></script>
+  <script src="src/45-panel-competences.js"></script>
+  <script src="src/50-input.js"></script>
+  <script src="src/51-save.js"></script>
+  <script src="src/52-boot.js"></script>
+</body>
+</html>

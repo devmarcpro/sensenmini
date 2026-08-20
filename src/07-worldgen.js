@@ -1,0 +1,54 @@
+/* Sensen Mini — 07-worldgen.js
+   Bruit, biomes, cellules, strates
+   Chargé dans l'ordre par index.html ; portée globale partagée. */
+
+/* ===== GÉNÉRATION ===== */
+function hash(x,y,s,k){
+  let h=(x*374761393+y*668265263+s*1013904223+(k||0)*2654435761)>>>0;
+  h=Math.imul(h^(h>>>13),1274126177)>>>0;
+  return ((h^(h>>>16))>>>0)/4294967296;
+}
+function noise(x,y,s,k,sc){
+  sc=sc||3;const fx=x/sc,fy=y/sc,x0=Math.floor(fx),y0=Math.floor(fy),tx=fx-x0,ty=fy-y0;
+  const sm=t=>t*t*(3-2*t),u=sm(tx),v=sm(ty);
+  const a=hash(x0,y0,s,k),b=hash(x0+1,y0,s,k),c=hash(x0,y0+1,s,k),d=hash(x0+1,y0+1,s,k);
+  return (a*(1-u)+b*u)*(1-v)+(c*(1-u)+d*u)*v;
+}
+function genCell(x,y){
+  const s=S.seed;
+  const alt=noise(x,y,s,1,5),temp=noise(x,y,s,2,7),hum=noise(x,y,s,3,6),
+        mana=noise(x,y,s,4,4),res=noise(x,y,s,5,3),veg=noise(x,y,s,6,4),dang=noise(x,y,s,7,3);
+  let b;
+  if(mana>.72&&veg>.5)b='foretmana';
+  else if(alt>.74&&mana>.62)b='montcris';
+  else if(temp>.74&&alt>.55)b='cendres';
+  else if(dang>.76&&hum>.55)b='marcorr';
+  else if(alt>.70)b='montagne';
+  else if(alt<.24)b='cote';
+  else if(temp<.28)b=hum>.5?'taiga':'toundra';
+  else if(temp>.68&&hum<.34)b='desert';
+  else if(hum>.70)b='marecage';
+  else if(veg>.52)b='foret';
+  else b='plaine';
+  const c={x,y,b,alt:+alt.toFixed(2),temp:+temp.toFixed(2),hum:+hum.toFixed(2),
+    mana:+mana.toFixed(2),res:+res.toFixed(2),veg:+veg.toFixed(2),
+    corr:Math.round(dang*100),corr0:Math.round(dang*100),
+    seen:false,depth:0,cleared:0,claim:null,dug:0};
+  const r=hash(x,y,s,9);
+  if(r<.04)c.poi='village';else if(r<.10)c.poi='donjon';else if(r<.18)c.poi='camp';
+  else if(r<.21)c.poi='sanctuaire';else if(r<.27)c.poi='filon';
+  if(c.poi==='village')c.town=TOWN[Math.floor(hash(x,y,s,11)*TOWN.length)];
+  if(c.poi==='donjon'||c.poi==='camp')c.corr=Math.min(100,c.corr+12);
+  return c;
+}
+function cellVec(c){
+  return norm([c.veg*c.hum*1.4,Math.max(c.temp-.55,0)*2.2+(c.b==='cendres'?.6:0),
+    .35+c.alt*.5,c.res*1.2,Math.max(c.hum-.4,0)*1.8]);
+}
+function cellMats(c){
+  const l=BIOME[c.b].mats.slice();
+  for(let i=1;i<=c.depth;i++)STRAT_MATS[i].forEach(m=>l.push(m));
+  if(c.poi==='filon')['fer','argent','or'].forEach(m=>l.push(m));
+  if(c.depth>0)l.push(STRATA[Math.min(5,c.depth)].rock);
+  return [...new Set(l)];
+}

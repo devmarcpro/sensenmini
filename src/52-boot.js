@@ -24,8 +24,36 @@ function chargementComplet(){
       &&buildGate&&applyBirth&&defaultStart&&repLocale&&lawsHere&&handle&&tabsEdges);
   }catch(e){return false;}
 }
+/* ===== FEUILLE DE STYLE ET CODE DOIVENT ÊTRE DU MÊME ÂGE =====
+   Un module manquant se voit ; une feuille de style périmée, non. Elle
+   s'applique sans se plaindre, et l'on obtient un jeu en morceaux — des
+   règles d'une version appliquées à une géométrie d'une autre. Le cas
+   s'est produit : le service worker servait le cache d'abord et
+   rafraîchissait fichier par fichier, sans aucune atomicité.
+   La feuille déclare donc sa révision, et l'on refuse de démarrer sur un
+   désaccord. Les deux valeurs se bougent ensemble. */
+const CSS_REV='2';
+function styleAJour(){
+  try{
+    const v=getComputedStyle(document.documentElement).getPropertyValue('--css-rev').trim();
+    /* pas de valeur du tout : navigateur trop ancien ou feuille non chargée —
+       on ne bloque pas là-dessus, l'absence n'est pas une preuve */
+    return !v||v===CSS_REV;
+  }catch(e){return true;}
+}
 /* ===== DÉMARRAGE ===== */
 (async()=>{
+  if(!styleAJour()){
+    let dejaTente=false;
+    try{dejaTente=sessionStorage.getItem('sensen:css')==='1';sessionStorage.setItem('sensen:css','1');}catch(e){}
+    if(!dejaTente&&/^https?:$/.test(location.protocol)){
+      /* vider le cache du service worker avant de recharger : sans cela on
+         reviendrait sur la même feuille périmée */
+      try{if(self.caches)for(const k of await caches.keys())await caches.delete(k);}catch(e){}
+      location.reload();return;
+    }
+  }
+  try{sessionStorage.removeItem('sensen:css');}catch(e){}
   if(!chargementComplet()){
     /* réseau capricieux ou hébergeur qui limite : un fichier sur cinquante-sept
        a manqué. On recharge une fois, puis on l'annonce plutôt que de boucler. */

@@ -603,6 +603,24 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('publication — feuille de style et code du même âge',()=>{
+  /* Le défaut vécu : le service worker rafraîchissait fichier par fichier et
+     l'on chargeait le nouveau code avec l'ancienne feuille. Ces deux valeurs
+     doivent bouger ensemble, sinon le garde-fou du démarrage ne sert à rien. */
+  const css=readFileSync(join(root,'src','style.css'),'utf8');
+  const boot=readFileSync(join(root,'src','52-boot.js'),'utf8');
+  const rc=(/--css-rev:\s*([0-9]+)/.exec(css)||[])[1];
+  const rb=(/const CSS_REV='([0-9]+)'/.exec(boot)||[])[1];
+  ok(!!rc,'la feuille de style déclare sa révision');
+  ok(!!rb,'le démarrage connaît la révision attendue');
+  eq(rc,rb,'les deux révisions concordent',
+    'style.css dit '+rc+', 52-boot.js attend '+rb+' — bouge les deux ensemble');
+  /* le service worker ne doit plus servir le cache avant le réseau */
+  const sw=readFileSync(join(root,'sw.js'),'utf8');
+  eq(/const VERSION='sensen-mini-[0-9a-f]{8}'/.test(sw),true,
+    'la version du cache est un condensé du contenu');
+});
+
 test('territoire — une case raclée se dépeuple, et se repeuple',()=>{
   const c=nouveau();
   R(c,'S.pos=[0,0];here().cleared=0;here().kills=0;here().vide=0;');

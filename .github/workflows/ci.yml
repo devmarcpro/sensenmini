@@ -21,6 +21,11 @@ jobs:
       - name: Syntaxe des modules
         run: npm run check
 
+      # Une version de cache perimee fait servir aux navigateurs un melange
+      # de deux publications : nouveau code, ancienne feuille de style.
+      - name: La version du cache hors-ligne est a jour
+        run: node tools/stamp.mjs --check
+
       - name: Règles du jeu (spec)
         run: npm run spec
 

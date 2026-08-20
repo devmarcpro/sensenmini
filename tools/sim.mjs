@@ -83,6 +83,18 @@ const BOTS={
       if(S.books.length&&S.occ!=='combat')readBook(0);
       __eat();
       __equipBest();
+      /* une virée en ville par jour quand la bourse le permet : un joueur
+         ne dort pas sur soixante mille or sans jamais s'équiper */
+      if(__away==='ville'){
+        if(S.pos[0]===__vil[0]&&S.pos[1]===__vil[1]){
+          if(S.occ!=='repos'){S.occ='repos';E=null;}
+          if(!isNight()){__shop();__equipBest();__away=false;}
+          return;}
+        return;}
+      const vil=S.or>600&&!isNight()&&Math.floor(S.day)>__vilDay
+        ?Object.values(S.world).find(x=>x.seen&&townAt(x.x,x.y)&&Math.abs(x.x-S.pos[0])+Math.abs(x.y-S.pos[1])<=4):null;
+      if(vil){__vilDay=Math.floor(S.day);__vil=[vil.x,vil.y];__away='ville';travel(vil.x,vil.y);return;}
+      for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)cell(S.pos[0]+dx,S.pos[1]+dy).seen=true;
       if(S.occ==='repos'&&!S.resume&&S.hp>=maxHp()*.9)S.occ='combat';
     })()`);
   },
@@ -112,6 +124,7 @@ const BOTS={
       if(S.books.length&&S.occ!=='combat'&&S.occ!=='donjon')readBook(0);
       __eat();
       __equipBest();
+      if(S.occ==='repos'&&townAt(S.pos[0],S.pos[1])&&__shop())__equipBest();
       if(S.occ==='donjon'||S.occ==='dormir'||S.resume)return;
       const c=here();
       /* la carte révèle le voisinage immédiat à chaque affichage : on fait pareil */
@@ -160,6 +173,10 @@ const BOTS={
         if(!b.slots.some(s=>s&&s.k==='cuisine'))need.push(['roche',8],['bois',6]);
         if(!b.slots.some(s=>s&&s.k==='scierie'))need.push(['bois',10],['roche',4]);
         if(!b.slots.some(s=>s&&s.k==='tailleur'))need.push(['roche',12],['bois',4]);
+        /* forge puis enclume : sans elles, aucune arme ne se fabrique —
+           le bot restait à vie avec ce qu'il ramassait */
+        if(!b.slots.some(s=>s&&s.k==='forge'))need.push(['roche',14],['terre',6]);
+        if(!b.slots.some(s=>s&&s.k==='enclume'))need.push(['metal',12]);
         if(!P[1])need.push(['roche',6]);}
       const lack=need.find(([cat,n])=>has(cat)<n);
       if(atHome&&!lack&&need.length){
@@ -170,6 +187,13 @@ const BOTS={
           else if(!b.slots.some(s=>s&&s.k==='cuisine'))placeSlot(0,free(),'station','cuisine');
           else if(!b.slots.some(s=>s&&s.k==='scierie'))placeSlot(0,free(),'station','scierie');
           else if(!b.slots.some(s=>s&&s.k==='tailleur'))placeSlot(0,free(),'station','tailleur');
+          else if(!b.slots.some(s=>s&&s.k==='forge'))placeSlot(0,free(),'station','forge');
+          else if(!b.slots.some(s=>s&&s.k==='enclume')){
+            /* l'enclume se paie en lingots : il faut d'abord les couler */
+            const mt=Object.keys(S.mat).find(m=>MAT[m].c==='metal'&&S.mat[m]>=2);
+            const lingots=Object.keys(S.ref).filter(r=>r.startsWith('lingot:')).reduce((a,r)=>a+S.ref[r],0);
+            if(lingots>=5||!mt)placeSlot(0,free(),'station','enclume');
+            else{startCraft({t:'form',f:'lingot',mk:mt});return;}}
           else if(!P[1])buildPlot(1,'route');}
         return;}
       if(lack&&atHome){ /* récolter ce qui manque */
@@ -186,7 +210,8 @@ const BOTS={
         const m=lack?cellMats(c).find(mk=>MAT[mk].c===lack[0]&&canHarvest(mk)&&stockOf(c,mk)>0):null;
         if(m){if(S.occ!=='recolte'||S.target!==m){S.target=m;S.occ='recolte';harvT=0;}return;}
         __away=false;return;}
-      /* 3. tout est bâti : combattre pour l'or, et recruter quand un village est en vue */
+      /* 3. tout est bâti : forger, puis combattre pour l'or, et recruter */
+      if(atHome&&S.occ==='repos'&&!S.resume&&__forge()){__equipBest();return;}
       const vil=Object.values(S.world).find(x=>x.seen&&(x.poi==='village'||townAt(x.x,x.y))&&Math.abs(x.x-home.x)+Math.abs(x.y-home.y)<=4);
       const rec=S.npcs.filter(n=>n.rec);
       if(__away==='village'){
@@ -212,7 +237,7 @@ const BOTS={
 };
 /* équipe la meilleure arme et une pièce d'armure par zone, à partir du sac */
 const HELPERS=`
-const __score=itemScore;let __away=false,__recDay=-1,__recTry=0;const __djFail={};
+const __score=itemScore;let __away=false,__recDay=-1,__recTry=0,__vilDay=-1,__vil=[0,0];const __djFail={};
 /* un bot qui meurt deux fois dans un donjon renonce à celui-là */
 (()=>{const d0=down;down=function(){if(S.occ==='donjon'||S.resume==='donjon'){const k=key(S.pos[0],S.pos[1]);__djFail[k]=(__djFail[k]||0)+1;}return d0.apply(this,arguments);};})();
 function __eat(){
@@ -227,6 +252,72 @@ function __equipBest(){
   ZK.forEach(zk=>{const sl=SLOTS.find(x=>x.zone===zk);const cur=S.eq[sl.k];
     const best=S.items.filter(it=>it.kind==='armure'&&it.slot===sl.k).sort((a,b)=>__score(b)-__score(a))[0];
     if(best&&(!cur||__score(best)>__score(cur)*1.05)){const idx=S.items.indexOf(best);S.eq[sl.k]=best;S.items.splice(idx,1);if(cur)S.items.push(cur);}});
+}
+/* ---- la bourse sert à quelque chose ----
+   Un bot qui n'équipait que son butin ne disait rien de la progression :
+   il pouvait accumuler soixante mille or sans jamais changer d'arme. Il
+   fait donc ses courses comme un joueur — et l'on voit enfin si l'économie
+   propose des montées en gamme. */
+let __achats=0,__forges=0;
+function __shop(){
+  const t=townAt(S.pos[0],S.pos[1]);
+  if(!t||!shopsOpen(t))return false;
+  const st=shopStock(t);let pris=false;
+  for(const sk of Object.keys(st)){
+    const list=st[sk];
+    /* à l'envers : buyOffer retire l'offre de la liste */
+    for(let i=list.length-1;i>=0;i--){
+      const o=list[i];if(S.or<o.p)continue;
+      if(o.t==='item'){
+        if(sacPlein())continue;
+        const porte=o.it.kind==='arme'?weapon():S.eq[o.it.slot];
+        if(!porte||__score(o.it)>__score(porte)*1.10){buyOffer(sk,i);pris=true;__achats++;}
+      }else if(o.t==='food'&&S.or>400&&Object.keys(S.food).length<4){buyOffer(sk,i);pris=true;}
+    }
+  }
+  return pris;
+}
+/* ---- forger plutôt que d'attendre le butin ----
+   Trois étapes : la matière devient forme travaillée, la forme devient
+   composant, les composants s'assemblent. Le bot ne le fait que s'il a la
+   station sous la main et de quoi faire mieux que ce qu'il porte. */
+function __forge(){
+  if(S.occ==='atelier'||S.craft)return false;
+  const fns=FK2.filter(f=>!FUNC[f].dist&&!FUNC[f].shield);
+  /* on forge ce qu'on sait le mieux manier */
+  fns.sort((a,b)=>lv(b)-lv(a));
+  const fn=fns[0];if(!fn)return false;
+  const besoin=FUNC[fn].comp.concat(['fixations']);
+  const dispo=ct=>Object.keys(S.comp).find(k=>S.comp[k].ct===ct&&S.comp[k].n>0);
+  const manque=besoin.filter(ct=>!dispo(ct));
+  if(!manque.length){
+    if(sacPlein())return false;
+    const picks=besoin.map(ct=>dispo(ct));
+    const it=assembleFrom('arme',fn,picks);
+    if(it)__forges++;
+    return !!it;
+  }
+  /* Il manque un composant. On remonte la chaîne : matière → forme
+     travaillée → composant. Chaque étape a sa station ; si elle n'est
+     pas là, rien à faire ici. */
+  const ct=manque[0],C=COMP[ct];
+  const stock=Object.keys(S.mat).filter(m=>S.mat[m]>=4&&recipeKnown(ct,m));
+  if(!stock.length)return false;
+  /* partFor connaît les formes valides pour ce composant */
+  const p=partFor(ct,stock);
+  if(!p||!MAT[p.mk])return false;
+  const cout=C.w>.5?2:1;
+  if(p.f==='brut'){
+    if(!hasStation(C.st)||(S.mat[p.mk]||0)<cout*2)return false;
+    startCraft({t:'comp',ct,f:'brut',mk:p.mk});return true;
+  }
+  if((S.ref[refKey(p.f,p.mk)]||0)>=cout){
+    if(!hasStation(C.st))return false;
+    startCraft({t:'comp',ct,f:p.f,mk:p.mk});return true;
+  }
+  const F=FORM[p.f];
+  if(!hasStation(F.st)||(S.mat[p.mk]||0)<F.cost)return false;
+  startCraft({t:'form',f:p.f,mk:p.mk});return true;
 }`;
 
 function snapshot(ctx){
@@ -237,6 +328,7 @@ function snapshot(ctx){
       kills:__ev['kill']||0,deaths:__ev['cut:死']||0,items:S.items.length,books:S.books.length,modules:S.modules.length,
       mats:Object.values(S.mat).reduce((a,b)=>a+b,0),food:Object.values(S.food).reduce((a,b)=>a+b,0),
       weapon:w?w.nom+' q'+w.q+(w.aff&&w.aff.length?' +'+w.aff.length+'aff':''):'—',
+      achats:typeof __achats!=='undefined'?__achats:0,forges:typeof __forges!=='undefined'?__forges:0,
       armor:ZK.filter(zk=>S.eq[SLOTS.find(x=>x.zone===zk).k]).length+'/5',
       top,corr:here().corr,depth:here().depth,pos:S.pos.join(','),comps:S.comps.length,
       week:S.week,faim:Math.round(S.faim)};})()`);
@@ -299,6 +391,8 @@ for(const r of results){
   const ev=r.events;
   console.log('  rythme : '+(ev.spawn||0)+' rencontres · '+((ev.__grp||0)/Math.max(1,ev.spawn||1)).toFixed(2)+' créature(s) par rencontre · '
     +(ev.travel||0)+' voyages ('+Math.round(ev.__jours||0)+' jours de marche)');
+  const fin=last||{};
+  console.log('  equipement : '+(fin.achats||0)+' achats en boutique · '+(fin.forges||0)+' armes forgees');
   if(r.events.__lastToast)console.log('  dernier toast : '+r.events.__lastToast);
   const x=r.extra;
   console.log('  territoire : '+x.claims+' claims · '+x.plots+' parcelles · stations ici '+(x.stations||'—')+' · résidents '+x.rec+' ('+x.assign+' assignés) · trésor '+x.tresor+' · dette '+x.dette+' · vivres '+x.vivres+' · plats '+x.plats+' · recettes '+x.recettes+' · livres '+x.livres);

@@ -1,4 +1,10 @@
 :root{
+  /* Révision de la feuille de style. Le démarrage la lit et la compare à
+     CSS_REV (52-boot.js) : si les deux ne concordent pas, c'est qu'un cache
+     sert une version avec le code d'une autre — le jeu s'affiche alors en
+     morceaux sans que rien ne le signale. On recharge plutôt une fois.
+     Les deux valeurs se bougent ensemble ; `npm test` le vérifie. */
+  --css-rev:2;
   --ink:#0B0D0C;--sumi:#131817;--panel:#181E1C;--line:#26302C;--line2:#3C4F47;
   --paper:#F4F1E8;--bone:#E6E2D6;--dim:#7E9187;
   --zhu:#C8332B;

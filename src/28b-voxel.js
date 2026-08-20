@@ -117,6 +117,61 @@ const VOX={
     [-1.2,-1.2,1.9,1.2,2.2,1.2,.86],[1.3,-1.8,-2,1.1,1.8,1.1,.74]],
 };
 
+/* ==================================================================
+   CE QU'ON RÉCOLTE
+   Les scènes de récolte et d'atelier montraient un cube unique, recoloré
+   selon la matière. Abattre un chêne, creuser un filon et arracher des
+   herbes se ressemblaient donc trait pour trait. Une catégorie = un sujet.
+   ================================================================== */
+const VOXMAT={
+  /* un tronc et sa frondaison */
+  bois:[[0,-3,0,1.8,5,1.8,.72],[0,-5.4,0,3.4,.8,3.4,.6],
+    [0,1.4,0,5.4,2.6,5.4],[0,3.4,0,3.8,1.6,3.8,1.15],
+    [-2.6,.4,1.4,2,1.6,2,.88],[2.4,.8,-1.6,2.2,1.8,2.2,.88],
+    [1.2,2.6,2.2,1.8,1.4,1.8,1.05]],
+  /* une masse rocheuse où affleure le métal */
+  metal:[[0,-2.4,0,6.4,2.6,5.4,.62],[-1,0,-.6,4.6,2.4,4,.7],
+    [1.4,.6,1,2.6,2.2,2.6,.78],
+    [2,1.6,1.2,1.4,1.2,1.4,1.3],[-1.6,1.2,-1.6,1.1,1,1.1,1.25],
+    [.2,2.2,-.4,.9,.9,.9,1.35],[-2.8,.4,1.6,1,.9,1,1.2]],
+  /* un bloc anguleux, sans veine */
+  roche:[[0,-2.2,0,6,2.8,5.2,.66],[-.6,.4,-.4,4.4,2.6,3.8,.82],
+    [1,2.2,.8,2.6,1.8,2.4],[-1.8,2,-1.2,1.6,1.2,1.6,.9],
+    [2.6,-.6,-2,1.8,1.6,1.6,.74]],
+  /* un monticule meuble */
+  terre:[[0,-2.6,0,6.6,2,6,.7],[0,-1,0,4.8,1.6,4.4,.85],
+    [.4,.2,-.2,3,1.2,2.8],[-1.4,.4,1.2,1.6,.8,1.6,1.1]],
+  /* une touffe basse */
+  vegetal:[[0,-2.8,0,3.4,1,3.4,.6],
+    [0,-1,0,2.6,2.4,2.6],[-1.8,-.6,1,1.4,2.6,1.4,.9],[1.8,-.8,-1.2,1.4,2.2,1.4,.9],
+    [.6,1.2,.6,1.8,1.8,1.8,1.15],[-1.2,.8,-1.6,1.2,1.6,1.2,1.05],
+    [2.2,.4,1.4,1,1.4,1,.95]],
+  /* une flaque, un bassin */
+  liquide:[[0,-2.8,0,6.4,.9,6,.7],[0,-2,0,4.6,.9,4.4,.95],
+    [.6,-1.3,-.4,2.6,.8,2.4,1.2],[-1.6,-1.3,1.4,1.4,.7,1.4,1.1]],
+  /* des cristaux dans leur gangue */
+  mineral:[[0,-2.4,0,5.4,2.2,4.8,.6],[-.8,-.6,-.4,3.6,2,3.2,.72],
+    [1.2,.8,.8,1.6,2.4,1.6,1.1],[-1.4,.6,-1.2,1.2,1.8,1.2,1.25],
+    [2.2,.2,-1.4,1,1.4,1,1.15]],
+  gemme:[[0,-2.6,0,4.4,1.6,4,.58],
+    [0,-.4,0,2,2.8,2,1.1],[1.6,-1,1.2,1.4,2,1.4,.9],[-1.5,-1.2,-1,1.2,1.6,1.2,1.25],
+    [.4,1.6,-.8,1,1.4,1,1.3]],
+  /* des os pris dans la roche */
+  fossile:[[0,-2.6,0,5.8,2,5.2,.64],[-.6,-.8,0,4,1.6,3.4,.76],
+    [-2,.4,.6,4.4,.8,.8,1.2],[1.4,.4,-.8,2.6,.8,.8,1.15],
+    [1.6,1.2,.8,.8,.8,2.6,1.25],[-.4,1,-1.6,.7,.7,.7,1.1]],
+  /* nuage, givre, ce qui tombe du ciel */
+  meteo:[[0,.4,0,4.4,1.8,3.6,1.05],[2.4,1.2,.8,2.4,1.6,2.2,1.2],
+    [-2.2,.8,-1,2,1.4,2,.95],[.6,2,-.6,1.8,1.2,1.8,1.3],
+    [-.8,-1.6,.8,1,1,1,.8],[1.4,-2.4,-.6,.8,.8,.8,.7]],
+};
+/* Le sujet d'une récolte : la catégorie décide de la forme, la matière de
+   la couleur. Un chêne n'a plus la même silhouette qu'un filon de fer. */
+function matHtml(mk,coul){
+  const C=MAT[mk]&&MAT[mk].c;
+  return boitesHtml(VOXMAT[C]||VOXMAT.roche,5.4,coul||'#7E9187',1);
+}
+
 /* Quelle espèce porte quel squelette, et à quelle échelle.
    Le squelette dit la silhouette, l'échelle dit la stature : un renard
    et un ours partagent des cousins mais pas la même place à l'écran. */
@@ -181,12 +236,18 @@ function boitesHtml(liste,U,base,sens){
   return liste.map(b=>{
     const w=b[3]*U,h=b[4]*U,d=b[5]*U,t=b[6];
     const c=typeof t==='string'?t:(t?teinte(base,t):base);
+    /* Les trois faces, posées depuis le coin arrière-haut-gauche du pavé.
+       La face de droite demande rotateY(-90deg) et non +90 : en CSS, un
+       rotateY(90deg) envoie l'axe +x du calque vers -z, si bien que la face
+       se posait derrière le pavé au lieu d'à côté. Sur un cube quasi
+       régulier le décalage passe inaperçu ; sur un pavé profond — une
+       épaule, un tronc d'arbre — la face part en dalle détachée. */
     return '<div class="bx" style="width:'+w.toFixed(1)+'px;height:'+h.toFixed(1)+'px;'
       +'transform:translate3d('+(s*b[0]*U-w/2).toFixed(1)+'px,'+(-b[1]*U-h/2).toFixed(1)+'px,'
       +(b[2]*U-d/2).toFixed(1)+'px)">'
       +'<i style="background:'+c+';transform:translateZ('+d.toFixed(1)+'px)"></i>'
       +'<i style="background:'+teinte(c,.58)+';width:'+d.toFixed(1)+'px;'
-        +'transform:rotateY(90deg) translateZ('+w.toFixed(1)+'px)"></i>'
+        +'transform:translate3d('+w.toFixed(1)+'px,0,0) rotateY(-90deg)"></i>'
       +'<i style="background:'+teinte(c,1.3)+';height:'+d.toFixed(1)+'px;'
         +'transform:rotateX(90deg)"></i>'
       +'</div>';

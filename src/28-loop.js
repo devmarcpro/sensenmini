@@ -43,6 +43,12 @@ function step(dt){
   } else {
     if(S.st&&S.st.length)tickStatus(S,dt,true);          /* poison et saignement courent aussi hors combat */
     S.end=Math.min(100,S.end+1.2*dt);
+    /* On se soigne aussi en travaillant — quatre fois moins vite qu'au repos,
+       mais on se soigne. Sans cela, une famine passée par zéro laissait le
+       personnage à un point de vie pour toujours : la faim le ramène à 1 sans
+       le tuer (A.9), la récolte ne rendait rien, et seul un arrêt volontaire
+       pouvait le remettre d'aplomb. Rien ne le disait. */
+    if(S.faim>25)S.hp=Math.min(maxHp(),S.hp+maxHp()*.004*dt*(S.thermal||1));
     if(S.occ==='recolte')harvestTick(dt);
     else if(S.occ==='atelier')craftTick(dt);
     else if(S.occ==='percer')pierce(dt);

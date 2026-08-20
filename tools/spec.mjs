@@ -250,7 +250,11 @@ test('récolte — gisements finis et régénération',()=>{
   R(c,'takeStock(here(),"'+mk+'",'+max+')');
   eq(G(c,'stockOf(here(),"'+mk+'")'),0,'on peut le vider');
   R(c,'regenStocks()');
-  eq(G(c,'stockOf(here(),"'+mk+'")'),max,'une cellule sauvage se régénère');
+  /* une case sauvage revient par quart : le plein prend un mois, pas huit jours */
+  gt(G(c,'stockOf(here(),"'+mk+'")'),0,'une cellule sauvage se régénère');
+  ok(G(c,'stockOf(here(),"'+mk+'")')<max,'mais pas d\'un coup');
+  R(c,'for(let i=0;i<4;i++)regenStocks()');
+  eq(G(c,'stockOf(here(),"'+mk+'")'),max,'un mois de repos la refait entièrement');
   /* une cellule revendiquée garde ce qu'on lui a pris, sauf en rôle ressources */
   R(c,'S.or=9999;claimCell();takeStock(here(),"'+mk+'",5);regenStocks();');
   ok(G(c,'stockOf(here(),"'+mk+'")')<max,'un claim ne se régénère pas tout seul');
@@ -601,6 +605,48 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   /* un poison hors combat ne tue pas */
   R(c,'S.occ="repos";S.hp=3;S.st=[];addStatus(S,"poison",20,50);for(let i=0;i<40;i++)tickStatus(S,.5,true);');
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
+});
+
+test('soin — travailler soigne, moins vite que se reposer',()=>{
+  const c=nouveau();
+  /* Le cas vécu en simulation : un mineur a passé cinquante semaines à un
+     point de vie sur cent trente-six. Une famine du premier mois l'avait
+     ramené à 1 (la faim ne tue pas, A.9), et la récolte ne rendait aucun
+     point — seul un arrêt volontaire soignait. */
+  R(c,'S.faim=90;S.hp=1;S.occ="recolte";S.target=cellMats(here()).filter(canHarvest)[0];'
+    +'for(let i=0;i<600;i++)step(.1);');
+  gt(G(c,'S.hp'),1,'soixante secondes de récolte rendent des points de vie');
+  const enTravail=G(c,'S.hp');
+  R(c,'S.faim=90;S.hp=1;S.occ="repos";S.resume=null;for(let i=0;i<600;i++)step(.1);');
+  gt(G(c,'S.hp'),enTravail,'le repos soigne plus vite — '+Math.round(G(c,'S.hp'))+' contre '+Math.round(enTravail));
+  /* affamé, on ne se soigne pas : la faim reste une contrainte */
+  R(c,'S.faim=0;S.hp=10;S.occ="recolte";for(let i=0;i<600;i++)step(.1);');
+  ok(G(c,'S.hp')<=10,'affamé, le travail ne soigne plus');
+  gte(G(c,'S.hp'),1,'mais la faim ne tue toujours pas hors combat');
+});
+
+test('gisements — une case travaillée reste à sec, une case au repos revient',()=>{
+  const c=nouveau();
+  R(c,'S.pos=[0,0];here().claim=null;globalThis.__m=cellMats(here())[0];'
+    +'globalThis.__max=stockMax(here(),__m);here().stock={};here().stock[__m]=0;');
+  const max=G(c,'__max');
+  gt(max,0,'un gisement a un plein');
+  R(c,'regenStocks();');
+  const apres=G(c,'stockOf(here(),__m)');
+  gt(apres,0,'une semaine de repos en rend une part');
+  ok(apres<max,'mais pas la totalité — '+apres+' sur '+max,
+    'une mine qui se referme en une semaine n\'est pas une mine');
+  /* quatre semaines suffisent à tout refaire */
+  R(c,'for(let i=0;i<4;i++)regenStocks();');
+  eq(G(c,'stockOf(here(),__m)'),max,'un mois de repos la refait entièrement');
+  /* une case revendiquée en ressources se refait d'un coup : c'est ce qu'on achète */
+  R(c,'here().claim="ressources";here().stock={};here().stock[__m]=0;regenStocks();');
+  eq(G(c,'stockOf(here(),__m)'),max,'une case revendiquée en ressources se refait entièrement');
+  /* et l'on ne peut plus vider une case indéfiniment sans la voir baisser */
+  R(c,'here().claim=null;here().stock={};here().stock[__m]=__max;'
+    +'globalThis.__pris=0;for(let s=0;s<8;s++){__pris+=takeStock(here(),__m,99999);regenStocks();}');
+  ok(G(c,'__pris')<max*8,'huit semaines de raclage rendent moins que huit pleins — '
+    +G(c,'__pris')+' contre '+(max*8));
 });
 
 test('hameaux — un village de la carte est un vrai village',()=>{

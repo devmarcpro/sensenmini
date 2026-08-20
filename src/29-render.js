@@ -227,7 +227,7 @@ function buildScene(){
     const gly=j.t==='form'?FORM[j.f].g:COMP[j.ct].g;
     $('scene').innerHTML='<div class="scene"><div class="scene-top"><span>'+(j.t==='form'?STATION[FORM[j.f].st].n:STATION[COMP[j.ct].st].n)+'</span><span>'+nom+' de '+matName(j.mk)+'</span></div>'
      +'<div class="stage"><div class="gridfloor"></div><div class="bigk">'+gly+'</div>'
-     +'<div class="blk" id="blk" style="--e:'+col+'"><i class="fr"></i><i class="rt"></i><i class="tp"></i></div>'
+     +'<div class="blk" id="blk"><div class="cam">'+matHtml(j.mk,col)+'</div></div>'
      +'<div class="floaters" id="floaters"></div></div>'
      +'<div class="bar2"><span id="hProg" style="background:#C8332B"></span><em id="hTxt"></em></div>'
      +'<div style="display:flex;gap:6px;margin-top:7px"><button class="btn" data-occ="repos" style="flex:1;background:#171C1A;color:var(--paper);border-color:#000">止 ARRÊTER</button></div></div>';
@@ -239,7 +239,7 @@ function buildScene(){
     const col=MAT[mk].col||EL[domi(matVec(mk))].c;
     $('scene').innerHTML='<div class="scene"><div class="scene-top"><span>'+BIOME[c.b].n+' · strate '+c.depth+'</span><span>'+matName(mk)+' · dureté '+MAT[mk].d+'</span></div>'
      +'<div class="stage"><div class="gridfloor"></div><div class="bigk">'+CAT[MAT[mk].c].g+'</div>'
-     +'<div class="blk" id="blk" style="--e:'+col+'"><i class="fr"></i><i class="rt"></i><i class="tp"></i></div>'
+     +'<div class="blk" id="blk"><div class="cam">'+matHtml(mk,col)+'</div></div>'
      +'<div class="floaters" id="floaters"></div></div>'
      +'<div class="bar2"><span id="hProg"></span><em id="hTxt"></em></div>'
      +'<div style="display:flex;gap:6px;margin-top:7px"><button class="btn" data-occ="repos" style="flex:1;background:#171C1A;color:var(--paper);border-color:#000">止 ARRÊTER</button></div></div>';

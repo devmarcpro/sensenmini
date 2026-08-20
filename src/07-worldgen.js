@@ -64,11 +64,39 @@ function stockOf(c,mk){
   return c.stock[mk];
 }
 function takeStock(c,mk,n){const s=stockOf(c,mk);const t=Math.min(s,n);c.stock[mk]=s-t;return t;}
-/* régénération hebdomadaire : cases sauvages et claims « ressources naturelles » */
+/* ===== RÉGÉNÉRATION HEBDOMADAIRE (3.3) =====
+   La règle disait « ce qui est pris manque jusqu'à la régénération », et le
+   code effaçait tout le stock chaque semaine : chaque gisement revenait à
+   plein, quoi qu'on lui ait fait. Une seule case pouvait donc nourrir un
+   mineur indéfiniment — cinq cent mille unités de matière en deux ans de
+   jeu simulé, sans jamais bouger. La lettre était respectée, l'esprit non :
+   une mine qui se referme d'une semaine sur l'autre n'est pas une mine.
+
+   Une case sauvage revient donc d'un quart de son plein par semaine. Qui la
+   travaille sans relâche la tient à sec et doit tourner sur plusieurs cases ;
+   qui la laisse reposer la retrouve entière en un mois.
+
+   Une case revendiquée en « ressources naturelles » fait exception et se
+   refait entièrement : c'est précisément ce qu'on achète en la revendiquant. */
+const REGEN_HEBDO=.25;
 function regenStocks(){
   let n=0;
-  for(const k in S.world){const c=S.world[k];
-    if(c.stock&&(!c.claim||c.claim==='ressources')){delete c.stock;n++;}}
+  for(const k in S.world){
+    const c=S.world[k];
+    if(!c.stock)continue;
+    if(c.claim&&c.claim!=='ressources')continue;
+    if(c.claim==='ressources'){delete c.stock;n++;continue;}
+    let pleins=0,total=0;
+    for(const mk in c.stock){
+      if(!MAT[mk]){delete c.stock[mk];continue;}
+      const max=stockMax(c,mk);
+      c.stock[mk]=Math.min(max,c.stock[mk]+Math.ceil(max*REGEN_HEBDO));
+      total++;if(c.stock[mk]>=max)pleins++;
+    }
+    /* entièrement revenue : on oublie le compteur, la sauvegarde s'allège */
+    if(!total||pleins===total)delete c.stock;
+    n++;
+  }
   return n;
 }
 function cellMats(c){

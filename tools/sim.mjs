@@ -95,6 +95,10 @@ const BOTS={
         ?Object.values(S.world).find(x=>x.seen&&townAt(x.x,x.y)&&Math.abs(x.x-S.pos[0])+Math.abs(x.y-S.pos[1])<=4):null;
       if(vil){__vilDay=Math.floor(S.day);__vil=[vil.x,vil.y];__away='ville';travel(vil.x,vil.y);return;}
       for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)cell(S.pos[0]+dx,S.pos[1]+dy).seen=true;
+      /* une case purgee ne rapporte plus grand-chose : on va voir plus loin.
+         Sans cela le bot ne decouvrait jamais un village et l'on ne pouvait
+         rien mesurer de l'economie. */
+      if(here().cleared>=3&&Math.random()<.02){S.occ='explore';E=null;return;}
       if(S.occ==='repos'&&!S.resume&&S.hp>=maxHp()*.9)S.occ='combat';
     })()`);
   },

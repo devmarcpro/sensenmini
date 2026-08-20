@@ -22,6 +22,20 @@ const RACE_BIOME={montagne:'nain',montcris:'nain',foret:'sylvide',foretmana:'elf
 const TITRES={monarchie:'Roi',republique:'Consul',theocratie:'Hiérophante',
   ploutocratie:'Doge',dictature:'Maréchal',anarchie:'—'};
 function hcell(x,y,k){return hash(x,y,S.seed,k);}
+/* Tirer n éléments d'une liste, de façon stable pour une case donnée.
+
+   Le tirage d'origine triait avec hcell(x+a.length, y+b.length, …) : il ne
+   voyait que la LONGUEUR des noms. Or la moitié des enseignes en font huit
+   — forgeron, libraire, tailleur, armurier étaient rigoureusement
+   indistinguables, et le comparateur, non transitif, retombait toujours sur
+   le même ordre. Toutes les villes du monde tenaient donc les mêmes étals,
+   et pas une seule ne vendait d'arme : la seule voie d'équipement était le
+   butin. On tire maintenant sur l'indice, qui est propre à chaque enseigne. */
+function tirage(liste,x,y,graine,n){
+  if(n<=0)return [];
+  return liste.map((v,i)=>[v,hcell(x+i*7,y-i*11,graine+i)])
+    .sort((a,b)=>a[1]-b[1]).slice(0,n).map(p=>p[0]);
+}
 /* graines de capitale : les cellules les plus favorables du secteur */
 function sectorKingdoms(sx,sy){
   S.kd=S.kd||{};
@@ -99,9 +113,9 @@ function kTowns(k){
     v.prosp=.6+hcell(v.x,v.y,57)*.6;
     /* un exemplaire maximum de chaque type par ville */
     const nbb=gros===2?ri(5,8):gros===1?ri(2,4):ri(0,1);
-    v.shops=BOUTIQUES.slice().sort((a,b)=>hcell(v.x+a.length,v.y+b.length,58)-.5).slice(0,nbb);
+    v.shops=tirage(BOUTIQUES,v.x,v.y,58,nbb);
     const nh=gros===2?ri(2,4):gros===1?ri(0,1):0;
-    v.halls=GUILDS.map(g=>g.k).sort((a,b)=>hcell(v.x+a.length,v.y+b.length,59)-.5).slice(0,nh);
+    v.halls=tirage(GUILDS.map(g=>g.k),v.x,v.y,59,nh);
     v.or=v.type==='capitale'?1200:v.type==='ville'?500:150;
     v.orMax=v.or;
   });
@@ -123,14 +137,45 @@ function kingdomAt(x,y){
   }
   return null;
 }
+/* ===== LES HAMEAUX =====
+   Le monde avait deux notions de village sans rapport l'une avec l'autre.
+   La génération de terrain en pose (genCell : c.poi='village', avec un nom
+   tiré de TOWN), et les royaumes placent les leurs autour de leur capitale
+   (kTowns). townAt ne connaissait que les seconds. Résultat : la carte
+   annonçait des villages nommés, la création de personnage promettait « un
+   village sur place », et l'on y trouvait ni marché, ni boutique, ni âme
+   qui vive — l'onglet VILLE restait vide.
+
+   Un village de la carte est donc désormais un vrai hameau : petit, un ou
+   deux étals, une bourse modeste. Il se matérialise à la première visite et
+   se garde sur la cellule — pas avant, pour ne pas peupler la sauvegarde de
+   villages que le joueur n'a jamais vus. */
+function hameauAt(x,y){
+  if(genCell(x,y).poi!=='village')return null;
+  const c=S.world[key(x,y)];
+  if(!c)return null;                       /* jamais visitée : rien à matérialiser */
+  if(c.poi!=='village')return null;        /* rasée, conquise, ou changée depuis */
+  if(!c.hameau){
+    const k=kingdomAt(x,y);
+    const v={x,y,type:'village',hameau:1,
+      nom:c.town||capName(k?k.cult:'latine',x*3,y*7),
+      k:k?k.id:null,cap:6,
+      pop:Math.max(1,Math.round(6*(.55+hcell(x,y,56)*.4))),
+      prosp:.5+hcell(x,y,57)*.5,halls:[],or:150,orMax:150};
+    /* un étal, deux au mieux : un hameau n'est pas une capitale */
+    v.shops=tirage(BOUTIQUES,x,y,58,hcell(x,y,60)<.45?2:1);
+    c.hameau=v;
+  }
+  return c.hameau;
+}
 /* une ville conquise sort de la liste de son ancien royaume : sans ce premier
    coup d'œil, elle n'existerait plus nulle part — ni marché, ni boutiques, ni PNJ */
 function townAt(x,y){
   const mienne=myTowns().find(t=>t.x===x&&t.y===y);
   if(mienne)return mienne;
   const k=kingdomAt(x,y);
-  if(!k)return null;
-  return kTowns(k).find(t=>t.x===x&&t.y===y)||null;
+  const kt=k?kTowns(k).find(t=>t.x===x&&t.y===y):null;
+  return kt||hameauAt(x,y);
 }
 const myTowns=()=>S.towns||(S.towns=[]);
 /* ===== ÉCONOMIE LOCALE : ce qui abonde ici vaut moins qu'ailleurs ===== */

@@ -20,6 +20,16 @@ const SHOPDEF={
   joaillier:{n:'Joaillier',g:'玉',d:'gemmes brutes, parfois un cristal de mana'},
   herboriste:{n:'Herboriste',g:'草',d:'herbes, champignons, et un remède'},
 };
+/* ===== CE QU'ON TROUVE SUIT LA VILLE =====
+   Tout l'équipement de boutique était tiré dans 0,80–1,20 de qualité, quelle
+   que soit la ville. Une capitale à cent cases de marche vendait donc
+   exactement la même camelote que le hameau d'à côté — et le plus souvent
+   moins bonne que l'équipement de départ. Le voyage ne payait rien, et la
+   boutique n'était une voie de progression pour personne.
+   Le rang de la ville décide maintenant du plancher, la prospérité nuance. */
+const rangVille=t=>t.cap>=26?2:t.cap>=14?1:0;
+const qVille=(t,etendue)=>+([.80,1.00,1.20][rangVille(t)]*(.92+(t.prosp||1)*.12)
+  +Math.random()*(etendue===undefined?.40:etendue)).toFixed(2);
 /* facteur de prix à l'achat : réputation, prospérité, douane */
 function buyMul(t){
   const k=kingdomAt(t.x,t.y);
@@ -73,18 +83,18 @@ const SHOPGEN={
     o.push(offComp(t,'fixations','lingot','fer',lvl));
     o.push(offRef(t,'lingot','fer',ri(2,5)));
     const tool=pick(Object.keys(OUTIL));
-    o.push(offItem(t,mkShopItem('outil',tool,['fer','chene'],+(0.9+Math.random()*.4).toFixed(2))));
+    o.push(offItem(t,mkShopItem('outil',tool,['fer','chene'],qVille(t))));
     return o;},
   armurier(t){const o=[];
     for(let i=0;i<ri(2,3);i++){const sl=pick(SLOTS.filter(x=>x.zone)).k;const ct=pick(['plaque','anneaux','peau','rembourrage']);
       const mk=ct==='peau'?'cuir':ct==='rembourrage'?'laine':pick(['fer','cuivre']);
-      o.push(offItem(t,mkShopArmor(sl,ct,mk,+(0.8+Math.random()*.5).toFixed(2))));}
-    o.push(offItem(t,mkShopItem('arme',pick(FK2.filter(f=>!FUNC[f].dist)),['fer','chene'],+(0.8+Math.random()*.4).toFixed(2))));
+      o.push(offItem(t,mkShopArmor(sl,ct,mk,qVille(t,.50))));}
+    o.push(offItem(t,mkShopItem('arme',pick(FK2.filter(f=>!FUNC[f].dist)),['fer','chene'],qVille(t))));
     /* l'armurier tient toujours un bouclier, et souvent un arc — en bois de pays */
-    o.push(offItem(t,mkShopItem('arme','bouclier',['fer','cuir'],+(0.8+Math.random()*.5).toFixed(2))));
+    o.push(offItem(t,mkShopItem('arme','bouclier',['fer','cuir'],qVille(t,.50))));
     if(Math.random()<.6){
       const bois=pick(['frene','orme','if','bambou','chene']);
-      o.push(offItem(t,mkShopItem('arme',Math.random()<.7?'arc':'fronde',[bois,'cuir'],+(0.8+Math.random()*.4).toFixed(2))));}
+      o.push(offItem(t,mkShopItem('arme',Math.random()<.7?'arc':'fronde',[bois,'cuir'],qVille(t))));}
     return o;},
   alchimiste(t){const o=[];
     for(let i=0;i<ri(2,3);i++)o.push(offPotion(t,pick(Object.keys(BUFFN))));

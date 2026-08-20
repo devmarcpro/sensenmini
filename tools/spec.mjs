@@ -603,6 +603,54 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('hameaux — un village de la carte est un vrai village',()=>{
+  const c=nouveau();
+  /* le monde avait deux notions de village sans rapport : celle du terrain
+     (genCell) et celle des royaumes (kTowns). townAt ne connaissait que la
+     seconde, et l'on arrivait dans des villages nommés, vides de tout. */
+  R(c,'globalThis.__v=null;for(let dx=-8;dx<=8&&!__v;dx++)for(let dy=-8;dy<=8&&!__v;dy++){'
+    +'const g=genCell(S.pos[0]+dx,S.pos[1]+dy);if(g.poi==="village")__v=[g.x,g.y];}');
+  ok(!!G(c,'__v'),'un village de terrain existe dans le voisinage');
+  /* non visité : rien ne se matérialise, la sauvegarde ne gonfle pas */
+  eq(G(c,'townAt(__v[0],__v[1])===null'),true,'un village jamais visité ne se matérialise pas');
+  R(c,'cell(__v[0],__v[1]).seen=true;');
+  const t=G(c,'(()=>{const t=townAt(__v[0],__v[1]);return t?{nom:t.nom,shops:t.shops.length,or:t.or}:null;})()');
+  ok(!!t,'une fois la case connue, le village est une vraie ville');
+  ok(t&&t.nom&&t.nom.length>1,'il porte le nom que la carte annonçait — '+(t&&t.nom));
+  gte(t?t.shops:0,1,'il tient au moins un étal');
+  gt(t?t.or:0,0,'il a une bourse');
+  /* et il reste le même d'une visite à l'autre */
+  R(c,'globalThis.__n1=townAt(__v[0],__v[1]).nom;');
+  eq(G(c,'townAt(__v[0],__v[1]).nom===__n1'),true,'il ne change pas de nom entre deux visites');
+  /* les étals s'y garnissent vraiment */
+  R(c,'S.pos=[__v[0],__v[1]];here().seen=true;');
+  gte(G(c,'Object.keys(shopStock(townAt(__v[0],__v[1]))).length'),1,'ses étals se garnissent');
+});
+
+test('boutiques — les enseignes varient, et la ville décide de la qualité',()=>{
+  const c=nouveau();
+  /* Le tirage des enseignes ne comparait que la LONGUEUR des noms : la
+     moitié en fait huit, si bien que toutes les villes du monde tenaient
+     les mêmes étals — et pas une ne vendait d'arme. */
+  R(c,'globalThis.__ens={};for(let x=-30;x<30;x+=3)for(let y=-30;y<30;y+=3)'
+    +'tirage(BOUTIQUES,x,y,58,2).forEach(s=>__ens[s]=(__ens[s]||0)+1);');
+  eq(G(c,'Object.keys(__ens).length'),G(c,'BOUTIQUES.length'),
+    'chaque enseigne finit par apparaître quelque part');
+  ok(G(c,'(__ens.armurier||0)')>10,'l\'armurier n\'est pas systématiquement écarté',
+    'occurrences : '+G(c,'JSON.stringify(__ens)'));
+  /* la qualité suit le rang de la ville : hameau < ville < capitale */
+  R(c,'globalThis.__q=(cap,n)=>{let s=0;for(let i=0;i<n;i++)s+=qVille({cap,prosp:1});return s/n;};');
+  const h=G(c,'__q(6,400)'),v=G(c,'__q(14,400)'),k=G(c,'__q(26,400)');
+  gt(v,h,'une ville vend mieux qu\'un hameau ('+v.toFixed(2)+' contre '+h.toFixed(2)+')');
+  gt(k,v,'une capitale vend mieux qu\'une ville ('+k.toFixed(2)+' contre '+v.toFixed(2)+')');
+  /* et une capitale doit dépasser l'équipement de départ, sinon le voyage ne paie pas */
+  gt(k,1.2,'une capitale dépasse la qualité de départ — '+k.toFixed(2));
+  /* les villages de la carte ne s'appellent plus tous pareil */
+  R(c,'globalThis.__noms=new Set();for(let x=-40;x<40;x++)for(let y=-40;y<40;y++){'
+    +'const g=genCell(x,y);if(g.poi==="village")__noms.add(g.town);}');
+  gte(G(c,'__noms.size'),80,'les villages portent des noms variés — '+G(c,'__noms.size')+' distincts');
+});
+
 test('publication — feuille de style et code du même âge',()=>{
   /* Le défaut vécu : le service worker rafraîchissait fichier par fichier et
      l'on chargeait le nouveau code avec l'ancienne feuille. Ces deux valeurs

@@ -37,7 +37,11 @@ function genCell(x,y){
   const r=hash(x,y,s,9);
   if(r<.04)c.poi='village';else if(r<.10)c.poi='donjon';else if(r<.18)c.poi='camp';
   else if(r<.21)c.poi='sanctuaire';else if(r<.27)c.poi='filon';
-  if(c.poi==='village')c.town=TOWN[Math.floor(hash(x,y,s,11)*TOWN.length)];
+  if(c.poi==='village'){
+    const base=TOWN[Math.floor(hash(x,y,s,11)*TOWN.length)];
+    const q=hash(x,y,s,12);
+    c.town=q<.45?base:base+'-'+TOWNQ[Math.floor(hash(x,y,s,13)*TOWNQ.length)];
+  }
   if(c.poi==='donjon'||c.poi==='camp')c.corr=Math.min(100,c.corr+12);
   return c;
 }

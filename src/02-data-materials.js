@@ -233,6 +233,10 @@ const TOWN=['Grispierre','Val-Muet','Fontcendre','Haute-Ronce','Sombreverse','Pi
   'Sel-du-Nord','Bassefeuille','Cormorance','Roche-Fendue','Ambrelune','Bois-Dormant','Clairvive','Ferrebrume',
   'Mortefontaine','Aubépine','Gué-des-Loups','Saint-Orme','Vieille-Forge','Brumaille','Les Tanneries','Ronce-Basse',
   'Porte-Grise','Cendrefeuille','Mont-Sauvage','Écluse-Noire','Hautefeuille','La Charbonnière','Pont-de-Sel'];
+/* Trente noms pour un monde sans bord : on croisait deux Ferrebrume a dix cases
+   l'une de l'autre. Un qualificatif tire a part porte l'ensemble a plus de deux
+   cents, sans toucher a la liste d'origine ni au determinisme. */
+const TOWNQ=['le-Haut','le-Bas','la-Neuve','le-Vieux','sur-Ronce','en-Bois','la-Grange','le-Gue','les-Eaux'];
 const STRATA=[
   {n:'Terre et grès',rock:'gres',prof:'surface'},
   {n:'Calcaire et ardoise',rock:'calcaire',prof:'−30'},

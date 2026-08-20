@@ -17,7 +17,7 @@ function chargementComplet(){
     return !!(EL&&MAT&&CAT&&BIOME&&FORM&&COMP&&FUNC&&SLOTS&&MODULE&&DOMAIN&&SKILLS&&SK&&STATS&&RACE&&CLASSE
       &&genCell&&NEW&&gainXp&&gainStat&&mkItem&&partFor&&cutGem&&GEMSPEC&&mkNpc&&linkFamilies&&JOBS
       &&GOV&&GUILDS&&QTPL&&PLANTE&&cook&&escortList&&ORDERS&&PLOT&&MEUBLE&&plots&&genDungeon&&DJTHEME
-      &&METEO&&SEASON&&offline&&AUTOS&&STATUS&&addStatus&&KSIZE&&kingdomsNear&&starterKit&&SHOPDEF
+      &&METEO&&SEASON&&offline&&AUTOS&&STATUS&&addStatus&&KSIZE&&kingdomsNear&&hameauAt&&starterKit&&SHOPDEF
       &&CREATURE&&PATTERN&&VOX&&voxelHtml&&heroHtml&&vide&&STANCE&&attack&&compileSpell&&harvestTick&&tickClock&&step&&paint&&grp&&foldHead
       &&pMonde&&pCell&&pAtelier&&pEquip&&pMagie&&pTable&&pVille&&pPnj&&pComps&&pBatir&&pRoyaume
       &&pGuilde&&pSac&&pAuto&&pSkills&&pRecolte&&TIPS&&SFX&&save&&exportSave

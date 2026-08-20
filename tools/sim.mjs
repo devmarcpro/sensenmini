@@ -261,7 +261,7 @@ function run(botName,classe,race,hours,seed){
     catch(e){errors.push({h:+(t/3600).toFixed(2),msg:String(e.message||e).split('\n')[0]});if(errors.length>20)break;}
     t+=DT;botT+=DT;snapT+=DT;
     if(botT>=1){botT=0;try{bot(ctx);}catch(e){errors.push({h:+(t/3600).toFixed(2),msg:'bot: '+String(e.message||e)});if(errors.length>20)break;}}
-    if(snapT>=1800){snapT=0;snaps.push(snapshot(ctx));
+    if(snapT>=(+process.env.SNAP||1800)){snapT=0;snaps.push(snapshot(ctx));
       if(nanCheck()){errors.push({h:+(t/3600).toFixed(2),msg:'NaN dans l\'état'});break;}}
   }
   snaps.push(snapshot(ctx));

@@ -59,6 +59,9 @@ function pVille(){
   }
   /* marché local */
   h+=grp('市','MARCHÉ',isNight()?'fermé pour la nuit':'ce qui abonde ici vaut moins');
+  h+='<div class="meta" style="margin-bottom:6px">Bourse de la ville : <b>'+Math.round(t.or)+' / '+t.orMax+' or</b>'
+   +' — elle se regarnit de 15 % par semaine. À sec, le marchand troque en vivres : <b>'+trocReste(t)+'</b> encore échangeables cette semaine.'
+   +' Une seule ville n\'absorbe pas une saison de récolte : il faut faire la tournée, ou attendre.</div>';
   const ks=Object.keys(S.mat);
   if(!ks.length)h+='<p class="hint">Rien à vendre.</p>';
   else h+='<div class="matlist">'+ks.map(m=>{

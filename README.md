@@ -175,6 +175,7 @@ GDD entre parenthèses) :
 | stats qui montent (6.4) | `09-progress.js` | les six stats ont leur potentiel et progressent par l'usage, comme les compétences |
 | sac et coffres (A.4.2 / F.6) | `10-craft.js`, `16-building.js` | le dos porte 20 + Force×2 ; un coffre garde le reste, attaché à sa cellule |
 | veille (E.6) | `19-idle.js` | cadence observée, ou calculée à défaut ; on mange sur ses réserves pendant l'absence |
+| troc (A.8.1) | `12-npc.js` | une bourse a un fond : à sec, le marchand paie en vivres au lieu de refuser |
 | guildes (7.3 / B.7) | `13b-guilds.js` | 29 gabarits de quête, rangs qui les ouvrent, présent à chaque palier |
 | familles (12.2 / 12.3) | `12b-family.js` | couples et enfants, deuil, héritage, succession des trônes |
 

@@ -213,15 +213,39 @@ function priceMat(k,n){
   const t=townAt(S.pos[0],S.pos[1]),kg=kingdomAt(S.pos[0],S.pos[1]);
   return Math.round(MAT[k].v*n*repFactor()*prixContrebande(k)
     *(t?townPrice(t,k):1)*douane(kg,k)*(1+lv('negociation')*.008));}
+/* ===== LE TROC (A.8.1 / 7.6) =====
+   « Un marchand à sec REFUSE d'acheter en or au-delà de son stock — il
+   propose un troc en objets de valeur équivalente plutôt qu'un refus
+   sec : le débouché est préservé. » Un village n'a pas d'or infini, mais
+   il a toujours des vivres — et des vivres nourrissent un royaume.
+   Le troc a lui aussi sa limite hebdomadaire : ce que la ville produit. */
+const TROC_OR=6;                                  /* un vivre vaut six pièces (cf. l'épicier) */
+function trocReste(t){
+  if(t.trocSem!==S.week){t.trocSem=S.week;t.trocRest=Math.max(5,Math.round(t.pop*4*t.prosp));}
+  return t.trocRest;
+}
+function trocMat(b,k){
+  const t=b.ville;
+  const dispo=t?trocReste(t):0;
+  if(dispo<1)return toast(b.nom+' est à sec et n\'a plus de vivres à échanger — une autre ville, ou la semaine prochaine');
+  const parU=Math.max(1,priceMat(k,1));
+  const u=Math.min(S.mat[k]||0,Math.floor(dispo*TROC_OR/parU));
+  const v=Math.min(dispo,Math.floor(priceMat(k,u)/TROC_OR));
+  if(u<1||v<1)return toast(b.nom+' est à sec, et le troc ne couvre pas si peu');
+  S.mat[k]-=u;if(!S.mat[k])delete S.mat[k];
+  S.vivres=(S.vivres||0)+v;t.trocRest-=v;
+  gainXp('negociation',v*2);
+  log(b.nom+' n\'a plus d\'or — troc : '+u+' × '+matName(k)+' contre <b>'+v+' vivres</b> ('+(dispo-v)+' encore échangeables cette semaine)');
+}
 function sellMat(k){
   const n=S.mat[k]||0;if(!n)return;
   const b=buyerHere();if(!b)return toast('Personne pour acheter ici');
   ctx2=k;if(controle('vente'))return;
   const prix=priceMat(k,n);
   if(b.or<prix){
-    /* portefeuille fini : troc automatique plutôt que refus sec */
+    /* portefeuille fini : il prend ce qu'il peut payer, le reste passe au troc */
     const part=Math.floor(b.or/Math.max(1,priceMat(k,1)));
-    if(part<1)return toast(b.nom+' est à sec');
+    if(part<1)return trocMat(b,k);
     const p2=Math.min(Math.round(b.or),priceMat(k,part));
     b.or-=p2;S.or+=p2;S.mat[k]-=part;if(!S.mat[k])delete S.mat[k];
     gainXp('negociation',p2/3);
@@ -236,11 +260,15 @@ function sellItem(i){
   const b=buyerHere();if(!b)return toast('Personne pour acheter ici');
   const prix=Math.round(itemValue(it)*repFactor());
   if(b.or<prix){
-    const troc=Math.floor(b.or*.9);
-    if(troc<1)return toast(b.nom+' est à sec');
-    b.or-=troc;S.or+=troc;S.items.splice(i,1);
+    const paye=Math.floor(b.or*.9);
+    const t=b.ville,dispo=t?trocReste(t):0;
+    /* ce qu'il ne peut payer, il l'échange en vivres — jusqu'à ce que la ville n'en ait plus */
+    const v=Math.min(dispo,Math.floor((prix-paye)/TROC_OR));
+    if(paye<1&&v<1)return toast(b.nom+' est à sec, et n\'a plus rien à échanger cette semaine');
+    b.or-=paye;S.or+=paye;S.items.splice(i,1);
+    if(v>0){S.vivres=(S.vivres||0)+v;t.trocRest-=v;}
     gainXp('negociation',prix/4);
-    return log(b.nom+' propose un troc : '+troc+' or pour '+it.nom);
+    return log(b.nom+' complète en nature : '+paye+' or'+(v?' et '+v+' vivres':'')+' pour '+it.nom);
   }
   b.or-=prix;S.or+=prix;S.items.splice(i,1);
   gainXp('negociation',prix/3);

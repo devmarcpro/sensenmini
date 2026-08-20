@@ -150,19 +150,23 @@ function teinte(hex,t){
   return '#'+((1<<24)+(r<<16)+(v<<8)+b).toString(16).slice(1);
 }
 
-/* Le HTML d'une silhouette. On ne pose que les trois faces qu'on voit :
-   la caméra ne bouge jamais, les trois autres seraient du DOM mort. */
-function voxelHtml(cre,mul,coul){
-  const [sq,ech]=archOf(cre);
-  const U=5.4*ech*(mul||1);
-  const base=coul||'#7E9187';
-  return (VOX[sq]||VOX.quadrupede).map(b=>{
-    const w=b[3]*U,h=b[4]*U,d=b[5]*U;
-    const c=b[6]?teinte(base,b[6]):base;
-    /* la face de droite est dans l'ombre, le dessus prend la lumière :
-       deux couleurs calculées, aucun filtre — voir teinte() */
+/* Poser une liste de pavés. On ne dessine que les trois faces qu'on voit :
+   la caméra ne bouge jamais, les trois autres seraient du DOM mort.
+
+   La septième valeur d'un pavé est soit un nombre — une teinte relative à
+   la couleur de base — soit une couleur explicite, ce dont le joueur a
+   besoin puisque chaque pièce d'armure a la sienne.
+
+   sens vaut -1 pour retourner la silhouette : les deux combattants doivent
+   se faire face, et négocier x est plus honnête qu'un scaleX(-1) qui
+   échangerait les faces éclairée et ombrée. */
+function boitesHtml(liste,U,base,sens){
+  const s=sens||1;
+  return liste.map(b=>{
+    const w=b[3]*U,h=b[4]*U,d=b[5]*U,t=b[6];
+    const c=typeof t==='string'?t:(t?teinte(base,t):base);
     return '<div class="bx" style="width:'+w.toFixed(1)+'px;height:'+h.toFixed(1)+'px;'
-      +'transform:translate3d('+(b[0]*U-w/2).toFixed(1)+'px,'+(-b[1]*U-h/2).toFixed(1)+'px,'
+      +'transform:translate3d('+(s*b[0]*U-w/2).toFixed(1)+'px,'+(-b[1]*U-h/2).toFixed(1)+'px,'
       +(b[2]*U-d/2).toFixed(1)+'px)">'
       +'<i style="background:'+c+';transform:translateZ('+d.toFixed(1)+'px)"></i>'
       +'<i style="background:'+teinte(c,.58)+';width:'+d.toFixed(1)+'px;'
@@ -172,5 +176,69 @@ function voxelHtml(cre,mul,coul){
       +'</div>';
   }).join('');
 }
+function voxelHtml(cre,mul,coul,sens){
+  const [sq,ech]=archOf(cre);
+  return boitesHtml(VOX[sq]||VOX.quadrupede,5.4*ech*(mul||1),coul||'#7E9187',sens);
+}
 /* Le gabarit d'une instance : le rang grossit la bête (G.5). */
 const voxMul=e=>(e&&e.boss?1.45:e&&e.rare?1.18:1);
+
+/* ==================================================================
+   LE JOUEUR
+   Même squelette humanoïde, mais chaque pièce prend la couleur de ce
+   qu'elle porte réellement : l'élément dominant du casque, de la
+   cuirasse, des jambières. Sans armure, on voit la peau et l'étoffe.
+   L'arme suit la prise en main (10-craft, grip()) — une lame courte,
+   une longue à deux mains, un arc, un bâton, un bouclier au bras.
+   ================================================================== */
+const PEAU={humain:'#C0A084',elfe:'#B6C7A6',nain:'#BE9A78',
+  sylvide:'#9DBE86',cendreux:'#A39892',echomorphe:'#B2AEC4'};
+const ETOFFE='#8A8574';
+
+/* la couleur d'une pièce : son élément dominant, ou l'étoffe si nue */
+function coulPiece(it,defaut){
+  return it?teinte(EL[domi(itemVec(it))].c,.92):defaut;
+}
+function heroHtml(U){
+  U=U||5.2;
+  const peau=PEAU[S.race]||PEAU.humain;
+  const tor=coulPiece(S.eq.torse,ETOFFE),jam=coulPiece(S.eq.jambes,teinte(ETOFFE,.88));
+  const bra=coulPiece(S.eq.bras,peau),pie=coulPiece(S.eq.pieds,teinte(ETOFFE,.7));
+  const g=grip(),arme=S.eq.main1,sec=S.eq.main2;
+  const b=[
+    [0,.4,0,2.6,3.6,2.6,tor],[0,2.6,0,2.4,1.2,3.8,teinte(tor,.9)],
+    [0,3.6,0,1,.8,1,teinte(peau,.85)],[.2,5,0,2.2,2,2.2,peau],
+    [.2,.2,1.7,1.2,1.4,1.2,bra],[.2,.2,-1.7,1.2,1.4,1.2,bra],
+    [.6,-1.6,1.7,1.1,2.6,1.1,teinte(bra,.94)],[.6,-1.6,-1.7,1.1,2.6,1.1,teinte(bra,.94)],
+    [0,-2.4,.7,1.3,2.4,1.3,jam],[0,-2.4,-.7,1.3,2.4,1.3,jam],
+    [0,-4.4,.7,1.2,2,1.2,teinte(jam,.9)],[0,-4.4,-.7,1.2,2,1.2,teinte(jam,.9)],
+    [.5,-5.6,.7,2,.8,1.3,pie],[.5,-5.6,-.7,2,.8,1.3,pie],
+  ];
+  /* le casque recouvre la tête ; sans casque, une tignasse */
+  if(S.eq.tete)b.push([.2,5.2,0,2.5,2.2,2.5,coulPiece(S.eq.tete)],
+                      [1.3,5.1,0,.7,1.4,1.6,teinte(coulPiece(S.eq.tete),.7)]);
+  else b.push([-.4,5.4,0,2.6,.9,2.6,teinte(peau,.68)]);
+  /* la cape flotte derrière — c'est elle qui donne de l'allure à la silhouette */
+  if(S.eq.dos)b.push([-1.5,.6,0,.9,5.4,3.2,coulPiece(S.eq.dos)],
+                     [-2.1,-2.2,0,.8,1.4,2.6,teinte(coulPiece(S.eq.dos),.82)]);
+  /* l'arme : sa longueur dit la prise, sa couleur dit son matériau */
+  const cArme=arme?teinte(EL[domi(itemVec(arme))].c,1.02):null;
+  if(g.k==='dist'){
+    /* l'arc se tient devant, en travers : trois segments et la corde */
+    b.push([1.9,.4,1.9,.7,2.6,.7,cArme],[2.5,2.2,1.9,.7,1.4,.7,teinte(cArme,.9)],
+           [2.5,-1.4,1.9,.7,1.4,.7,teinte(cArme,.9)],[1.5,.4,1.9,.3,5.6,.3,'#E6E2D6']);
+  }else if(g.k==='deuxmains'){
+    b.push([1.9,-.6,1.2,.6,7,.6,cArme],[1.7,-2.6,1.2,1.6,.7,1.1,teinte(cArme,.8)]);
+  }else if(arme){
+    b.push([1.6,-2.2,1.7,.5,4,.5,cArme],[1.4,-.2,1.7,1.2,.7,.9,teinte(cArme,.85)]);
+  }
+  /* la main gauche : un bouclier, ou la seconde lame */
+  if(g.k==='bouclier')b.push([1.2,-.4,-2.1,.6,4,3.4,coulPiece(sec)]);
+  else if(g.k==='dualwield')b.push([1.5,-2,-1.7,.5,3.4,.5,coulPiece(sec)]);
+  return boitesHtml(b,U,peau,1);
+}
+
+/* La signature de la tenue : tant qu'elle ne bouge pas, on ne recompose rien. */
+const heroSig=()=>[S.race,grip().k].concat(
+  ["tete","torse","bras","jambes","pieds","dos","main1","main2"]
+    .map(k=>{const it=S.eq[k];return it?(it.nom||"?")+domi(itemVec(it)):"-";})).join("|");

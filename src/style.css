@@ -165,7 +165,17 @@ body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
 
 /* La créature : un point d'ancrage sans dimension, une caméra fixe,
    et les pavés que 28b-voxel.js assemble dedans (GDD 12.1). */
-.mob{width:0;height:0;position:relative;transform-style:preserve-3d;z-index:2}
+/* Le duel : le joueur a gauche, la creature a droite, tournes l'un vers
+   l'autre. Deux points d'ancrage sans dimension, chacun sa camera. */
+.duel{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-evenly;z-index:2}
+.hero,.mob{width:0;height:0;position:relative;transform-style:preserve-3d;z-index:2}
+.hero .cam,.hero .bx{position:absolute;transform-style:preserve-3d}
+.hero .cam{left:0;top:0;transform:rotateX(-20deg) rotateY(-32deg);animation:bob 3.4s ease-in-out infinite}
+.hero i{position:absolute;inset:0;border:1px solid rgba(0,0,0,.32);transform-origin:left top}
+.hero::after{content:"";position:absolute;left:-34px;top:33px;width:68px;height:17px;
+  border-radius:50%;background:rgba(0,0,0,.15);filter:blur(4px)}
+/* la garde levee se voit : le joueur se ramasse derriere son bras */
+.hero.garde .cam{transform:rotateX(-20deg) rotateY(-32deg) translateY(3px) scale(.97);animation:none}
 .mob .cam{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;
   transform:rotateX(-20deg) rotateY(-32deg);animation:bob 2.6s ease-in-out infinite}
 .mob .bx{position:absolute;transform-style:preserve-3d}
@@ -174,7 +184,7 @@ body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
    deja calculees par voxelHtml(). */
 .mob i{position:absolute;inset:0;border:1px solid rgba(0,0,0,.32);transform-origin:left top}
 /* l'ombre portée ancre la bête au sol : sans elle tout flotte */
-.mob::after{content:"";position:absolute;left:-40px;top:22px;width:80px;height:20px;
+.mob::after{content:"";position:absolute;left:-40px;top:28px;width:80px;height:20px;
   border-radius:50%;background:rgba(0,0,0,.15);filter:blur(4px)}
 
 .mob .pk{position:absolute;left:18px;top:-48px;font-family:var(--px);font-size:11px;color:#171C1A;background:#E4E1D8;border:1px solid #171C1A;padding:1px 4px;font-weight:400}

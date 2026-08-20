@@ -118,7 +118,8 @@ function combatScene(){
    +'</div>'
    +'<div class="stage"><div class="gridfloor"></div><div class="bigk">戦</div>'
    +'<div class="eName" id="eName">—</div><div class="eInfo" id="eInfo"></div>'
-   +'<div class="mob" id="mob"><div class="cam" id="mobCam"></div><b class="pk" id="mobPack"></b></div>'
+   +'<div class="duel"><div class="hero" id="hero"><div class="cam" id="heroCam"></div></div>'
+   +'<div class="mob" id="mob"><div class="cam" id="mobCam"></div><b class="pk" id="mobPack"></b></div></div>'
    +'<div class="floaters" id="floaters"></div></div>'
    +'<div class="bar2"><span id="eHp" style="background:#C8332B"></span><em id="eHpT">—</em></div>'
    +'<div class="tele" id="tele"><span id="teleF"></span><b id="teleW"></b><em id="teleG"></em></div>'
@@ -159,7 +160,12 @@ function renderCombat(){
        recomposer une trentaine de pavés à chaque image serait du gâchis */
     const coul=EL[domi(E.vec)].c;
     const cam=$('mobCam'),sig=(E.cre||'x')+':'+voxMul(E)+':'+coul;
-    if(cam&&cam.dataset.sig!==sig){cam.dataset.sig=sig;cam.innerHTML=voxelHtml(E.cre,voxMul(E),coul);}
+    if(cam&&cam.dataset.sig!==sig){cam.dataset.sig=sig;cam.innerHTML=voxelHtml(E.cre,voxMul(E),coul,-1);}
+    /* le joueur en face : sa silhouette dit ce qu'il porte, elle ne se
+       recompose donc que s'il change d'equipement */
+    const hc=$('heroCam');
+    if(hc){const hs=heroSig();if(hc.dataset.sig!==hs){hc.dataset.sig=hs;hc.innerHTML=heroHtml();}}
+    const hw=$('hero');if(hw)hw.className='hero'+(S.guard?' garde':'');
     const pk=$('mobPack');if(pk)pk.textContent=EE.length>1?'×'+EE.length:'';}
   const t=$('tele'),P=patOf(E),fen=parryWinVs(E);
   if(E.w>=0){

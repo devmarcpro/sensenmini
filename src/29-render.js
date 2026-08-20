@@ -9,7 +9,26 @@ function toast(t){const d=document.createElement('div');d.className='toast';d.te
 function log(h){S.log.unshift(h);if(S.log.length>7)S.log.pop();
   const l=$('log');if(l)l.innerHTML=S.log.map(x=>'<div>'+x+'</div>').join('');}
 let cutQ=[],cutBusy=false;
-function cutIn(k,t,sub){cutQ.push([k,t,sub]);if(!cutBusy)nextCut();}
+/* `hors` : une annonce d'interface (sauvegarde chargée…) s'affiche sans entrer
+   dans la chronique, qui ne raconte que le monde */
+function cutIn(k,t,sub,hors){if(!hors)chronique(k,t,sub);cutQ.push([k,t,sub]);if(!cutBusy)nextCut();}
+/* ===== LA CHRONIQUE =====
+   Le journal ne garde que sept lignes, et un idle se joue par absences :
+   on revient après huit heures et l'on veut savoir ce qui est arrivé.
+   Chaque cut-in — ce que le jeu juge digne d'être annoncé — s'inscrit ici,
+   daté. C'est le récit de la partie, pas un flux de combat : les coups
+   n'y entrent pas, seulement les seuils, les trouvailles et les morts. */
+const CHRON_MAX=150;
+function chronique(g,t,s){
+  if(!S.race)return;
+  S.chron=S.chron||[];
+  const e={d:+S.day.toFixed(2),w:S.week,g,t,s:s||''};
+  const p=S.chron[0];
+  /* deux annonces identiques d'affilée se comptent au lieu de se répéter */
+  if(p&&p.g===g&&p.t===t&&p.s===e.s){p.n=(p.n||1)+1;p.d=e.d;return;}
+  S.chron.unshift(e);
+  if(S.chron.length>CHRON_MAX)S.chron.length=CHRON_MAX;
+}
 function nextCut(){
   if(!cutQ.length){cutBusy=false;return;}
   cutBusy=true;const c=cutQ.shift();

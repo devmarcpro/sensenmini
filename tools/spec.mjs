@@ -51,7 +51,9 @@ function makeContext(seed){
   /* rendu neutralisé, journal capté */
   vm.runInContext(`
     var __log=[],__toast=[],__cut=[];
-    cutIn=(k,t,s)=>__cut.push(k+' '+t+(s?' — '+s:''));
+    /* on garde ce que fait vraiment cutIn — la chronique en dépend — et l'on
+       ne neutralise que l'affichage */
+    cutIn=(k,t,s,hors)=>{if(!hors)chronique(k,t,s);__cut.push(k+' '+t+(s?' — '+s:''));};
     float=()=>{};knock=()=>{};shake=()=>{};flashHp=()=>{};sfx=()=>{};
     paint=()=>{};render=()=>{};buildScene=()=>{};renderCombat=()=>{};buildGate=()=>{};
     toast=t=>__toast.push(t);
@@ -509,6 +511,26 @@ test('boutiques — étals hebdomadaires et achats',()=>{
   R(c,'S.day=Math.floor(S.day)+.98;');
   eq(G(c,'shopsOpen(__t)'),false,'les boutiques ferment la nuit');
 });
+
+test('chronique — le récit de la partie survit aux absences',()=>{
+  const c=nouveau();
+  eq(G(c,'(S.chron||[]).length'),0,'une partie neuve n\'a pas d\'histoire');
+  R(c,'cutIn("試","Premier fait","détail");');
+  eq(G(c,'S.chron.length'),1,'une annonce s\'inscrit');
+  eq(G(c,'S.chron[0].t'),'Premier fait','avec son titre');
+  gte(G(c,'S.chron[0].d'),0,'et sa date');
+  /* les répétitions se comptent au lieu de s'empiler */
+  R(c,'for(let i=0;i<4;i++)cutIn("試","Premier fait","détail");');
+  eq(G(c,'S.chron.length'),1,'quatre répétitions ne font qu\'une entrée');
+  eq(G(c,'S.chron[0].n'),5,'comptée cinq fois');
+  /* plafond */
+  R(c,'for(let i=0;i<300;i++)cutIn("試","Fait "+i,"");');
+  eq(G(c,'S.chron.length'),CHRON(c),'la chronique est plafonnée');
+  /* elle traverse la sauvegarde */
+  R(c,'__t0=S.chron[0].t;__txt=exportSave();S=NEW();importSave(__txt);');
+  eq(G(c,'S.chron[0].t'),G(c,'__t0'),'et survit à un aller-retour de sauvegarde');
+});
+const CHRON=c=>G(c,'CHRON_MAX');
 
 test('statuts — plafonds et anti-enchaînement',()=>{
   const c=nouveau();

@@ -14,6 +14,22 @@ function pAuto(){
   h+=grp('助','CONSEILS',S.tips===false?'mode vétéran':(Object.keys(S.seen||{}).length+' / '+TIPS.length+' vus'));
   h+='<div class="card"><div class="meta">Les conseils n\'apparaissent qu\'une fois chacun, à la première occasion — information pure, rien n\'est verrouillé derrière.</div>'
    +'<div class="row"><button class="btn" data-tips="1">'+(S.tips===false?'Réactiver les conseils':'Mode vétéran — tout couper')+'</button></div></div>';
+  /* la chronique : ce qui est arrivé, et ce qu'on en a fait */
+  const ch=S.chron||[];
+  const an=d=>Math.floor(d/120)+1,jr=d=>Math.floor(d%120)+1;
+  h+=grp('史','CHRONIQUE',ch.length?'AN '+an(S.day)+' · J'+jr(S.day)+' · semaine '+S.week:'rien encore');
+  h+='<div class="card"><div class="meta">'
+   +(S.deaths?S.deaths+' fois tombé · ':'jamais tombé · ')
+   +(S.plats||0)+' plats · '+S.claims.length+' cellules · '+S.items.length+' objets en sac · '
+   +Object.keys(S.recipes||{}).length+' recettes · '+(S.modules||[]).length+' modules · '
+   +S.npcs.filter(n=>n.rec).length+' résidents</div>'
+   +'<div class="meta">Niveau de combat '+combatLvl()+' · niveau général '+genLvl()+' · '+S.or+' or</div></div>';
+  if(ch.length){
+    h+='<div class="chron">'+ch.slice(0,60).map(e=>
+      '<div class="ce"><b>'+e.g+'</b><span class="cd">AN '+an(e.d)+' J'+jr(e.d)+'</span>'
+      +'<span class="ct">'+e.t+(e.n>1?' <i>×'+e.n+'</i>':'')+(e.s?'<small>'+e.s+'</small>':'')+'</span></div>').join('')+'</div>';
+    if(ch.length>60)h+='<div class="meta">… et '+(ch.length-60)+' entrées plus anciennes, gardées jusqu\'à '+CHRON_MAX+'.</div>';
+  } else h+='<p class="hint">Rien de notable encore. La chronique retient les seuils franchis, les trouvailles et les morts — pas les coups.</p>';
   /* partie : sons, sauvegarde, nouvelle partie */
   h+=grp('保','PARTIE',S.nom+' · semaine '+S.week);
   h+='<div class="card"><div class="row"><button class="btn" data-sfx="1">'+(S.sfx===false?'Sons : coupés':'Sons : actifs')+'</button>'

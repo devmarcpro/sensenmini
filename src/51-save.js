@@ -90,6 +90,7 @@ function sanitize(){
   S.books=(S.books||[]).filter(b=>b&&DOMAIN[b.dom]);
   S.gems=(S.gems||[]).filter(g=>g&&GEMSPEC[g.spec]);
   S.comps=(S.comps||[]).filter(c=>c&&c.nom);
+  S.chron=(S.chron||[]).filter(e=>e&&e.g&&e.t).slice(0,CHRON_MAX);
   S.spells=(S.spells||[[],[]]).map(sp=>(sp||[]).filter(i=>S.modules[i]));
   S.postures=(S.postures||[]).filter(i=>S.modules[i]);
   S.carry=(S.carry||[]).filter(k=>STATION[k]);
@@ -106,7 +107,7 @@ function importSave(txt){
     unpackSave(d);
     E=null;sceneMode='';tab='monde';
     save();paint();
-    cutIn('保','Sauvegarde chargée',S.nom+' · semaine '+S.week);
+    cutIn('保','Sauvegarde chargée',S.nom+' · semaine '+S.week,true);
     absence((Date.now()-(d.t||Date.now()))/1000);
   }catch(e){toast('Sauvegarde illisible');}
 }

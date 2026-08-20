@@ -532,6 +532,39 @@ test('chronique — le récit de la partie survit aux absences',()=>{
 });
 const CHRON=c=>G(c,'CHRON_MAX');
 
+test('panneaux — chaque onglet se rend, replié ou déplié',()=>{
+  const c=nouveau();
+  const onglets=['monde','cell','recolte','atelier','equip','magie','table','ville','pnj','comps','batir','royaume','guilde','sac','autos','skills'];
+  /* sur une partie neuve et sur une partie avancée */
+  for(const avance of [false,true]){
+    if(avance)R(c,`S.or=99999;claimCell();
+      cellMats(here()).concat(['fer','chene','cuir','pierre','rubis']).forEach(m=>{if(MAT[m])S.mat[m]=200;});
+      S.carry=['etabli','forge','enclume','scierie','tissage','tailleur','cuisine'];
+      FK.forEach(f=>Object.keys(S.mat).forEach(m=>{if(formOk(f,m))addRef(f,m,9);}));
+      Object.keys(COMP).forEach(ct=>{S.comp[ct+'|brut|fer|1']={ct,f:'brut',mk:'fer',q:1,n:4};});
+      const p=FUNC.epee.comp.map(ct=>partFor(ct,['fer','chene']));p.push(partFor('fixations',['fer']));
+      for(let i=0;i<12;i++)S.items.push(mkItem('arme','epee',p,1));
+      S.gems=[randomGem(here())];cutIn('試','Fait','détail');
+      S.mat.chene=400;S.mat.pierre=400;buildPlot(0,'batiment');placeSlot(0,0,'meuble','coffre');`);
+    const ko=G(c,`(()=>{const ko=[];
+      const P={monde:pMonde,cell:pCell,recolte:pRecolte,atelier:pAtelier,equip:pEquip,magie:pMagie,
+        table:pTable,ville:pVille,pnj:pPnj,comps:pComps,batir:pBatir,royaume:pRoyaume,
+        guilde:pGuilde,sac:pSac,autos:pAuto,skills:pSkills};
+      for(const k in P){try{const s=P[k]();if(typeof s!=='string'||!s.length)ko.push(k+': vide');}
+        catch(e){ko.push(k+': '+e.message);}}
+      return ko;})()`);
+    eq(ko.length,0,'les seize onglets se rendent'+(avance?' sur une partie avancée':' sur une partie neuve'),ko.join(' | '));
+  }
+  /* les sections repliables : une seule ouverte, et le choix se retient */
+  R(c,'S.fold={};__a=pAtelier();');
+  eq(G(c,'S.fold.atelier'),'tr','l\'établi s\'ouvre sur la transformation');
+  R(c,'S.fold.atelier="co";__b=pAtelier();');
+  ok(G(c,'__b.indexOf("data-fold=\\"atelier:co\\"")')>=0,'la tête de section porte son bouton');
+  ok(G(c,'__b.length')<G(c,'__a.length')*3,'déplier une section ne fait pas exploser le panneau');
+  R(c,'S.fold.atelier=null;__c=pAtelier();');
+  ok(G(c,'__c.length')<G(c,'__a.length'),'tout replié, le panneau est plus court');
+});
+
 test('statuts — plafonds et anti-enchaînement',()=>{
   const c=nouveau();
   R(c,'S.st=[];S.cdStun=0;addStatus(S,"etourdi",10,1);');

@@ -64,9 +64,18 @@ function capName(cult,x,y){
   const b=C.b[Math.floor(hash(x,y,S.seed,52)*C.b.length)];
   return (a+b).replace('-','');
 }
+/* un souverain a une famille : c'est elle qui décide de la succession (12.3) */
 function mkRuler(k){
-  return {nom:cultName(k.cult),age:ri(28,70),race:k.race,
-    titre:TITRES[k.gov],lv:ri(12,30),heir:Math.random()<.65?cultName(k.cult):null};
+  if(k.gov==='anarchie')return null;              /* personne ne règne : c'est tout le principe */
+  const nom=cultName(k.cult),age=ri(28,70);
+  const enfants=[];
+  const n=Math.random()<.75?ri(1,3):0;
+  for(let i=0;i<n;i++)enfants.push({nom:cultName(k.cult),age:Math.max(1,age-ri(18,42))});
+  enfants.sort((a,b)=>b.age-a.age);
+  const majeur=enfants.find(e=>e.age>=14);
+  return {nom,age,race:k.race,titre:TITRES[k.gov],lv:ri(12,30),
+    conjoint:Math.random()<.7?cultName(k.cult):null,enfants,
+    heir:majeur?majeur.nom:null};
 }
 /* villes du royaume, matérialisées à la première interrogation */
 function kTowns(k){
@@ -153,15 +162,17 @@ function weeklyTowns(r){
       t.prosp=Math.max(.3,Math.min(1.6,t.prosp+(c.corr>60?-.02:.01)));
       t.or=Math.min(t.orMax,Math.round(t.or+t.orMax*.15));
     });
-    /* trésor et succession */
+    /* trésor et succession (12.3 / E.25) */
     k.or=Math.min(60000,k.or+kTowns(k).reduce((a,t)=>a+t.pop*3*k.tax*10,0));
     if(k.transition>0){k.transition--;
-      if(k.transition===0){k.ruler=mkRuler(k);seen.push(k.ruler.titre+' '+k.ruler.nom+' monte sur le trône de '+k.nom);}}
-    else if(k.ruler&&Math.random()<.004*(k.ruler.age>60?3:1)){
-      k.ruler.age++;
-      if(k.ruler.age>78||Math.random()<.02){
-        seen.push('<span class="bd">'+k.ruler.titre+' '+k.ruler.nom+' est mort — '+k.nom+' entre en transition</span>');
-        k.transition=4;}
+      if(k.transition===0)rulerSucceeds(k,seen);}
+    else if(k.ruler){
+      if(S.week%17===0){                       /* une année passe : la cour vieillit */
+        k.ruler.age++;(k.ruler.enfants||[]).forEach(e=>e.age++);
+        const m=(k.ruler.enfants||[]).find(e=>e.age>=14);
+        k.ruler.heir=m?m.nom:null;
+      }
+      if(k.ruler.age>78||Math.random()<.004*(k.ruler.age>60?3:1)&&Math.random()<.35)rulerDies(k,seen);
     }
   });
   /* mes propres villes */

@@ -69,11 +69,11 @@ function combatTick(dt){
   if(endLock>0)endLock-=dt;
   else S.end=Math.min(100,S.end+((S.guard?2:6)+passives().regen+buffOf('regen')+gemEndurance())*dt);
   if(S.hp<maxHp()*.25&&E&&!hasStatus(S,'enracine')){
-    S.resume=S.occ;S.occ='repos';E=null;S.seg=[];S.bonus=0;sceneMode='';
+    const oc=S.occ;
+    disengage();S.resume=oc;
     log('<span class="bd">Tu romps le contact et te replies.</span>');return;}
   if(respawnT>0){respawnT-=dt;if(respawnT<=0&&!E){spawn();sceneMode='';}return;}
   if(!E){spawn();sceneMode='';return;}
-  if(stagger>0)stagger-=dt;
   const iv=1/Math.max(.2,wSpeed());
   atkT+=dt;
   let guard=0;
@@ -85,20 +85,31 @@ function combatTick(dt){
     if(decay>=3){decay=0;const last=S.seg.pop();
       const prev=S.seg.length?S.seg[S.seg.length-1]:null;
       S.bonus=Math.max(0,S.bonus-transBonus(prev,last));}}
-  tickStatus(E,dt,false);
   tickStatus(S,dt,true);
-  if(E&&(hasStatus(E,'etourdi')||hasStatus(E,'terreur'))){wind=-1;teleT=0;}
-  /* créature invoquée : elle frappe seule, un temps */
+  /* créature invoquée : elle frappe la cible, un temps */
   if(S.summon&&E){S.summon.t-=dt;const d=S.summon.dps*dt;E.hp-=d;dpsA+=d;
-    if(S.summon.t<=0){S.summon=null;}if(E.hp<=0){kill();return;}}
-  if(E&&stagger<=0&&!hasStatus(E,'etourdi')){
-    const lent=(hasStatus(E,'ralenti')?.6:1)*(hasStatus(E,'enracine')?.75:1);
-    if(wind<0){teleT+=dt*lent;if(teleT>=E.delay)wind=0;}
-    else{wind+=dt*lent;
-      const reste=E.wind-wind;
-      if(auto('garde')&&reste<=parryWin()*.55&&S.end>=14)
-        resolveHit(Math.random()<.12*auto('garde')?2:1);
-      else if(wind>=E.wind)resolveHit(S.guard?1:0);}
+    if(S.summon.t<=0)S.summon=null;
+    if(E.hp<=0){kill();if(!E)return;}}
+  /* chaque créature engagée a son propre rythme : télégraphe, montée, frappe */
+  const grp=engaged().slice();
+  for(const e of grp){
+    if(e.hp<=0)continue;
+    if(e.stg>0)e.stg-=dt;
+    tickStatus(e,dt,false);
+    if(e.hp<=0){kill(e);continue;}
+    if(hasStatus(e,'etourdi')||hasStatus(e,'terreur')){e.w=-1;e.tt=0;continue;}
+    if(e.stg>0)continue;
+    const lent=(hasStatus(e,'ralenti')?.6:1)*(hasStatus(e,'enracine')?.75:1);
+    if(e.w<0){e.tt+=dt*lent;if(e.tt>=e.delay)e.w=0;}
+    else{
+      e.w+=dt*lent;
+      const cible=e===E;                      /* la garde réflexe ne couvre que la cible regardée */
+      const reste=e.wind-e.w;
+      if(cible&&auto('garde')&&reste<=parryWin()*.55&&S.end>=14)
+        resolveHit(Math.random()<.12*auto('garde')?2:1,e);
+      else if(e.w>=e.wind)resolveHit(S.guard&&cible?1:(S.guard?1:0),e);
+    }
+    if(!E)return;
   }
   if(auto('deto')&&E&&S.seg.length===capChain()-1&&S.end>=S.thr+22)attack(true);
   compTick(dt);
@@ -117,8 +128,14 @@ function combatTick(dt){
   if(hitFx>0){hitFx-=dt;}
 }
 function tryParry(){
-  if(!E||wind<0){S.guard=true;return;}
-  if((E.wind-wind)<=parryWin())resolveHit(2);else S.guard=true;
+  if(!E||E.w<0){S.guard=true;return;}
+  if((E.wind-E.w)<=parryWin())resolveHit(2,E);else S.guard=true;
+}
+/* changer de cible : au tap sur une créature, ou au clavier */
+function cycleFocus(d){
+  if(EE.length<2)return;
+  refocus((foc+(d||1)+EE.length)%EE.length);
+  sceneMode='';
 }
 
 function explorePulse(){

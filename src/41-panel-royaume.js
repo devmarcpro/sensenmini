@@ -44,7 +44,7 @@ function pRoyaume(){
    +'<div class="meta">Tout se bâtit dans l\'onglet 建, en matériaux.</div></div>';
   if(rec.length){
     h+=grp('職','POSTES','rendement = compétence × humeur × richesse du lieu');
-    h+=rec.map(n=>'<div class="card"><h3><span>'+n.nom+'</span><i>'+JOBS[n.job].n+' · niv '+n.lv+'</i></h3>'
+    h+=rec.map(n=>'<div class="card"><h3><span>'+n.nom+'</span><i>'+npcRole(n)+' · niv '+n.lv+'</i></h3>'
       +'<div class="meta">humeur '+Math.round(n.mood)+' ('+(n.home?'logé':'sans logement, −6 par semaine')+') · '
       +'facteur de rendement ×'+Math.max(.4,Math.min(1.2,n.mood/100*1.5)).toFixed(2)+'</div>'
       +'<select data-assign="'+n.id+'"><option value="">— sans affectation —</option>'

@@ -175,6 +175,21 @@ async function runScenario(scen){
     }
     await tap('#heavyBtn');await sleep(300);
     await shot('4-combat');await checkOverflow('combat');flushErrors('combat');
+    /* multi-ennemis : forcer un groupe, verifier l'affichage et le changement de cible */
+    const grp=await evalJs(`(()=>{try{
+      const vus={};
+      for(let i=0;i<300&&EE.length<2;i++){spawn();vus[EE.length]=(vus[EE.length]||0)+1;}
+      if(EE.length<2)return 'pas de groupe : biome '+here().b+' occ '+S.occ+' tailles '+JSON.stringify(vus)
+        +' pool '+JSON.stringify([...new Set(Array.from({length:40},()=>creaturePool(here(),false,false)))]);
+      buildScene();render();
+      const chips=document.querySelectorAll('#mobs .mchip').length;
+      if(chips!==EE.length)return 'chips '+chips+' pour '+EE.length+' creatures';
+      const e0=EE[0];refocus(1);
+      if(!E||E===e0)return 'le changement de cible ne prend pas';
+      return 'ok:'+EE.length;
+    }catch(e){return 'erreur '+e.message;}})()`);
+    if(!String(grp).startsWith('ok'))report(scen.name,'multi-ennemis',grp);
+    else{await sleep(200);await shot('5-groupe');await checkOverflow('combat de groupe');flushErrors('groupe');}
   }
   /* arriere-plan : la sauvegarde doit partir */
   await evalJs('localStorage.removeItem(KEY)');

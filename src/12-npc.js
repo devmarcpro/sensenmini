@@ -17,16 +17,21 @@ const LIKES=['les pierres polies','le vin doux','les histoires du sud','les outi
 const MOODW=['maussade','distant','neutre','avenant','chaleureux'];
 const relTier=r=>r<0?0:r<20?1:r<50?2:r<75?3:r<90?4:5;
 const TIERN=['inconnu','connaissance','familier','confident','proche','intime'];
-function mkNpc(cellKey){
+function mkNpc(cellKey,age){
   const race=pick(['humain','humain','humain','elfe','nain','sylvide','cendreux','echomorphe']);
   const cult=pick(RACE[race].cult);
   const job=pick(JK);
+  const a=age!==undefined?age:ri(17,Math.min(90,Math.round(RACE[race].life*.6)));
+  /* un enfant n'a ni métier ni bourse : il apprend, et il grandira */
+  const jeune=a<MAJORITE;
   return {id:'n'+(S.nid++),nom:cultName(cult),race,cult,job,
-    age:ri(17,Math.min(90,Math.round(RACE[race].life*.6))),
-    sign:[ri(0,4),ri(0,11)],lv:ri(1,14),rel:0,mood:ri(45,85),
-    cell:cellKey,or:JOBS[job].wallet||30,orMax:JOBS[job].wallet||30,
+    age:a,
+    sign:[ri(0,4),ri(0,11)],lv:jeune?1:ri(1,14),rel:0,mood:ri(45,85),
+    cell:cellKey,or:jeune?0:(JOBS[job].wallet||30),orMax:jeune?12:(JOBS[job].wallet||30),
     likes:pick(LIKES),recipe:null,rec:false,talk:-1};
 }
+const MAJORITE=16;
+const estEnfant=n=>n.age<MAJORITE;
 function ensureNpcs(){
   const c=here();
   const t=townAt(c.x,c.y);
@@ -34,15 +39,19 @@ function ensureNpcs(){
     c.npcDone=true;
     const k=key(c.x,c.y),n=Math.min(8,Math.max(2,Math.round(t.pop/3)));
     const kg=kingdomsNear().find(x=>x.id===t.k);
+    const nes=[];
     for(let i=0;i<n;i++){const p=mkNpc(k);
       if(kg&&Math.random()<.9){p.race=kg.race;p.cult=pick(RACE[kg.race].cult);p.nom=cultName(p.cult);}
-      p.ville=t.nom;S.npcs.push(p);}
+      p.ville=t.nom;S.npcs.push(p);nes.push(p);}
+    linkFamilies(nes);
     return;
   }
   if(c.poi!=='village'||c.npcDone)return;
   c.npcDone=true;
   const k=key(c.x,c.y),n=ri(3,6);
-  for(let i=0;i<n;i++)S.npcs.push(mkNpc(k));
+  const nes=[];
+  for(let i=0;i<n;i++){const p=mkNpc(k);S.npcs.push(p);nes.push(p);}
+  linkFamilies(nes);
 }
 const npcsHere=()=>(isNight()||repTier(repLocale())===0)?[]:S.npcs.filter(n=>n.cell===key(S.pos[0],S.pos[1]));
 const npcsAll=()=>S.npcs.filter(n=>n.cell===key(S.pos[0],S.pos[1]));
@@ -50,9 +59,11 @@ const npcsAll=()=>S.npcs.filter(n=>n.cell===key(S.pos[0],S.pos[1]));
 function npcInfo(n){
   const t=relTier(n.rel),o=[];
   if(t===0){o.push('une silhouette — il ne se confie pas');return o;}
-  o.push(n.nom+' · '+RACE[n.race].n+' · '+JOBS[n.job].n);
+  o.push(n.nom+' · '+RACE[n.race].n+' · '+npcRole(n));
   if(t>=2)o.push(n.age+' ans · signe '+EL[n.sign[0]].g+ANIMALS[n.sign[1]].g+' · '+MOODW[Math.min(4,Math.floor(n.mood/21))]);
-  if(t>=3)o.push('niveau approximatif '+n.lv+' · '+SKILLS[JOBS[n.job].sk].n+' est son métier');
+  if(t>=2){const f=famTxt(n);if(f)o.push(f);}
+  if(t>=3)o.push(estEnfant(n)?'trop jeune pour un métier — il apprend en regardant'
+    :'niveau approximatif '+n.lv+' · '+SKILLS[JOBS[n.job].sk].n+' est son métier');
   if(t>=4)o.push('aime '+n.likes+(n.recipe?' · t\'a enseigné : '+n.recipe:' · prêt à enseigner un tour de main'));
   if(t>=5)o.push('te doit une faveur personnelle');
   return o;
@@ -235,9 +246,10 @@ function sellItem(i){
   log('Vendu '+it.nom+' à '+b.nom+' — +'+prix+' or');
 }
 function recruit(n){
+  if(estEnfant(n))return toast('On n\'emmène pas un enfant à l\'aventure');
   if(n.rel<50)return toast('Relation insuffisante ('+Math.round(n.rel)+'/50)');
   n.rec=true;
   if(!S.comps.some(c=>c.src===n.id))S.comps.push(compFromNpc(n));
   gainXp('leadership',60);
-  cutIn('従',n.nom+' te suit',JOBS[n.job].n+' · niveau '+n.lv);
+  cutIn('従',n.nom+' te suit',npcRole(n)+' · niveau '+n.lv);
 }

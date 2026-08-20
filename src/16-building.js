@@ -29,17 +29,19 @@ const MEUBLE={
 };
 const MK2=Object.keys(MEUBLE);
 const SPECIAL=['etal','hall'];
+/* les clés inconnues sont ignorées : une sauvegarde importée ne doit pas faire tomber le jeu */
+const matsOf=cat=>Object.keys(S.mat).filter(m=>MAT[m]&&MAT[m].c===cat);
 function payCost(cost){
   const ok=cost.every(([w,n])=>{
     if(w.startsWith('form:')){const f=w.slice(5);
       return Object.keys(S.ref).filter(r=>r.startsWith(f+':')).reduce((a,r)=>a+S.ref[r],0)>=n;}
-    return Object.keys(S.mat).filter(m=>MAT[m].c===w).reduce((a,m)=>a+S.mat[m],0)>=n;});
+    return matsOf(w).reduce((a,m)=>a+S.mat[m],0)>=n;});
   if(!ok)return false;
   cost.forEach(([w,n])=>{
     if(w.startsWith('form:')){const f=w.slice(5);
       Object.keys(S.ref).filter(r=>r.startsWith(f+':')).forEach(r=>{
         if(n<=0)return;const t=Math.min(n,S.ref[r]);S.ref[r]-=t;n-=t;if(!S.ref[r])delete S.ref[r];});
-    } else Object.keys(S.mat).filter(m=>MAT[m].c===w).forEach(m=>{
+    } else matsOf(w).forEach(m=>{
         if(n<=0)return;const t=Math.min(n,S.mat[m]);S.mat[m]-=t;n-=t;if(!S.mat[m])delete S.mat[m];});
   });
   return true;

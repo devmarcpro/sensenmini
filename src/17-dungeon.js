@@ -82,7 +82,11 @@ function djReward(room){
   if(room.t==='cellule'){
     const n=mkNpc(key(c.x,c.y));n.rel=60;n.ville=null;
     gainRep(2,n.race,kingdomHere());gainXp('leadership',50);
-    if(escortUsed()<escortMax()){n.rec=true;S.npcs.push(n);S.comps.push(compFromNpc(n));
+    /* la plupart rentrent chez eux : on ne recrute pas une armée dans les geôles.
+       Ceux qui suivent comptent dans l'escorte, et jamais au-delà d'une poignée. */
+    const roster=S.comps.filter(x=>!x.dead&&x.mode!=='betail').length;
+    if(roster<Math.min(escortMax(),5)&&Math.random()<.45){
+      n.rec=true;S.npcs.push(n);const co=compFromNpc(n);co.esc=true;S.comps.push(co);
       cutIn('牢',n.nom+' libéré'+(n.race==='elfe'||n.race==='sylvide'?'e':''),JOBS[n.job].n+' · niveau '+n.lv+' — te suit par gratitude');}
     else{const g=20+lvl*15;S.or+=g;
       cutIn('牢',n.nom+' libéré'+(n.race==='elfe'||n.race==='sylvide'?'e':''),'ton escorte est pleine — '+g+' or de gratitude, et un nom qui court');}}

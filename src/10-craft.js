@@ -171,7 +171,7 @@ function canBuildStation(k){
   return STATION[k].cost.every(([what,n])=>{
     if(what.startsWith('form:')){const f=what.slice(5);
       return Object.keys(S.ref).filter(r=>r.startsWith(f+':')).reduce((a,r)=>a+S.ref[r],0)>=n;}
-    return Object.keys(S.mat).filter(m=>MAT[m].c===what).reduce((a,m)=>a+S.mat[m],0)>=n;});
+    return matsOf(what).reduce((a,m)=>a+S.mat[m],0)>=n;});
 }
 
 /* ===== L'ATELIER COMME OCCUPATION (répétition tant qu'il y a matière) ===== */

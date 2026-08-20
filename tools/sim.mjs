@@ -47,7 +47,7 @@ function makeContext(seed){
   ctx.Math.random=()=>{s+=0x6D2B79F5;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};
   return ctx;
 }
-const files=readdirSync(join(root,'src')).filter(f=>/^(0[1-9]|[1-3][0-9]|4[0-9]|10b|23b|23c|29b)-.*\.js$/.test(f)&&f.endsWith('.js')).sort();
+const files=readdirSync(join(root,'src')).filter(f=>/^(0[1-9]|[1-3][0-9]|4[0-9]|10b|12b|13b|23b|23c|29b)-.*\.js$/.test(f)&&f.endsWith('.js')).sort();
 const code=files.map(f=>readFileSync(join(root,'src',f),'utf8')).join('\n');
 
 function newGame(seed,classe,race){
@@ -194,11 +194,14 @@ const BOTS={
         ensureNpcs();
         const list=npcsHere();
         for(const n of list){if(n.rec)continue;talkTo(n);
-          if(n.rel>=50){recruit(n);n.assign=pick(['mineur','bucheron','fermier','garde']);n.cell=S.claims[0];__count('recrue');}
+          if(n.rel>=50){recruit(n);n.assign=pick(['mineur','bucheron','fermier','garde']);n.cell=S.claims[0];__count('recrue');__recTry=0;}
           else if(S.or>giftCost(n)*2)giveGift(n);}
         if(S.npcs.filter(n=>n.rec).length>=4||S.or<120||!list.length)__away=false;
         return;}
-      if(vil&&rec.length<4&&S.or>500&&!isNight()){__away='village';travel(vil.x,vil.y);return;}
+      /* une tournée de recrutement par jour, et on renonce après trois échecs :
+         sans cela le bot fait l'aller-retour en boucle et fausse toutes les mesures */
+      if(vil&&rec.length<4&&S.or>500&&!isNight()&&__recTry<3&&Math.floor(S.day)>__recDay){
+        __recDay=Math.floor(S.day);__recTry++;__away='village';travel(vil.x,vil.y);return;}
       if(!vil){for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)cell(S.pos[0]+dx,S.pos[1]+dy).seen=true;
         if(S.occ==='repos'&&Math.random()<.2){S.occ='explore';return;}}
       if(S.occ==='repos'&&S.hp>=maxHp()*.9)S.occ='combat';
@@ -207,7 +210,7 @@ const BOTS={
 };
 /* équipe la meilleure arme et une pièce d'armure par zone, à partir du sac */
 const HELPERS=`
-const __score=itemScore;let __away=false;const __djFail={};
+const __score=itemScore;let __away=false,__recDay=-1,__recTry=0;const __djFail={};
 /* un bot qui meurt deux fois dans un donjon renonce à celui-là */
 (()=>{const d0=down;down=function(){if(S.occ==='donjon'||S.resume==='donjon'){const k=key(S.pos[0],S.pos[1]);__djFail[k]=(__djFail[k]||0)+1;}return d0.apply(this,arguments);};})();
 function __eat(){
@@ -240,8 +243,12 @@ function snapshot(ctx){
 function run(botName,classe,race,hours,seed){
   const ctx=newGame(seed,classe,race);
   vm.runInContext(HELPERS,ctx);
-  /* compter les kills en enveloppant kill() */
-  vm.runInContext(`(()=>{const k0=kill;kill=function(){__count('kill');return k0.apply(this,arguments);};})()`,ctx);
+  /* compter les kills, les voyages et les spawns en enveloppant les fonctions */
+  vm.runInContext(`(()=>{
+    const k0=kill;kill=function(){__count('kill');return k0.apply(this,arguments);};
+    const t0=travel;travel=function(x,y){__count('travel');__ev.__jours=(__ev.__jours||0)+(Math.abs(x-S.pos[0])+Math.abs(y-S.pos[1]))/24;return t0.apply(this,arguments);};
+    const s0=spawn;spawn=function(){const r=s0.apply(this,arguments);__count('spawn');__ev.__grp=(__ev.__grp||0)+EE.length;return r;};
+  })()`,ctx);
   const bot=BOTS[botName];
   const snaps=[];const errors=[];
   const total=hours*3600;let t=0,botT=0,snapT=0;
@@ -280,6 +287,9 @@ for(const r of results){
   console.log('  fin : occ '+last.occ+' · pos '+last.pos+' · corruption '+last.corr+' · strate '+last.depth+' · semaine '+last.week+' · faim '+last.faim+' · compagnons '+last.comps);
   const cuts=Object.entries(r.events).filter(([k])=>k.startsWith('cut:')).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([k,v])=>k.slice(4)+'×'+v).join('  ');
   console.log('  événements : '+cuts);
+  const ev=r.events;
+  console.log('  rythme : '+(ev.spawn||0)+' rencontres · '+((ev.__grp||0)/Math.max(1,ev.spawn||1)).toFixed(2)+' créature(s) par rencontre · '
+    +(ev.travel||0)+' voyages ('+Math.round(ev.__jours||0)+' jours de marche)');
   if(r.events.__lastToast)console.log('  dernier toast : '+r.events.__lastToast);
   const x=r.extra;
   console.log('  territoire : '+x.claims+' claims · '+x.plots+' parcelles · stations ici '+(x.stations||'—')+' · résidents '+x.rec+' ('+x.assign+' assignés) · trésor '+x.tresor+' · dette '+x.dette+' · vivres '+x.vivres+' · plats '+x.plats);

@@ -46,7 +46,8 @@ function tickStatus(tgt,dt,estJoueur){
       if(estJoueur){S.hp-=d;
         /* hors combat, un poison ou une plaie ronge jusqu'à 1 PV sans tuer — comme la faim (A.9) */
         if(S.hp<=0){if(S.occ==='combat'||S.occ==='donjon')down();else S.hp=1;}}
-      else if(E){E.hp-=d;dpsA+=d;if(E.hp<=0){kill();return;}}
+      /* la plaie ronge CELLE qui la porte, pas la cible regardée */
+      else{tgt.hp-=d;dpsA+=d;if(tgt.hp<=0){kill(tgt);return;}}
     }
   });
   const fini=tgt.st.filter(x=>x.t<=0);

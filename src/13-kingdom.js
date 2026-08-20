@@ -148,49 +148,6 @@ function weeklyKingdom(r){
   if(!S.gov&&S.claims.length>=8&&S.npcs.filter(n=>n.rec).length>=5)
     r.push('<span class="hi">ton territoire est reconnu comme royaume — choisis une gouvernance</span>');
 }
-/* --- guildes et quêtes (B.7) --- */
-function guildOf(k){return S.guilds[k]||(S.guilds[k]={rank:0,xp:0,gains:0});}
-function newQuest(gk){
-  const g=GUILDS.find(x=>x.k===gk),r=guildOf(gk).rank;
-  const n=(2+r*2)*ri(1,3);
-  const q={g:gk,type:g.q,cur:0,need:n,or:Math.round((30+r*45)*n/3),xp:35+r*25};
-  if(g.q==='harvest'){q.mat=pick(cellMats(here()));q.need=n*3;q.txt='Récolter '+q.need+' × '+matName(q.mat);}
-  else if(g.q==='kill')q.txt='Abattre '+n+' créatures';
-  else if(g.q==='craft'){q.need=Math.max(1,Math.round(n/3));q.txt='Assembler '+q.need+' objets';}
-  else if(g.q==='build'){q.need=Math.max(1,Math.round(n/4));q.txt='Élever '+q.need+' structures ou claims';}
-  else if(g.q==='explore'){q.need=Math.max(2,Math.round(n/2));q.txt='Découvrir '+q.need+' cellules';}
-  else if(g.q==='donjon'){q.need=Math.max(3,Math.round(n));q.txt='Nettoyer '+q.need+' salles de donjon';}
-  else if(g.q==='deliver'){q.mat=pick(Object.keys(MAT));q.need=n;q.txt='Livrer '+n+' × '+matName(q.mat);}
-  S.quest=q;
-  log('<span class="in">Quête ('+g.n+') : '+q.txt+'</span>');
-}
-function questTick(type,n,mat){
-  const q=S.quest;if(!q||q.type!==type)return;
-  if(type==='harvest'&&mat!==q.mat)return;
-  q.cur+=n;
-  if(q.cur>=q.need)completeQuest();
-}
-function completeQuest(){
-  const q=S.quest;if(!q)return;
-  if(q.type==='deliver'){
-    if((S.mat[q.mat]||0)<q.need)return;
-    S.mat[q.mat]-=q.need;if(!S.mat[q.mat])delete S.mat[q.mat];
-  }
-  const gu=guildOf(q.g);
-  S.or+=q.or;gu.gains+=q.or;gu.xp+=q.xp;
-  gainRep(4,null,kingdomHere());
-  const need=100*Math.pow(2,gu.rank);
-  if(gu.xp>=need&&gu.rank<4){gu.xp-=need;gu.rank++;
-    cutIn('会',RANKS[gu.rank]+' — '+GUILDS.find(g=>g.k===q.g).n,'rang '+(gu.rank+1)+'/5');}
-  else cutIn('達','Quête accomplie','+'+q.or+' or · '+GUILDS.find(g=>g.k===q.g).n);
-  S.quest=null;
-}
-function weeklyGuild(r){
-  let taxe=0;
-  for(const k in S.guilds){const gu=S.guilds[k];
-    taxe+=Math.round(.05*(gu.gains||0)*(1+gu.rank*.1));gu.gains=0;}
-  if(taxe){S.or=Math.max(0,S.or-taxe);r.push('taxes de guilde −'+taxe+' or (détruit)');}
-}
 /* --- diplomatie (14.4) --- */
 function diplo(i,type){
   const k=S.kingdoms[i];

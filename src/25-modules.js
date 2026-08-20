@@ -13,7 +13,7 @@ const moduleSlots=()=>{const w=weapon();return Math.min(5,2+Math.floor(lv(w?w.fn
 const modLv=i=>(S.modules[i]&&S.modules[i].lv)||1;
 /* passifs issus des manuels */
 function passives(){
-  const p={dmg:0,pierce:0,gardecost:0,regen:0,win:0,riposte:0,multi:0,reach:0,heavy:0,spd:0,execute:0,def:0,stagger:0,crit:0,weaken:0,endcost:0,staggerE:0};
+  const p={dmg:0,pierce:0,gardecost:0,regen:0,win:0,riposte:0,multi:0,reach:0,heavy:0,spd:0,execute:0,def:0,stagger:0,crit:0,weaken:0,endcost:0,staggerE:0,sweep:0};
   S.postures.forEach(i=>{const m=S.modules[i];if(!m)return;
     const def=MODULE[m.id];if(!def.p)return;
     for(const k in def.p)p[k]+=def.p[k]*sf(m.lv);});
@@ -68,6 +68,7 @@ function castSpell(si){
     float('surchauffe','#C8332B');
     if(S.hp<=0){down();return false;}
   } else S.mana-=cost;
+  questTick('spell',1);
   sp.casts.forEach(c=>{
     if(c.hp)S.hp-=maxHp()*c.hp;
     /* effets sur soi : ils ne posent pas de segment, mais apprennent le domaine */
@@ -82,29 +83,38 @@ function castSpell(si){
         gainXp('m_'+c.dom,h);if(!c.shield)continue;}
       if(c.shield){S.end=Math.min(100,S.end+c.shield);float('盾','#3E7CB1');gainXp('m_'+c.dom,c.shield);continue;}
       if(!c.pow){if(c.status&&E){addStatus(E,c.status.k,c.status.dur,c.status.v||1);}continue;}
-      let p=c.pow*(1+st('vol')*.04);
-      if(c.el>=0)p*=1+lv('el_'+EL[c.el].k)/100+gemSum(weapon(),'domaine',c.el)/100;
-      p*=vmult(c.vec,E.vec,multOff);
+      let p0=c.pow*(1+st('vol')*.04);
+      if(c.el>=0)p0*=1+lv('el_'+EL[c.el].k)/100+gemSum(weapon(),'domaine',c.el)/100;
       const res=pushSeg(c.el>=0?c.el:domi(c.vec));   /* tout module lancé pose un segment */
-      if(res){const mul=1+S.bonus;p*=mul;S.seg=[];S.bonus=0;
+      if(res){const mul=1+S.bonus;p0*=mul;S.seg=[];S.bonus=0;
         log('<span class="hi">Chaîne résolue par un module ×'+mul.toFixed(2)+'</span>');}
-      const applied=Math.min(p,E.hp);
-      E.hp-=p;dpsA+=p;
-      if(c.drain){const h=applied*c.drain;S.hp=Math.min(maxHp(),S.hp+h);float('+'+Math.round(h),'#7E4C8C');}
-      if(c.status&&E)addStatus(E,c.status.k,c.status.dur,c.status.m?p*c.status.m:(c.status.v||1));
-      const stk=DOMSTAT[c.dom];
-      if(stk&&E&&!c.status&&Math.random()<.45){
-        const dur=STATUS[stk].dur?1.5:3.5;
-        addStatus(E,stk,dur,STATUS[stk].dot?p*.12:1);}
-      float(Math.round(p),c.el>=0?EL[c.el].c:'#B9A7D6',res);knock();
-      gainXp('m_'+c.dom,applied);
-      if(c.el>=0)gainXp('el_'+EL[c.el].k,applied);
-      const m=S.modules[c.idx];
-      if(m){m.xp=(m.xp||0)+applied;
-        if(m.xp>=xpNext(m.lv)){m.xp=0;m.lv++;cutIn(DOMAIN[m.dom].g,MODULE[m.id].n+' niveau '+m.lv,'plus puissant et moins coûteux');}}
-      if(E&&E.hp<=0){kill();return;}
-      if(c.echo&&Math.random()<c.echo){E.hp-=p*.5;dpsA+=p*.5;float('echo','#B9A7D6');
-        if(E&&E.hp<=0){kill();return;}}
+      /* un sort de zone arrose le groupe entier ; les autres ne touchent que la cible */
+      const zone=MODULE[c.id].aoe;
+      const cibles=zone?engaged().map((x,i)=>[x,x===E?1:.6]):[[E,1]];
+      const morts=[];
+      cibles.forEach(([tgt,part])=>{
+        if(!tgt||tgt.hp<=0)return;
+        let p=p0*part*vmult(c.vec,tgt.vec,multOff);
+        const applied=Math.min(p,tgt.hp);
+        tgt.hp-=p;dpsA+=p;
+        if(c.drain){const h=applied*c.drain;S.hp=Math.min(maxHp(),S.hp+h);float('+'+Math.round(h),'#7E4C8C');}
+        if(c.status)addStatus(tgt,c.status.k,c.status.dur,c.status.m?p*c.status.m:(c.status.v||1));
+        const stk=DOMSTAT[c.dom];
+        if(stk&&!c.status&&Math.random()<.45){
+          const dur=STATUS[stk].dur?1.5:3.5;
+          addStatus(tgt,stk,dur,STATUS[stk].dot?p*.12:1);}
+        float(Math.round(p),c.el>=0?EL[c.el].c:'#B9A7D6',res&&tgt===E);
+        gainXp('m_'+c.dom,applied);
+        if(c.el>=0)gainXp('el_'+EL[c.el].k,applied);
+        const m=S.modules[c.idx];
+        if(m){m.xp=(m.xp||0)+applied;
+          if(m.xp>=xpNext(m.lv)){m.xp=0;m.lv++;cutIn(DOMAIN[m.dom].g,MODULE[m.id].n+' niveau '+m.lv,'plus puissant et moins coûteux');}}
+        if(c.echo&&Math.random()<c.echo&&tgt.hp>0){tgt.hp-=p*.5;dpsA+=p*.5;float('echo','#B9A7D6');}
+        if(tgt.hp<=0)morts.push(tgt);
+      });
+      knock();
+      morts.forEach(m2=>kill(m2));
+      if(!E)return;
     }
   });
   return true;
@@ -133,6 +143,7 @@ function readBook(i){
       else{S.modules.push({id,dom:b.dom,lv:1,xp:0});
         log('<span class="gd">Module appris : '+MODULE[id].n+' ('+DOMAIN[b.dom].n+')</span>');}
     }
+    questTick('book',1);
     cutIn('読','Lecture réussie',n+' module(s) · jet '+jet.toFixed(1)+' contre DD '+readDD(b));
   } else {
     const eff=pick(READFAIL);

@@ -1,6 +1,7 @@
 /* Sensen Mini — 36-panel-table.js
    Onglet pTable */
 
+let selFood=[];
 function pTable(){
   let h='<p class="hint">Bien manger n\'est pas de la survie, c\'est de l\'optimisation de croissance. Monter une compétence consomme son potentiel ; la table le rend. La nutrition est le multiplicateur — et un plat couvrant les cinq éléments gagne l\'harmonie daoïste ×1.2.</p>';
   const ks=Object.keys(S.food).filter(k=>S.food[k]>0);

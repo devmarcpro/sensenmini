@@ -33,9 +33,10 @@ function foodInfo(k){
 const addFood=(k,n)=>{S.food[k]=(S.food[k]||0)+n;};
 function useFood(k,n){if((S.food[k]||0)<n)return false;S.food[k]-=n;if(!S.food[k])delete S.food[k];return true;}
 /* une créature laisse sa propre viande : le groupe dérive de son profil */
-function creatureDrops(){
-  const el=domi(E.vec);
-  addFood(foodKey('viande',el,MEATGRP[el]),1+(E.rare?2:0));
+function creatureDrops(e){
+  e=e||E;if(!e)return;
+  const el=domi(e.vec);
+  addFood(foodKey('viande',el,MEATGRP[el]),1+(e.rare?2:0));
   if(Math.random()<.35){const d=pick(PARTS.slice(1));
     addFood(foodKey(d.k,d.el,d.grp),1);}
 }
@@ -84,7 +85,7 @@ function cook(sel2){
     if(n2)lignes.push(g+' +'+Math.round(moy/n2));
   }
   gainXp('cuisine',infos.reduce((a,i)=>a+i.nutr,0)*12);
-  S.plats=(S.plats||0)+1;
+  S.plats=(S.plats||0)+1;questTick('cook',1);
   cutIn('厨',QNAME(q)+' — nutrition '+Math.round(nutr),
     (harmonie>1?'harmonie des cinq ×1.2 · ':'')+(lignes.join(' · ')||'aucun potentiel'));
 }

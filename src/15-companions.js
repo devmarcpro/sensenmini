@@ -42,17 +42,18 @@ function tameBeast(){
   const el=domi(E.vec),l=Math.max(1,lvCible);
   S.comps.push({id:'c'+(S.nid++),type:'bete',nom:(E.cre&&CREATURE[E.cre]?CREATURE[E.cre].n:pick(BEASTN))+' '+EL[el].n.toLowerCase(),cre:E.cre||null,
     el,lv:l,hp:36+l*8,max:36+l*8,xp:0,mood:70,order:'attaquer',esc:false,dead:0,mode:'permanent',eq:null,pot:90});
-  E=null;respawnT=1.4;
+  removeEnemy(E);questTick('tame',1);
   cutIn('馴','Apprivoisée','niveau '+l+' · '+EL[el].n);
 }
 const compEl=c=>c.eq?domi(itemVec(c.eq)):c.el;
-function compDmg(c){
+function compDmg(c,tgt){
+  tgt=tgt||E;if(!tgt)return 0;
   const o=ORDERS.find(x=>x.k===c.order);
   const moodF=Math.max(.5,Math.min(1.2,c.mood/100*1.4));
   let d=(2.2+c.lv*1.5)*o.dmg*moodF*weakF(c);
   if(c.eq){const F=FUNC[c.eq.fn];
     d+=roll(F.d[0],F.d[1])*(c.eq.durBase/20)*c.eq.q*.55;}
-  d*=vmult(V({[compEl(c)]:1}),E.vec,multOff);
+  d*=vmult(V({[compEl(c)]:1}),tgt.vec,multOff);
   return d;
 }
 function armComp(i,itemIdx){
@@ -79,13 +80,17 @@ function compTick(dt){
     const iv=2.8-Math.min(1.4,c.lv*.02);
     if(c.t<iv)return;
     c.t=0;
-    const d=Math.max(1,compDmg(c)*(1-E.arm*.5/(E.arm*.5+10)));
-    const applied=Math.min(d,E.hp);
-    E.hp-=d;dpsA+=d;
+    /* les compagnons ne se collent pas à ta cible : ils prennent les autres en charge */
+    const grp=engaged();
+    if(!grp.length)return;
+    const tgt=c.order==='tenir'?grp[grp.length-1]:pick(grp);
+    const d=Math.max(1,compDmg(c,tgt)*(1-tgt.arm*.5/(tgt.arm*.5+10)));
+    const applied=Math.min(d,tgt.hp);
+    tgt.hp-=d;dpsA+=d;
     float(Math.round(d),EL[compEl(c)].c);
     compXp(c,applied);
     gainXp('leadership',applied*.25);
-    if(E.hp<=0){kill();return;}
+    if(tgt.hp<=0)kill(tgt);
   });
 }
 /* la créature répartit ses coups : c'est l'ordre qui décide de l'exposition */

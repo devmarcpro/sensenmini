@@ -209,8 +209,9 @@ const MAT={
   neige:{n:"Neige",c:'meteo',d:1,de:3,v:1,iso:6,wx:{4:1},nutr:2,grp:'Éléments',col:'#FAFBFD'},
   cendre:{n:"Cendre",c:'meteo',d:2,de:2,v:2,iso:4,wx:{1:1},col:'#6F6B66'},
 };
-const matVec=k=>norm(V(MAT[k].wx||CAT[MAT[k].c].wx));
-const matName=k=>MAT[k].n;
+/* défensifs : une clé inconnue (sauvegarde ancienne, aperçu de gabarit) ne doit pas faire tomber le jeu */
+const matVec=k=>MAT[k]?norm(V(MAT[k].wx||CAT[MAT[k].c].wx)):[.2,.2,.2,.2,.2];
+const matName=k=>MAT[k]?MAT[k].n:String(k);
 const BIOME={
   plaine:{n:"Plaine tempérée",c:'#6E8E5A',fert:1,mats:['pin','chene','hetre','frene','orme','pommier','lin','coton','chanvre','paille','ble','orge','carotte','chou','oignon','limon','terrefertile','argile','cuivre','gres','craie','calcaire','silex','ocre','baies','camomille']},
   foret:{n:"Forêt tempérée",c:'#3F6B45',fert:0.9,mats:['chene','hetre','bouleau','erable','noyer','cerisier','charme','chataignier','tilleul','if','pin','champignons','herbes','framboise','myrtille','cuir','fourrure','os','sauge','achillee','ortie','amanite','pierre','limon']},

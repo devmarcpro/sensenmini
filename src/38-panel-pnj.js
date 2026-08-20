@@ -25,7 +25,7 @@ function pPnj(){
   if(!list.length){
     h+='<p class="hint">Personne ici. Les villages sont marqués 村 sur la carte — 4 % des cellules.</p>';
     const rec=S.npcs.filter(n=>n.rec);
-    if(rec.length)h+=grp('従','QUI TE SUIT')+rec.map(n=>'<div class="card"><h3><span>'+n.nom+'</span><i>'+JOBS[n.job].n+'</i></h3>'
+    if(rec.length)h+=grp('従','QUI TE SUIT')+rec.map(n=>'<div class="card"><h3><span>'+n.nom+'</span><i>'+npcRole(n)+'</i></h3>'
       +'<div class="meta">niveau '+n.lv+' · humeur '+Math.round(n.mood)+' · en attente d\'un territoire où résider</div></div>').join('');
     return h;
   }

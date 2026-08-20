@@ -46,7 +46,7 @@ function cutGem(mk,spec){
   const q=quality(lv('taille'));
   const g={mk,spec,el:GEMDEF[mk].el,v:gemValue(spec,q,mk),q:+q.toFixed(2)};
   S.gems=S.gems||[];S.gems.push(g);
-  gainXp('taille',MAT[mk].d*20);
+  gainXp('taille',MAT[mk].d*20);questTick('gem',1);
   cutIn('玉',gemLabel(g),'taille '+q.toFixed(2)+' — à sertir dans 装 ÉQUIPEMENT');
 }
 /* une gemme déjà taillée, pour le loot exceptionnel */

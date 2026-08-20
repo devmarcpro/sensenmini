@@ -32,15 +32,8 @@ function weekly(){
   S.npcs.forEach(n=>{
     n.or=Math.min(n.orMax,Math.round(n.or+n.orMax*.15));
     if(n.rel<0)n.rel=Math.min(0,n.rel+1);          /* voie de rédemption : +1 par semaine */
-    n.mood=Math.max(20,Math.min(100,n.mood+ri(-3,3)));
+    n.mood=Math.max(20,Math.min(100,n.mood+ri(-3,3)+(n.veuf?-1:0)));
   });
-  if(S.week%17===0){                                /* 1 an in-game ≈ 120 jours */
-    S.npcs.forEach(n=>{n.age++;
-      if(n.age>RACE[n.race].life*(1+ri(-15,15)/100)&&Math.random()<.3)n.dead=true;});
-    const morts=S.npcs.filter(n=>n.dead);
-    if(morts.length)log('<span class="bd">'+morts.map(n=>n.nom).join(', ')+' — mort de vieillesse</span>');
-    S.npcs=S.npcs.filter(n=>!n.dead);
-  }
   const r=[];
   if(inf)r.push(inf+' cases gagnées par la corruption');
   if(calm)r.push(calm+' cases s\'apaisent');
@@ -54,6 +47,6 @@ function weekly(){
       else c.mood=Math.max(15,c.mood-6);
       c.hp=Math.min(c.max,c.hp+c.max*.4);
     }});
-  weeklyTowns(r);weeklyFarms(r);weeklyKingdom(r);weeklyGuild(r);
+  weeklyTowns(r);weeklyFamilies(r);weeklyFarms(r);weeklyKingdom(r);weeklyGuild(r);
   log('<span class="in">Semaine '+S.week+'</span>'+(r.length?' · '+r.join(' · '):' · rien à signaler'));
 }

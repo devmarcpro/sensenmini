@@ -19,6 +19,8 @@ $('tip').addEventListener('click',e=>{
 function handle(e){
   const t=e.target;let b;
   if(b=t.closest('[data-go]')){const p=b.dataset.go.split(',');travel(+p[0],+p[1]);return;}
+  if(b=t.closest('[data-flee]')){disengage();paint();return;}
+  if(b=t.closest('[data-foc]')){refocus(+b.dataset.foc);sceneMode='';return;}
   if(b=t.closest('[data-occ]')){S.occ=b.dataset.occ;if(S.occ==='percer')harvT=0;sceneMode='';paint();return;}
   if(b=t.closest('[data-harv]')){S.target=b.dataset.harv;S.occ='recolte';harvT=0;sceneMode='';paint();return;}
   if(b=t.closest('[data-eat]')){eat(b.dataset.eat);return;}
@@ -153,6 +155,7 @@ $('panel').addEventListener('change',e=>{
 });
 $('scene').addEventListener('pointerdown',e=>{
   const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.foc!==undefined){e.preventDefault();refocus(+b.dataset.foc);sceneMode='';return;}
   if(b.id==='guardBtn'){e.preventDefault();tryParry();}
   if(b.id==='heavyBtn'){e.preventDefault();attack(true);}
   if(b.id==='tameBtn'){e.preventDefault();tameBeast();}
@@ -163,8 +166,13 @@ addEventListener('keydown',e=>{
   if(e.repeat)return;
   if(e.code==='Space'&&S.occ==='combat'){e.preventDefault();tryParry();}
   if(e.code==='KeyD'&&S.occ==='combat'){e.preventDefault();attack(true);}
-  if(/^Digit[1-4]$/.test(e.code)&&S.occ==='combat'){S.stance=+e.code.slice(5)-1;
+  const enCombat=S.occ==='combat'||S.occ==='donjon';
+  if(/^Digit[1-4]$/.test(e.code)&&enCombat){S.stance=+e.code.slice(5)-1;
     document.querySelectorAll('#stances button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.st===S.stance));}
+  /* changer de cible : Tab, ou les flèches */
+  if(enCombat&&(e.code==='Tab'||e.code==='ArrowRight')){e.preventDefault();cycleFocus(1);}
+  if(enCombat&&e.code==='ArrowLeft'){e.preventDefault();cycleFocus(-1);}
+  if(enCombat&&e.code==='KeyF'){e.preventDefault();disengage();paint();}
 });
 addEventListener('keyup',e=>{if(e.code==='Space')S.guard=false;});
 $('gate').addEventListener('click',e=>{

@@ -12,17 +12,15 @@ function pVille(){
     h+=near.map(o=>'<div class="card"><h3><span>'+o.k.nom+'</span><i>'+KSIZE[o.k.size].n+'</i></h3>'
       +'<div class="meta">'+GOV[o.k.gov].n+' · '+RACE[o.k.race].n+' · culture '+CULT[o.k.cult].n
       +' · capitale en '+o.k.cap.join(',')+' à '+o.d+' cellules</div>'
-      +'<div class="meta">'+o.k.ruler.titre+' '+o.k.ruler.nom+', '+o.k.ruler.age+' ans'
-      +(o.k.transition>0?' — <b style="color:var(--zhu)">trône vacant, '+o.k.transition+' semaines</b>':'')+'</div></div>').join('');
+      +'<div class="meta">'+rulerTxt(o.k)+'</div></div>').join('');
     return h;
   }
   const mien=t&&myTowns().includes(t);
   h+=grp('国',k.nom.toUpperCase(),KSIZE[k.size].n);
   h+='<div class="card"><div class="meta">'+GOV[k.gov].n+' · race dominante '+RACE[k.race].n
    +' · culture '+CULT[k.cult].n+' · taxe '+Math.round(k.tax*100)+'%</div>'
-   +'<div class="meta">'+k.ruler.titre+' '+k.ruler.nom+' ('+k.ruler.age+' ans)'
-   +(k.ruler.heir?' · héritier désigné : '+k.ruler.heir:' · <b>sans héritier</b>')
-   +(k.transition>0?' — <b style="color:var(--zhu)">trône vacant '+k.transition+' semaines : conquérir ici est 25 % plus facile</b>':'')+'</div>'
+   +'<div class="meta">'+rulerTxt(k)+'</div>'
+   +(k.transition>0?'<div class="meta" style="color:var(--zhu)">Le trône est vide : conquérir ici est 25 % plus facile tant que dure la transition.</div>':'')
    +'<div class="meta">trésor '+Math.round(k.or)+' or · réputation '+Math.round(repKing(kingdomHere()))+'</div>'
    +'<div class="meta">douanes : '+(Object.keys(k.tarifs||{}).filter(c=>k.tarifs[c]>0).map(c=>CAT[c].n+' '+Math.round(k.tarifs[c]*100)+'%').join(' · ')||'aucune connue')+'</div></div>';
   if(!t){

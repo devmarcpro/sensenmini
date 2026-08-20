@@ -59,7 +59,7 @@ Une seule interface, qui s'adapte :
 | | ordinateur | téléphone |
 |---|---|---|
 | onglets | tous visibles, sur deux lignes | défilent, fondu aux bords, recentrage au tap |
-| combat | `Espace` garde (maintenir), `D` frappe lourde, `1`–`4` postures | boutons larges ; garde = appui maintenu |
+| combat | `Espace` garde (maintenir), `D` frappe lourde, `1`–`4` postures, `Tab`/`←``→` changer de cible, `F` rompre | boutons larges ; garde = appui maintenu, tap sur une créature pour la viser |
 | raccourcis affichés | oui (`<kbd>`) | masqués (`pointer: coarse`) |
 | cibles | taille normale | boutons et listes agrandis, pas de zoom iOS |
 | encoche / barre d'accueil | — | `env(safe-area-inset-*)` |
@@ -169,6 +169,9 @@ GDD entre parenthèses) :
 | modules (F.2) | `04-data-magic.js`, `25-modules.js` | 62 modules : statuts, buffs, drain, esquive, invocation, purge ; 18 passifs de manuel |
 | bestiaire (F.3) | `23c-creatures.js` | 30 espèces par biome, meutes, fuite, venin, nuées, embuscade, humains à bourse, corrompus, statue 1:1 |
 | donjons (E.29) | `17-dungeon.js` | quatre thèmes, onze types de salles (piège, autel, puits, cellule, cache, armurerie…) |
+| multi-ennemis (5.1) | `24-combat.js`, `28-loop.js` | groupe de quatre, cible au tap, le dos coûte +30 %, balayage à l'allonge |
+| guildes (7.3 / B.7) | `13b-guilds.js` | 29 gabarits de quête, rangs qui les ouvrent, présent à chaque palier |
+| familles (12.2 / 12.3) | `12b-family.js` | couples et enfants, deuil, héritage, succession des trônes |
 
 ---
 
@@ -193,6 +196,10 @@ npm run sim -- --seed 7 --json               # autre graine, sortie brute
 | `mineur` | récolte le plus dur possible, change de cellule quand les gisements sont vides |
 | `mixte` | combat, explore, entre dans les donjons connus |
 | `batisseur` | la boucle d'endgame : claim, bâtiment, lit, cuisine, stations, dort, cuisine, recrute au village, assigne, dépose au trésor |
+
+Il relève aussi le **rythme** : nombre de rencontres, taille moyenne des groupes,
+voyages et jours de marche. Un bot qui fait l'aller-retour en boucle fausse toutes
+les mesures hebdomadaires — cette ligne est là pour le voir tout de suite.
 
 Il relève or, PV, kills, morts, objets, livres, modules, matériaux, arme,
 armure et compétences par demi-heure, puis l'état du territoire, et signale

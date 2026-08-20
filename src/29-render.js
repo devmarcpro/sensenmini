@@ -45,7 +45,7 @@ function render(){
   g('Hp',S.hp,maxHp());g('En',S.end,100);g('Ma',S.mana,maxMana());g('Fa',S.faim,100);
   const st2=$('hStat');
   if(st2)st2.innerHTML=(S.st&&S.st.length)?statusTxt(S):'';
-  if(sceneMode!==S.occ+(S.target||'')+(S.craft?S.craft.mk+(S.craft.ct||S.craft.f):''))buildScene();
+  if(sceneMode!==S.occ+(S.target||'')+(S.craft?S.craft.mk+(S.craft.ct||S.craft.f):'')+(EE.length>1?'g':''))buildScene();
   if(S.occ==='combat'||S.occ==='donjon'){renderCombat();return;}
   if(S.occ==='recolte'&&S.target){
     const t=harvestTime(S.target),p=$('hProg');
@@ -89,11 +89,12 @@ function combatScene(){
    +'<div class="floaters" id="floaters"></div></div>'
    +'<div class="bar2"><span id="eHp" style="background:#C8332B"></span><em id="eHpT">—</em></div>'
    +'<div class="tele" id="tele"><span id="teleF"></span><b id="teleW"></b></div>'
+   +'<div class="mobs" id="mobs"></div>'
    +'<div class="stances" id="stances">'+STANCE.map((st,i)=>
       '<button data-st="'+i+'" aria-pressed="'+(i===(S.stance||0))+'"><b>'+st.g+'</b>'+st.n.toUpperCase()+'<kbd>'+(i+1)+'</kbd></button>').join('')+'</div>'
    +'<div class="acts"><button id="guardBtn">護 GARDE<kbd>espace</kbd></button><button id="heavyBtn">重 LOURDE<kbd>D</kbd></button>'
    +(lv('dressage')||S.comps.length?'<button id="tameBtn">馴 APPRIVOISER</button>':'')
-   +'<button data-occ="repos">走 '+(S.occ==='donjon'?'REMONTER':'ROMPRE')+'</button></div>'
+   +'<button data-flee="1">走 '+(S.occ==='donjon'?'REMONTER':'ROMPRE')+'</button></div>'
    +(escortList().length?'<div class="comps" id="comps"></div>':'')+'</div>'
    +'<div class="chain">'+wheelSvg()+'<div class="cbox"><div class="pastilles" id="past"></div>'
    +'<div class="cinfo"><div>Bonus <b id="cBonus">+0.00</b> · résolveur <b id="cRes" style="color:var(--terre)">×1.00</b>'
@@ -114,16 +115,33 @@ function renderCombat(){
     +(E.st&&E.st.length?'<br>'+statusTxt(E):'');
   const mo=$('mob');
   if(mo){mo.style.setProperty('--e',EL[domi(E.vec)].c);
-    mo.className='mob'+(stagger>0?' stag':'')+(E.rare?' rare':'')+(hitFx>0?' hit':'')+(E.boss?' boss':'')+(E.pack>1?' pack':'');
+    mo.className='mob'+(E.stg>0?' stag':'')+(E.rare?' rare':'')+(hitFx>0?' hit':'')+(E.boss?' boss':'');
     const g=E.cre&&CREATURE[E.cre]?CREATURE[E.cre].g:'獣';
     const fr=mo.firstElementChild;if(fr&&fr.textContent!==g)fr.textContent=g;
-    const pk=$('mobPack');if(pk)pk.textContent=E.pack>1?'×'+E.pack:'';}
+    const pk=$('mobPack');if(pk)pk.textContent=EE.length>1?'×'+EE.length:'';}
   const t=$('tele');
-  if(wind>=0){t.className='tele on';
-    $('teleF').style.width=(wind/E.wind*100)+'%';
+  if(E.w>=0){t.className='tele on';
+    $('teleF').style.width=(E.w/E.wind*100)+'%';
     $('teleW').style.width=Math.min(100,parryWin()/E.wind*100)+'%';
-    $('guardBtn').className=(E.wind-wind)<=parryWin()?'armed':'';}
+    $('guardBtn').className=(E.wind-E.w)<=parryWin()?'armed':'';}
   else{t.className='tele';$('teleF').style.width='0';$('guardBtn').className=S.guard?'held':'';}
+  /* le groupe engagé : celles que tu ne regardes pas frappent dans ton dos */
+  const mb=$('mobs');
+  if(mb){
+    if(EE.length<2)mb.innerHTML='';
+    else{
+      if(mb.children.length!==EE.length)
+        mb.innerHTML=EE.map((x,i)=>'<button class="mchip" data-foc="'+i+'"><b></b><span class="mn"></span><i class="mb2"><u></u></i></button>').join('');
+      EE.forEach((x,i)=>{const el=mb.children[i];if(!el)return;
+        el.className='mchip'+(i===foc?' on':'')+(x.w>=0?' wind':'');
+        el.dataset.foc=i;
+        el.querySelector('b').textContent=x.cre&&CREATURE[x.cre]?CREATURE[x.cre].g:'獣';
+        el.querySelector('b').style.color=EL[domi(x.vec)].c;
+        el.querySelector('.mn').textContent=(i===foc?'':'背 ')+Math.round(Math.max(0,x.hp));
+        el.querySelector('u').style.width=Math.max(0,x.hp)/x.max*100+'%';
+        el.querySelector('u').style.background=EL[domi(x.vec)].c;});
+    }
+  }
   const p=$('past');
   if(p.children.length!==capChain())p.innerHTML=Array.from({length:capChain()},()=>'<i></i>').join('');
   for(let i=0;i<capChain();i++){const el=p.children[i],sg=S.seg[i];
@@ -148,7 +166,7 @@ function renderCombat(){
 
 let sceneMode='';
 function buildScene(){
-  sceneMode=S.occ+(S.target||'')+(S.craft?S.craft.mk+(S.craft.ct||S.craft.f):'');
+  sceneMode=S.occ+(S.target||'')+(S.craft?S.craft.mk+(S.craft.ct||S.craft.f):'')+(EE.length>1?'g':'');
   const c=here();
   if(S.occ==='combat'||S.occ==='donjon'){$('scene').innerHTML=combatScene();return;}
   if(S.occ==='atelier'&&S.craft){

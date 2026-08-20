@@ -146,8 +146,9 @@ const MAT={
 `;
 for(const ck of Object.keys(CAT_ORDER())){if(!byCat[ck])continue;out+='  /* --- '+ck+' ('+byCat[ck].length+') --- */\n'+byCat[ck].map(fmt).join('\n')+'\n';}
 out+=`};
-const matVec=k=>norm(V(MAT[k].wx||CAT[MAT[k].c].wx));
-const matName=k=>MAT[k].n;
+/* défensifs : une clé inconnue (sauvegarde ancienne, aperçu de gabarit) ne doit pas faire tomber le jeu */
+const matVec=k=>MAT[k]?norm(V(MAT[k].wx||CAT[MAT[k].c].wx)):[.2,.2,.2,.2,.2];
+const matName=k=>MAT[k]?MAT[k].n:String(k);
 const BIOME={
 `+Object.keys(BIOMES).map(k=>{const B=BIOMES[k];return '  '+k+':{n:'+JSON.stringify(B.n)+',c:\''+B.c+'\',fert:'+B.fert+',mats:'+JSON.stringify(B.mats).replace(/"/g,'\'')+'},';}).join('\n')+`
 };

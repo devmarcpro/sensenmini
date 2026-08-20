@@ -1,5 +1,9 @@
 # 森森 Sensen Mini
 
+**▶ Jouer : [devmarcpro.github.io/sensenmini](https://devmarcpro.github.io/sensenmini/)**
+&nbsp;·&nbsp;
+[![Vérifications](https://github.com/devmarcpro/sensenmini/actions/workflows/ci.yml/badge.svg)](https://github.com/devmarcpro/sensenmini/actions/workflows/ci.yml)
+
 Version *idle* de **Sensen**, le RPG voxel Wu Xing. Le jeu tourne dans un
 navigateur, sans dépendance ni build obligatoire : tout est en JavaScript
 classique, chargé dans l'ordre par `index.html`. Il se joue sur ordinateur
@@ -43,12 +47,17 @@ npm run build    # reconstruit dist/sensen-mini.html (fichier unique, file://)
 
 ### En ligne, sans l'ordinateur allumé
 
-Le dépôt est sur **[github.com/devmarcpro/sensenmini](https://github.com/devmarcpro/sensenmini)**.
-C'est un site statique : GitHub Pages suffit à l'héberger, sans build ni
-serveur. Sur le dépôt → *Settings* → *Pages* → *Source : Deploy from a
-branch* → branche `main`, dossier `/ (root)` → *Save*. Une minute plus tard,
-le jeu est jouable sur `https://devmarcpro.github.io/sensenmini/`, installable
-depuis le téléphone, et hors-ligne une fois ouvert.
+Le jeu est déjà déployé sur **[devmarcpro.github.io/sensenmini](https://devmarcpro.github.io/sensenmini/)**
+— ouvre l'adresse sur le téléphone, *Ajouter à l'écran d'accueil*, et il
+s'installe : plein écran, sans barre d'adresse, jouable sans réseau.
+
+C'est un site statique servi par GitHub Pages depuis `main` : chaque push
+met le jeu à jour. Le banc de test peut d'ailleurs s'exécuter contre le site
+en ligne plutôt que contre le serveur local :
+
+```bash
+npm run smoke -- --url https://devmarcpro.github.io/sensenmini/
+```
 
 La sauvegarde reste dans le navigateur de chaque appareil — pour la déplacer,
 自 VEILLE → *Exporter la sauvegarde*, puis *Importer* sur l'autre appareil.

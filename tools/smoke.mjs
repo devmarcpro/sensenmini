@@ -1,5 +1,7 @@
 /* Test de fumée dans Edge/Chrome headless, piloté par CDP sans dépendance.
-   node tools/smoke.mjs [--shots DIR] [--only phone|small|desktop]
+   node tools/smoke.mjs [--shots DIR] [--only phone|small|desktop] [--url ADRESSE]
+   --url pointe le banc sur un site déjà déployé (GitHub Pages, par exemple)
+   au lieu du serveur local : la même partie s'y joue, en vrai.
    — sert le projet, ouvre index.html en mode téléphone (tactile) puis
      ordinateur, crée un personnage, visite chaque onglet, lance un combat,
      et signale : exceptions JS, erreurs console, débordement horizontal,
@@ -28,7 +30,9 @@ const BROWSERS=[
 const bin=process.env.BROWSER||BROWSERS.find(existsSync);
 if(!bin){console.error('Aucun navigateur Chromium trouvé (définis BROWSER=chemin)');process.exit(2);}
 
-const server=spawn(process.execPath,[join(root,'tools/serve.mjs'),String(PORT)],{stdio:'ignore'});
+/* soit on sert le dossier, soit on éprouve une adresse déjà en ligne */
+const DISTANT=arg('--url','');
+const server=DISTANT?{kill(){}}:spawn(process.execPath,[join(root,'tools/serve.mjs'),String(PORT)],{stdio:'ignore'});
 const profile=join(tmpdir(),'sensen-smoke-'+process.pid);
 const browser=spawn(bin,['--headless=new','--disable-gpu','--no-first-run','--no-default-browser-check',
   '--remote-debugging-port=0','--remote-allow-origins=*','--user-data-dir='+profile,
@@ -114,7 +118,7 @@ async function runScenario(scen){
     return true;
   };
 
-  const url='http://127.0.0.1:'+PORT+'/index.html';
+  const url=DISTANT||('http://127.0.0.1:'+PORT+'/index.html');
   await cdp('Page.navigate',{url});await sleep(600);
   await evalJs('localStorage.clear()');
   await cdp('Page.navigate',{url});await sleep(900);

@@ -29,8 +29,11 @@ const PARTN=k=>PARTS.find(p=>p.k===k);
 function foodKey(type,el,grp){return type+':'+el+':'+grp;}
 function foodInfo(k){
   if(PLANTE[k])return {n:matName(k),nutr:PLANTE[k].nutr,el:domi(matVec(k)),grp:PLANTE[k].grp,plante:1};
-  const p=k.split(':'),d=PARTN(p[0]);
-  return {n:d.n+' ('+EL[+p[1]].n+')',nutr:d.nutr,el:+p[1],grp:p[2],part:p[0],alch:d.alch};
+  const p=String(k).split(':'),d=PARTN(p[0]);
+  /* une clé inconnue (sauvegarde d'une autre version) ne doit pas faire tomber le jeu */
+  if(!d)return {n:String(k),nutr:4,el:Math.min(4,Math.max(0,+p[1]||0)),grp:p[2]||'Vie',part:p[0]};
+  const el=EL[+p[1]]?+p[1]:0;
+  return {n:d.n+' ('+EL[el].n+')',nutr:d.nutr,el,grp:p[2]||d.grp||'Vie',part:p[0],alch:d.alch};
 }
 const addFood=(k,n)=>{S.food[k]=(S.food[k]||0)+n;};
 function useFood(k,n){if((S.food[k]||0)<n)return false;S.food[k]-=n;if(!S.food[k])delete S.food[k];return true;}

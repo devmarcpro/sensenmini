@@ -4,9 +4,12 @@
 
 /* ===== ÉTAT ===== */
 const DAY=240,WEEK=7;   /* 4 min réelles = 1 jour in-game ; la nuit dure ~80 s, la semaine ~28 min */
-function NEWSK(){const o={};SK.forEach(k=>o[k]={lv:0,xp:0,pot:80,base:80});return o;}
-/* les stats aussi ont leur potentiel (6.4) : elles montent par l'usage, lentement */
-function NEWSX(){const o={};STATS.forEach(([k])=>o[k]={xp:0,pot:100,base:100});return o;}
+/* Potentiel (6.4 / A.1) : `base` est le PLANCHER que la race et la classe
+   fixent, `pot` la valeur courante. Elle doit partir AU-DESSUS du plancher,
+   sinon monter de niveau ne consomme rien et toute la boucle de la table
+   — bien manger pour progresser plus vite — reste lettre morte. */
+function NEWSK(){const o={};SK.forEach(k=>o[k]={lv:0,xp:0,pot:100,base:80});return o;}
+function NEWSX(){const o={};STATS.forEach(([k])=>o[k]={xp:0,pot:110,base:90});return o;}
 const NEW=()=>({
   seed:Math.floor(Math.random()*1e6),
   pos:[0,0],world:{},occ:'repos',target:null,

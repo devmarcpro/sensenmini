@@ -23,9 +23,12 @@ Server*. Rechargement automatique à chaque sauvegarde.
 ```bash
 npm run dev      # sert le dossier sur http://localhost:5173 et affiche l'URL réseau
 npm run check    # vérifie la syntaxe de chaque module, sans navigateur (2 s)
-npm test         # test de fumée dans Edge/Chrome headless : téléphone + ordinateur
+npm run spec     # 141 vérifications sur les règles du jeu, sans navigateur (1 s)
+npm run smoke    # test de fumée dans Edge/Chrome headless : téléphone + ordinateur
+npm test         # spec puis smoke — à lancer avant de livrer
 npm run sim      # simule des parties longues avec des bots (équilibrage, voir plus bas)
 npm run icons    # régénère les icônes PNG de l'application (icons/)
+npm run gen      # régénère src/02-data-materials.js depuis le GDD
 npm run build    # reconstruit dist/sensen-mini.html (fichier unique, file://)
 ```
 
@@ -134,7 +137,24 @@ sauvegarde. `NEW()` en donne la forme de référence.
 
 ## Tester
 
-`npm test` lance `tools/smoke.mjs` : il sert le projet, pilote Edge ou Chrome
+Trois outils, trois questions différentes.
+
+**`npm run spec` — les règles tiennent-elles ?** `tools/spec.mjs` charge toute
+la logique dans un contexte Node isolé et exécute 141 vérifications nommées :
+génération du monde déterministe, catalogue de matériaux cohérent, chaîne Wu
+Xing, combat de groupe, prises en main, gestes des créatures, qualité
+d'artisanat, gemmes, gisements, agriculture, guildes, familles, sac et coffres,
+sauvegarde et rétrocompatibilité, veille, économie, royaume, conquête,
+progression, magie, boutiques, statuts. Chaque cas repart d'un personnage neuf
+et d'une graine fixe : deux exécutions donnent le même résultat. Une seconde.
+
+```bash
+npm run spec                  # tout
+npm run spec -- --only combat # les cas dont le nom contient « combat »
+npm run spec -- -v            # détail de chaque vérification
+```
+
+**`npm run smoke` — l'interface tient-elle ?** `tools/smoke.mjs` sert le projet, pilote Edge ou Chrome
 headless par le protocole DevTools (sans rien installer), et joue trois
 scénarios — téléphone 390×844 tactile, petit téléphone 320×568, ordinateur
 1280×860. Pour chacun : création de personnage, visite de tous les onglets,
@@ -143,6 +163,10 @@ passage en arrière-plan, rechargement, puis chargement **sans réseau** via le
 service worker. Il signale toute exception JS, erreur console, débordement
 horizontal, onglet sans bouton, sauvegarde manquante. Captures d'écran dans
 `.shots/`.
+
+**`npm run sim` — le jeu est-il jouable dans la durée ?** Voir plus bas.
+
+`npm test` enchaîne spec puis smoke : c'est ce qu'il faut passer avant de livrer.
 
 ---
 

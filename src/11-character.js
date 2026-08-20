@@ -79,8 +79,10 @@ function applyBirth(){
   for(const k in (C.st||{}))S.stats[k]+=C.st[k];
   /* potentiels de base : race, classe, puis naissance */
   /* un même identifiant peut désigner une compétence ou une stat : les deux ont un potentiel */
-  const setPot=(id,v)=>{const t=S.sk[id]||S.sx[id];if(t){t.base=Math.max(t.base,v);t.pot=Math.max(t.pot,v);}};
-  const setLow=(id,v)=>{const t=S.sk[id]||S.sx[id];if(t){t.base=v;t.pot=v;}};
+  /* la race et la classe relèvent le PLANCHER ; la valeur courante part vingt
+     points plus haut, pour qu'il y ait de quoi consommer en montant (6.4) */
+  const setPot=(id,v)=>{const t=S.sk[id]||S.sx[id];if(t){t.base=Math.max(t.base,v);t.pot=Math.max(t.pot,v+20);}};
+  const setLow=(id,v)=>{const t=S.sk[id]||S.sx[id];if(t){t.base=v;t.pot=v+10;}};
   /* la stat forte d'une race ou d'une classe monte aussi plus vite (6.4) */
   for(const k in (R.st||{}))if(S.sx[k])setPot(k,100+R.st[k]*10);
   for(const k in (C.st||{}))if(S.sx[k])setPot(k,100+C.st[k]*10);

@@ -2,8 +2,43 @@
    Démarrage, boucle rAF, cycle de vie de l'onglet, service worker
    Chargé dans l'ordre par index.html ; portée globale partagée. */
 
+/* ===== INTÉGRITÉ DU CHARGEMENT =====
+   Le jeu se charge en cinquante-six fichiers. Sur un réseau capricieux ou
+   un hébergeur qui limite, il suffit qu'un seul échoue pour que la partie
+   démarre amputée — sans que rien ne le dise. On vérifie donc quelques
+   symboles répartis sur tout l'ordre de chargement, et l'on recharge une
+   fois si l'un manque. Une seule fois : au-delà, on l'annonce plutôt que
+   de boucler. */
+/* Un `const` de portée globale n'est pas une propriété de `window` : on ne peut
+   pas le chercher par son nom. On les référence donc directement — un module
+   manquant fait lever une ReferenceError, et c'est exactement ce qu'on veut. */
+function chargementComplet(){
+  try{
+    return !!(EL&&MAT&&CAT&&BIOME&&FORM&&COMP&&FUNC&&SLOTS&&MODULE&&DOMAIN&&SKILLS&&SK&&STATS&&RACE&&CLASSE
+      &&genCell&&NEW&&gainXp&&gainStat&&mkItem&&partFor&&cutGem&&GEMSPEC&&mkNpc&&linkFamilies&&JOBS
+      &&GOV&&GUILDS&&QTPL&&PLANTE&&cook&&escortList&&ORDERS&&PLOT&&MEUBLE&&plots&&genDungeon&&DJTHEME
+      &&METEO&&SEASON&&offline&&AUTOS&&STATUS&&addStatus&&KSIZE&&kingdomsNear&&starterKit&&SHOPDEF
+      &&CREATURE&&PATTERN&&STANCE&&attack&&compileSpell&&harvestTick&&tickClock&&step&&paint&&grp&&foldHead
+      &&pMonde&&pCell&&pAtelier&&pEquip&&pMagie&&pTable&&pVille&&pPnj&&pComps&&pBatir&&pRoyaume
+      &&pGuilde&&pSac&&pAuto&&pSkills&&pRecolte&&TIPS&&SFX&&save&&exportSave
+      &&buildGate&&applyBirth&&defaultStart&&repLocale&&lawsHere&&handle&&tabsEdges);
+  }catch(e){return false;}
+}
 /* ===== DÉMARRAGE ===== */
 (async()=>{
+  if(!chargementComplet()){
+    /* réseau capricieux ou hébergeur qui limite : un fichier sur cinquante-six
+       a manqué. On recharge une fois, puis on l'annonce plutôt que de boucler. */
+    let dejaTente=false;
+    try{dejaTente=sessionStorage.getItem('sensen:reload')==='1';sessionStorage.setItem('sensen:reload','1');}catch(e){}
+    if(!dejaTente&&/^https?:$/.test(location.protocol)){location.reload();return;}
+    document.body.insertAdjacentHTML('afterbegin',
+      '<div class="toast" style="position:static;margin:12px;max-width:none">'
+      +'Le jeu n\'a pas pu charger entièrement — un morceau a manqué à l\'appel. '
+      +'Recharge la page : ta sauvegarde est intacte.</div>');
+    return;
+  }
+  try{sessionStorage.removeItem('sensen:reload');}catch(e){}
   const ok=await load();
   here().seen=true;
   if(ok)paint();

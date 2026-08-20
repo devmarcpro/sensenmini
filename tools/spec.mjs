@@ -31,7 +31,8 @@ function fakeEl(){
     classList:{toggle(){},add(){},remove(){},contains(){return false;}}};
   return el;
 }
-function makeContext(seed){
+/* un contexte vierge : le DOM factice, l'aléatoire seedé, mais aucun code chargé */
+function nuContext(seed){
   const els={};
   const document={getElementById:id=>els[id]||(els[id]=fakeEl()),querySelectorAll:()=>[],querySelector:()=>null,
     createElement:()=>fakeEl(),body:fakeEl(),documentElement:fakeEl(),addEventListener(){},
@@ -39,6 +40,7 @@ function makeContext(seed){
   const ctx={document,console,Math,JSON,Date,performance:{now:()=>0},
     setTimeout:()=>0,clearTimeout(){},requestAnimationFrame(){},addEventListener(){},
     localStorage:{getItem:()=>null,setItem(){},removeItem(){}},
+    sessionStorage:{getItem:()=>null,setItem(){},removeItem(){}},
     btoa:s=>Buffer.from(s,'binary').toString('base64'),atob:s=>Buffer.from(s,'base64').toString('binary'),
     unescape:global.unescape,escape:global.escape,encodeURIComponent,decodeURIComponent,
     navigator:{},location:{protocol:'file:'},getComputedStyle:()=>({})};
@@ -47,6 +49,10 @@ function makeContext(seed){
   let s=seed>>>0;
   ctx.Math=Object.create(Math);
   ctx.Math.random=()=>{s+=0x6D2B79F5;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};
+  return ctx;
+}
+function makeContext(seed){
+  const ctx=nuContext(seed);
   vm.runInContext(code,ctx,{filename:'sensen.js'});
   /* rendu neutralisé, journal capté */
   vm.runInContext(`
@@ -563,6 +569,27 @@ test('panneaux — chaque onglet se rend, replié ou déplié',()=>{
   ok(G(c,'__b.length')<G(c,'__a.length')*3,'déplier une section ne fait pas exploser le panneau');
   R(c,'S.fold.atelier=null;__c=pAtelier();');
   ok(G(c,'__c.length')<G(c,'__a.length'),'tout replié, le panneau est plus court');
+});
+
+test('chargement — un module manquant est détecté au démarrage',()=>{
+  /* Le jeu se charge en cinquante-six balises <script>. Sur un réseau
+     capricieux, il suffit qu'une seule échoue pour démarrer amputé.
+     `chargementComplet()` doit voir l'absence de N'IMPORTE lequel. */
+  const tous=readdirSync(join(root,'src')).filter(f=>f.endsWith('.js')).sort();
+  const charge=(liste)=>{
+    const ctx=nuContext(42);
+    try{vm.runInContext(liste.map(f=>readFileSync(join(root,'src',f),'utf8')).join('\n'),ctx);}catch(e){}
+    try{return vm.runInContext('typeof chargementComplet==="function"?chargementComplet():false',ctx);}
+    catch(e){return false;}
+  };
+  eq(charge(tous),true,'chargement complet : le contrôle passe');
+  const rates=[];
+  for(const f of tous){
+    if(/^52-/.test(f))continue;               /* le fichier qui porte le contrôle lui-même */
+    if(charge(tous.filter(x=>x!==f))!==false)rates.push(f);
+  }
+  eq(rates.length,0,'l\'absence de chacun des '+(tous.length-1)+' autres modules est détectée',
+    'non détectés : '+rates.join(', '));
 });
 
 test('statuts — plafonds et anti-enchaînement',()=>{

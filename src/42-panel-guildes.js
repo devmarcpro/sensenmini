@@ -4,7 +4,7 @@
 /* un gabarit décrit en clair, sans tirer la quête : « N » et une matière d'exemple */
 const APERCU={need:'N',mat:'materiau'};
 function pGuilde(){
-  let h='<p class="hint">Cinq rangs, des quêtes tirées de gabarits — jamais écrites à la main : le pattern, la cible et le compte se remplissent au contexte. Le cumul est permis ; la taxe hebdomadaire de 5 % des gains en est le coût, et cet or sort du jeu, c\'est un des puits qui tiennent l\'inflation.</p>';
+  let h='<p class="hint">Cinq rangs, des quêtes tirées de gabarits : le pattern, la cible et le compte se remplissent au contexte. Le cumul est permis — la taxe hebdomadaire de 5 % des gains en est le coût, et cet or sort du jeu.</p>';
   /* quête en cours */
   if(S.quest){const q=S.quest,g=GUILDS.find(x=>x.k===q.g);
     const pret=q.cur>=q.need;
@@ -19,7 +19,7 @@ function pGuilde(){
   const hall=countSlot('hall');
   const t=townAt(S.pos[0],S.pos[1]);
   h+=grp('会','GUILDES',hall?'hall sur ton territoire — toutes joignables':(t&&t.halls&&t.halls.length?t.nom+' : '+t.halls.length+' hall(s)':'aucun hall ici'));
-  h+='<div class="meta" style="margin-bottom:8px">Un gabarit ne s\'ouvre qu\'à partir d\'un certain rang : monter en donne de plus exigeants, et de meilleures récompenses. Chaque palier s\'accompagne d\'un présent de la guilde.</div>';
+  h+='<div class="meta" style="margin-bottom:8px">Monter en rang ouvre des gabarits plus exigeants, de meilleures récompenses, et un présent à chaque palier.</div>';
   h+=GUILDS.map(g=>{
     const gu=guildOf(g.k),need=guildRankNeed(gu.rank),ok=guildReachable(g.k);
     const ouverts=guildTemplates(g.k).length,tot=QTPL.filter(x=>x.g===g.k).length;
@@ -27,10 +27,10 @@ function pGuilde(){
     return '<div class="card'+(ok?'':' off')+'"><h3><span>'+g.g+' '+g.n+'</span><i>'+RANKS[gu.rank]+' · rang '+(gu.rank+1)+'/5</i></h3>'
      +'<div class="bar2"><span style="width:'+(gu.rank>=4?100:Math.min(100,gu.xp/need*100))+'%;background:#D9A441"></span>'
      +'<em>'+(gu.rank>=4?'maîtrise atteinte':Math.round(gu.xp)+' / '+need+' XP')+'</em></div>'
-     +'<div class="meta">'+ouverts+' gabarit'+(ouverts>1?'s':'')+' sur '+tot+' ouvert'+(ouverts>1?'s':'')
-     +(gu.faites?' · '+gu.faites+' quête'+(gu.faites>1?'s':'')+' accomplie'+(gu.faites>1?'s':''):'')
-     +(suiv?' · au rang '+(suiv.r+1)+' : '+suiv.txt(APERCU).toLowerCase():'')+'</div>'
      +'<div class="meta">'+guildTemplates(g.k).map(x=>x.txt(APERCU)).join(' · ')+'</div>'
+     +'<div class="meta">'+ouverts+'/'+tot+' gabarit'+(tot>1?'s':'')+' ouvert'+(ouverts>1?'s':'')
+     +(gu.faites?' · '+gu.faites+' accomplie'+(gu.faites>1?'s':''):'')
+     +(suiv?' · rang '+(suiv.r+1)+' : '+suiv.txt(APERCU):'')+'</div>'
      +'<div class="row"><button class="btn pri" data-quest="'+g.k+'" '+(S.quest||!ok?'disabled':'')+'>'
      +(S.quest?'une quête en cours':ok?'Prendre une quête':'hall hors de portée')+'</button></div></div>';
   }).join('');

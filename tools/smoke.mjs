@@ -152,7 +152,7 @@ async function runScenario(scen){
     const sel=await evalJs('tab');
     if(sel!==t)report(scen.name,'onglet','le tap sur '+t+' a ouvert '+sel);
     await checkOverflow('onglet '+t);
-    if(['atelier','royaume','skills','sac','autos'].includes(t))await shot('3-'+t);
+    if(['atelier','royaume','skills','sac','autos','guilde','equip','magie','pnj'].includes(t))await shot('3-'+t);
   }
   /* combat : GARDE maintenue puis relachee, puis LOURDE */
   await tap('#tabs button[data-tab="monde"]');await sleep(100);

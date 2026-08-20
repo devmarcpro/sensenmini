@@ -79,7 +79,7 @@ const TIPS=[
    when:()=>S.npcs.some(n=>n.rel>=50&&!n.rec)},
   {id:'veille',g:'自',t:'Le monde tourne sans toi',
    d:'Onglet 自 VEILLE : les automatisations rachètent ce que tu fais à la main, et ton absence se résout à ton retour — à la cadence que tu tenais, jusqu\'à 8 h.',
-   when:()=>S.day>=.08},
+   when:()=>S.day-7/24>=2.5},   /* après une dizaine de minutes de jeu, pas au premier pas */
   {id:'champ',g:'田',t:'Un champ en friche',
    d:'Dans 建 BÂTIR, ouvre la parcelle et sème deux unités d\'une plante. Elle produit chaque semaine selon la fertilité, la pluie et la saison — ×1,5 avec un fermier. Les bêtes apprivoisées en bétail y rendent de la viande.',
    when:()=>countPlot('champ')>0},
@@ -91,11 +91,15 @@ let tipQ=[];
 function tickTips(){
   if(!S.race||S.tips===false)return;
   S.seen=S.seen||{};
+  /* un conseil à la fois : au premier contact, une demi-douzaine de
+     conditions sont vraies d'un coup, et six encarts d'affilée forment
+     un mur. On attend que le précédent soit lu. */
+  if(tipQ.length){showTip();return;}
   for(const t of TIPS){
     if(S.seen[t.id])continue;
     let ok=false;try{ok=t.when();}catch(e){ok=false;}
     if(!ok)continue;
-    S.seen[t.id]=1;tipQ.push(t);
+    S.seen[t.id]=1;tipQ.push(t);break;
   }
   showTip();
 }

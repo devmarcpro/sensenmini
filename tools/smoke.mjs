@@ -17,6 +17,7 @@ const root=join(dirname(fileURLToPath(import.meta.url)),'..');
 const argv=process.argv.slice(2);
 const arg=(k,d)=>{const i=argv.indexOf(k);return i>=0?argv[i+1]:d;};
 const SHOTS=arg('--shots',join(root,'.shots'));
+const VERBOSE=argv.includes('-v');
 mkdirSync(SHOTS,{recursive:true});
 const PORT=5199;
 const BROWSERS=[
@@ -149,6 +150,7 @@ async function runScenario(scen){
   if(!born)report(scen.name,'creation','le personnage n\'est pas ne');
   await shot('2-monde');await checkOverflow('onglet monde');
   /* tous les onglets */
+  const hauteurs=[];
   const tabs=await evalJs('[...document.querySelectorAll("#tabs button")].map(b=>b.dataset.tab)');
   const panels=['monde','cell','recolte','atelier','equip','magie','table','ville','pnj','comps','batir','royaume','guilde','sac','autos','skills'];
   const missing=panels.filter(k=>!tabs.includes(k));
@@ -160,7 +162,42 @@ async function runScenario(scen){
     if(sel!==t)report(scen.name,'onglet','le tap sur '+t+' a ouvert '+sel);
     await checkOverflow('onglet '+t);
     if(['atelier','royaume','skills','sac','autos','guilde','equip','magie','pnj'].includes(t))await shot('3-'+t);
+    /* longueur du panneau : au-delà d'une vingtaine d'écrans, on ne trouve plus rien */
+    const ec=await evalJs('Math.round(document.getElementById("panel").scrollHeight/innerHeight*10)/10');
+    hauteurs.push(t+' '+ec);
+    if(ec>22)report(scen.name,'panneau interminable',t+' fait '+ec+' écrans de haut');
   }
+  if(VERBOSE)console.log('  hauteur des panneaux (écrans) : '+hauteurs.join(' · '));
+  /* les mêmes panneaux, mais sur une partie avancée : matières, formes,
+     composants, objets, recettes. C'est là que l'atelier peut devenir un mur. */
+  await evalJs(`(()=>{
+    cellMats(here()).concat(['fer','cuivre','argent','chene','pin','lin','cuir','pierre','calcaire']).forEach(m=>{if(MAT[m])S.mat[m]=200;});
+    S.carry=['etabli','forge','enclume','scierie','tissage','tailleur','enchantement','cuisine','alambic'];
+    FK.forEach(f=>Object.keys(S.mat).forEach(m=>{if(formOk(f,m))addRef(f,m,9);}));
+    Object.keys(COMP).forEach(ct=>Object.keys(S.mat).slice(0,6).forEach(m=>{
+      S.comp[ct+'|brut|'+m+'|1']={ct,f:'brut',mk:m,q:1,n:4};}));
+    const p=FUNC.epee.comp.map(ct=>partFor(ct,['fer','chene']));p.push(partFor('fixations',['fer']));
+    for(let i=0;i<25;i++)S.items.push(mkItem('arme','epee',p,1));
+    S.gems=[randomGem(here()),randomGem(here())];
+  })()`);
+  const lourds=[];
+  for(const t of ['atelier','equip','sac','magie','table','skills','autos','guilde']){
+    if(!await tap('#tabs button[data-tab="'+t+'"]'))continue;
+    await sleep(160);flushErrors('onglet chargé '+t);
+    const m=await evalJs('({ec:Math.round(document.getElementById("panel").scrollHeight/innerHeight*10)/10,'
+      +'onglet:tab,car:document.getElementById("panel").innerHTML.length})');
+    const ec=m.ec;
+    if(m.onglet!==t)report(scen.name,'onglet','mesure de '+t+' prise sur '+m.onglet);
+    lourds.push(t+' '+ec+' ('+Math.round(m.car/1000)+'k)');
+    if(ec>30)report(scen.name,'panneau interminable (partie avancée)',t+' fait '+ec+' écrans');
+    await checkOverflow('onglet chargé '+t);
+  }
+  if(VERBOSE)console.log('  partie avancée (écrans) : '+lourds.join(' · '));
+  /* l'établi d'une partie avancée : c'est là que l'accordéon se juge */
+  await tap('#tabs button[data-tab="atelier"]');await sleep(200);
+  await shot('6-atelier-charge');
+  /* et une section dépliée */
+  if(await tap('[data-fold="atelier:co"]')){await sleep(200);await shot('7-atelier-composants');}
   /* combat : GARDE maintenue puis relachee, puis LOURDE */
   await tap('#tabs button[data-tab="monde"]');await sleep(100);
   await tap('[data-occ="combat"]');await sleep(1600);flushErrors('entree en combat');

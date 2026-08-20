@@ -47,6 +47,20 @@ function knock(){const b=$('blk');if(!b)return;b.className='blk';void b.offsetWi
 function vecBar(v){return '<div style="display:flex;height:5px;margin-top:6px;border:1px solid var(--line)">'
   +v.map((p,i)=>p>.001?'<i style="display:block;height:100%;width:'+(p*100)+'%;background:'+EL[i].c+'"></i>':'').join('')+'</div>';}
 function grp(k,label,right){return '<div class="grp"><b>'+k+'</b><span>'+label+'</span>'+(right?'<em>'+right+'</em>':'')+'</div>';}
+/* ===== SECTIONS REPLIABLES =====
+   Un établi bien garni faisait douze écrans de haut : on n'y trouvait plus
+   rien. Une seule section ouverte à la fois par panneau, et le choix se retient. */
+function foldOpen(panel,key,def){
+  S.fold=S.fold||{};
+  if(S.fold[panel]===undefined)S.fold[panel]=def===undefined?key:def;
+  return S.fold[panel]===key;
+}
+function foldHead(panel,key,g,label,right,def){
+  const open=foldOpen(panel,key,def);
+  return '<button class="grp fold'+(open?' on':'')+'" data-fold="'+panel+':'+key+'">'
+    +'<b>'+g+'</b><span>'+label+'</span>'+(right?'<em>'+right+'</em>':'')
+    +'<i>'+(open?'▾':'▸')+'</i></button>';
+}
 function render(){
   const an=Math.floor(S.day/120)+1,jr=Math.floor(S.day%120)+1;
   $('hClock').textContent='AN '+an+' · J'+jr+' · 週'+S.week;

@@ -34,6 +34,8 @@ function handle(e){
     placeSlot(openPlot,openSlot,q[0],q[1]);openSlot=null;paint();return;}
   if(b=t.closest('[data-clear]')){const P=plots(here());
     if(P[openPlot]&&P[openPlot].slots)P[openPlot].slots[openSlot]=null;openSlot=null;paint();return;}
+  if(b=t.closest('[data-fold]')){const q=b.dataset.fold.split(':');
+    S.fold=S.fold||{};S.fold[q[0]]=S.fold[q[0]]===q[1]?null:q[1];paint();return;}
   if(b=t.closest('[data-carry]')){toggleCarry(b.dataset.carry);paint();return;}
   if(b=t.closest('[data-auto]')){buyAuto(b.dataset.auto);paint();return;}
   if(b=t.closest('[data-tips]')){if(S.tips===false)tipsReset();else tipsOff();paint();return;}
@@ -103,12 +105,19 @@ function handle(e){
   if(b=t.closest('[data-st]')){S.stance=+b.dataset.st;
     document.querySelectorAll('#stances button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.st===S.stance));return;}
   if(b=t.closest('[data-station]')){buildStation(b.dataset.station);paint();return;}
-  if(b=t.closest('[data-tr]')){startCraft({t:'form',f:b.dataset.tr,mk:b.dataset.mat});paint();return;}
-  if(b=t.closest('[data-mkc]')){startCraft({t:'comp',ct:b.dataset.mkc,f:b.dataset.f,mk:b.dataset.mat});paint();return;}
+  /* la matière se choisit dans la liste déroulante de la même carte */
+  if(b=t.closest('[data-tr]')){
+    const sel=b.closest('[data-form]').querySelector('[data-pick]');
+    startCraft({t:'form',f:b.dataset.tr,mk:sel.value});paint();return;}
+  if(b=t.closest('[data-mkc]')){
+    const sel=b.closest('[data-comp]').querySelector('[data-pick]');
+    const q=sel.value.split('|');
+    startCraft({t:'comp',ct:b.dataset.mkc,f:q[0],mk:q[1]});paint();return;}
   if(b=t.closest('[data-doasm]')){
     const card=b.closest('[data-asm]'),p=card.dataset.asm.split(':');
     const picks=[...card.querySelectorAll('select')].map(x=>x.value);
     assembleFrom(p[0],p[1],picks);paint();return;}
+  if(b=t.closest('[data-armslot]')){S.armSlot=b.dataset.armslot;paint();return;}
   if(b=t.closest('[data-doarm]')){
     const card=b.closest('[data-arm]');
     const picks=[...card.querySelectorAll('select')].map(x=>x.value);

@@ -170,8 +170,11 @@ scénarios — téléphone 390×844 tactile, petit téléphone 320×568, ordinat
 combat (garde maintenue puis relâchée, frappe lourde, clavier sur ordinateur),
 passage en arrière-plan, rechargement, puis chargement **sans réseau** via le
 service worker. Il signale toute exception JS, erreur console, débordement
-horizontal, onglet sans bouton, sauvegarde manquante. Captures d'écran dans
-`.shots/`.
+horizontal, onglet sans bouton, sauvegarde manquante. Il mesure aussi la
+**hauteur de chaque panneau** — sur une partie neuve et sur une partie avancée
+(sac plein, matières, formes, composants, gemmes) — et échoue si l'un devient
+interminable : c'est ainsi qu'on a vu l'établi atteindre douze écrans de haut.
+Captures d'écran dans `.shots/`.
 
 **`npm run sim` — le jeu est-il jouable dans la durée ?** Voir plus bas.
 

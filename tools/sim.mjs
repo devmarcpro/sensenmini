@@ -276,7 +276,7 @@ function run(botName,classe,race,hours,seed){
       items:S.items.length,top:top.join(' · ')};})()`);
   const extra=G(ctx,`JSON.stringify({claims:S.claims.length,plots:S.claims.reduce((a,k)=>a+((S.world[k].plots||[]).filter(Boolean).length),0),
     rec:S.npcs.filter(n=>n.rec).length,assign:S.npcs.filter(n=>n.rec&&n.assign).length,tresor:Math.round(S.tresor),dette:Math.round(S.dette),
-    vivres:S.vivres||0,plats:S.plats||0,stations:[...stationsHere()].join('/'),log:S.log.slice(0,4)})`);
+    vivres:S.vivres||0,plats:S.plats||0,recettes:Object.keys(S.recipes||{}).length,livres:S.books.length,stations:[...stationsHere()].join('/'),log:S.log.slice(0,4)})`);
   return {bot:botName,classe,race,seed,hours,ms:Date.now()-t0,snaps,errors,events:JSON.parse(ev),trace:JSON.parse(trace),extra:JSON.parse(extra),poids};
 }
 
@@ -301,7 +301,7 @@ for(const r of results){
     +(ev.travel||0)+' voyages ('+Math.round(ev.__jours||0)+' jours de marche)');
   if(r.events.__lastToast)console.log('  dernier toast : '+r.events.__lastToast);
   const x=r.extra;
-  console.log('  territoire : '+x.claims+' claims · '+x.plots+' parcelles · stations ici '+(x.stations||'—')+' · résidents '+x.rec+' ('+x.assign+' assignés) · trésor '+x.tresor+' · dette '+x.dette+' · vivres '+x.vivres+' · plats '+x.plats);
+  console.log('  territoire : '+x.claims+' claims · '+x.plots+' parcelles · stations ici '+(x.stations||'—')+' · résidents '+x.rec+' ('+x.assign+' assignés) · trésor '+x.tresor+' · dette '+x.dette+' · vivres '+x.vivres+' · plats '+x.plats+' · recettes '+x.recettes+' · livres '+x.livres);
   console.log('  journal : '+x.log.join(' | '));
   const p=r.poids;
   console.log('  sauvegarde : '+p.ko+' ko (état brut '+p.brut+' ko) · '+p.cells+' cellules · '+p.npcs+' PNJ · '+p.items+' objets — '+p.top);

@@ -8,6 +8,8 @@
    ses ingrédients crus. Un plat couvrant les cinq éléments gagne ×1.2.
    ================================================================== */
 const GROUPS=['Armes','Défense','Éléments','Magie','Récolte','Artisanat','Vie'];
+/* à quelle stat chaque famille de plats profite (6.4 / A.9.1) */
+const GRPSTAT={Armes:'force',Défense:'endu',Éléments:'per',Magie:'vol',Récolte:'endu',Artisanat:'dex',Vie:'cha'};
 /* ingrédients végétaux : tout matériau du catalogue qui porte une nutrition (F.1 / F.8) */
 const PLANTE={};
 Object.keys(MAT).forEach(k=>{if(MAT[k].nutr!==undefined)PLANTE[k]={nutr:MAT[k].nutr,grp:MAT[k].grp||'Vie',tox:MAT[k].tox};});
@@ -82,6 +84,15 @@ function cook(sel2){
       const damp=Math.max(.12,Math.min(1,(200-S.sk[k].pot)/130));
       const d2=pts*damp;
       S.sk[k].pot=Math.min(200,S.sk[k].pot+d2);moy+=d2;n2++;});
+    /* la table rend aussi le potentiel des STATS (6.4) : c'est ce qui raccorde
+       l'agriculture, la chasse et la cuisine à la croissance du personnage */
+    const sk2=GRPSTAT[g];
+    if(sk2&&S.sx[sk2]){
+      const damp=Math.max(.12,Math.min(1,(200-S.sx[sk2].pot)/130));
+      const d3=pts*damp*.7;
+      S.sx[sk2].pot=Math.min(200,S.sx[sk2].pot+d3);
+      if(d3>=1)lignes.push(STATN[sk2]+' +'+Math.round(d3));
+    }
     if(n2)lignes.push(g+' +'+Math.round(moy/n2));
   }
   gainXp('cuisine',infos.reduce((a,i)=>a+i.nutr,0)*12);

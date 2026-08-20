@@ -266,6 +266,8 @@ function attack(heavy){
     let tag=premier?(resolver?'連':crit?'!':em>1.2?'剋':''):'薙';
     float((tag?tag+' ':'')+Math.round(dmg),EL[e].c,premier&&(resolver||crit));
     gainXp('el_'+EL[e].k,applied);gainXp(w.fn,applied);gainXp('t_'+dtype,applied);
+    /* la Force vient du bras qui frappe, la Dextérité de la main qui vise (6.4) */
+    gainStat(tir?'dex':'force',applied*.35);
     (w.aff||[]).forEach(a=>{
       if(a.id==='vol')S.hp=Math.min(maxHp(),S.hp+applied*a.p.p/100);
       if(a.id==='saigne')addStatus(tgt,'saignement',a.p.d,a.p.n);
@@ -351,6 +353,7 @@ function resolveHit(q,atk){
     if(PA.riposte){const rip=atk.max*.06;atk.hp-=rip;dpsA+=rip;float('返撃','#6FBFA0');if(atk.hp<=0)kill(atk);}
     if(it)gainXp('c_'+it.cons,raw);
     gainXp('encaissement',raw);gainXp('esquive',raw*.4);
+    gainStat('dex',raw*.5);                 /* une parade parfaite, c'est de la main */
     /* LE BOUCLIER dans un jeu de rotation : une parade parfaite POSE SON ÉLÉMENT
        dans la chaîne. Il ne casse plus le cycle — il y participe, en défendant. */
     if(G.k==='bouclier'&&S.eq.main2){
@@ -373,6 +376,7 @@ function resolveHit(q,atk){
     const evite=raw-fin;
     if(it&&evite>0)gainXp('c_'+it.cons,evite);   /* l'armure gagne ce qu'elle épargne */
     if(evite>0)gainXp('encaissement',evite*.5);
+    gainStat('endu',fin*1.2);               /* l'Endurance vient des coups reçus */
     S.hp-=fin;S.end=Math.max(0,S.end-cost);
     float('-'+Math.round(fin)+(dos?' 背':' ')+(P.g!=='一'?P.g:z.g),'#C8332B');
     if(P.st&&Math.random()<.55)addStatus(S,P.st,3.5,Math.max(1,fin*.12));

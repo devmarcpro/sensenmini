@@ -172,6 +172,7 @@ GDD entre parenthèses) :
 | multi-ennemis (5.1) | `24-combat.js`, `28-loop.js` | groupe de quatre, cible au tap, le dos coûte +30 %, balayage à l'allonge |
 | prises en main (5.1) | `10-craft.js`, `24-combat.js` | bouclier, deux mains, deux armes, arc — chacune sa contrepartie |
 | gestes des créatures (5.1) | `23c-creatures.js` | six patterns télégraphiés : coup, enchaînement, charge, balayage, morsure, crachat |
+| stats qui montent (6.4) | `09-progress.js` | les six stats ont leur potentiel et progressent par l'usage, comme les compétences |
 | guildes (7.3 / B.7) | `13b-guilds.js` | 29 gabarits de quête, rangs qui les ouvrent, présent à chaque palier |
 | familles (12.2 / 12.3) | `12b-family.js` | couples et enfants, deuil, héritage, succession des trônes |
 

@@ -163,6 +163,7 @@ function talkTo(n){
   const g=(1.2+st('cha')*.15)*astroMul(n)*(d20()+st('cha')/2>=14?1.5:1);   /* jet de Charisme pour bonus */
   n.rel=Math.min(100,n.rel+g);
   gainXp('negociation',5);
+  gainStat('cha',g*30);                      /* le Charisme se travaille en parlant */
   n.said=n.said||[];
   let pool=DIAL.filter(d=>!n.said.includes(d.id)&&d.c(n));
   if(!pool.length)pool=DIAL.filter(d=>d.c(n));            /* plutôt se répéter que se taire */

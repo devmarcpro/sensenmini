@@ -78,8 +78,12 @@ function applyBirth(){
   for(const k in (R.st||{}))S.stats[k]+=R.st[k];
   for(const k in (C.st||{}))S.stats[k]+=C.st[k];
   /* potentiels de base : race, classe, puis naissance */
-  const setPot=(id,v)=>{if(S.sk[id]){S.sk[id].base=Math.max(S.sk[id].base,v);S.sk[id].pot=Math.max(S.sk[id].pot,v);}};
-  const setLow=(id,v)=>{if(S.sk[id]){S.sk[id].base=v;S.sk[id].pot=v;}};
+  /* un même identifiant peut désigner une compétence ou une stat : les deux ont un potentiel */
+  const setPot=(id,v)=>{const t=S.sk[id]||S.sx[id];if(t){t.base=Math.max(t.base,v);t.pot=Math.max(t.pot,v);}};
+  const setLow=(id,v)=>{const t=S.sk[id]||S.sx[id];if(t){t.base=v;t.pot=v;}};
+  /* la stat forte d'une race ou d'une classe monte aussi plus vite (6.4) */
+  for(const k in (R.st||{}))if(S.sx[k])setPot(k,100+R.st[k]*10);
+  for(const k in (C.st||{}))if(S.sx[k])setPot(k,100+C.st[k]*10);
   for(const id in (R.pot||{}))R.pot[id]>=80?setPot(id,R.pot[id]):setLow(id,R.pot[id]);
   for(const id in (C.pot||{}))C.pot[id]>=80?setPot(id,C.pot[id]):setLow(id,C.pot[id]);
   EL_DOM[cr.el].concat(ANIMALS[cr.an].s).forEach(id=>setPot(id,90));

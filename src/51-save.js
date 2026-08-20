@@ -25,6 +25,9 @@ async function load(){
    faire tomber le jeu : on complète ce qui manque et on jette ce qu'on ne connaît plus. */
 function sanitize(){
   SK.forEach(k=>{if(!S.sk[k])S.sk[k]={lv:0,xp:0,pot:80,base:80};});
+  S.sx=S.sx||NEWSX();
+  STATS.forEach(([k])=>{if(!S.sx[k])S.sx[k]={xp:0,pot:100,base:100};
+    if(!(S.stats[k]>0))S.stats[k]=5;});
   if(!S.race)return;
   Object.keys(S.mat||{}).forEach(k=>{if(!MAT[k]||!(S.mat[k]>0))delete S.mat[k];});
   Object.keys(S.food||{}).forEach(k=>{if(!(S.food[k]>0))delete S.food[k];});

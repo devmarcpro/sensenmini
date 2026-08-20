@@ -6,8 +6,18 @@ function pSkills(){
   h+=grp('己','PERSONNAGE',S.nom+' · '+RACE[S.race].n+' '+CLASSE[S.classe].n);
   h+='<div class="card"><div class="meta">signe '+EL[S.born[0]].g+ANIMALS[S.born[1]].g+' — '
    +EL[S.born[0]].n+' '+ANIMALS[S.born[1]].n+' · '+RACE[S.race].b+'</div>'
-   +'<div class="meta">'+STATS.map(([k,n])=>n+' '+st(k)).join(' · ')+'</div>'
+   +'<div class="meta">'+STATS.map(([k,n])=>n+' <b style="color:var(--paper);font-weight:400">'+st(k)+'</b>').join(' · ')+'</div>'
    +'<div class="meta">PV '+maxHp()+' · mana '+maxMana()+' · niveau de combat '+combatLvl()+' · niveau général '+genLvl()+'</div></div>';
+  /* les stats montent aussi, mais lentement : une stat est une identité, pas un compteur */
+  h+=grp('能','STATS','elles montent par l\'usage — la table rend leur potentiel');
+  h+='<div class="skl">'+STATS.map(([k,n,d])=>{const s=S.sx&&S.sx[k]?S.sx[k]:{xp:0,pot:100,base:100};
+    const need=statNext(S.stats[k]);
+    return '<div class="sk"><div class="h"><b>'+n+' '+st(k)+'</b><i>p'+Math.round(s.pot)+'</i></div>'
+     +'<div class="xp"><b style="width:'+Math.min(100,s.xp/need*100)+'%"></b></div>'
+     +'<div class="pot"><b style="width:'+(s.pot/200*100)+'%"></b></div>'
+     +'<div class="meta" style="font-size:9px;margin-top:2px">'+d+'</div></div>';}).join('')+'</div>';
+  h+='<div class="card"><div class="meta">Force : les coups portés · Dextérité : le tir et les parades parfaites · Endurance : les coups reçus · Volonté : le mana dépensé · Perception : l\'exploration et la lecture · Charisme : la parole.</div>'
+   +'<div class="meta">Monter consomme le potentiel ; un plat le rend (chaque famille nourrit une stat), et le sommeil en rend 4 à toutes.</div></div>';
   h+=grp('練','COMPÉTENCES','potentiel moyen '+Math.round(avgPot()));
   h+='<div class="skl">'+SK.map(k=>{const s=S.sk[k];
     return '<div class="sk"><div class="h"><b>'+SKILLS[k].n+'</b><i>niv '+s.lv+' · p'+Math.round(s.pot)+'</i></div>'

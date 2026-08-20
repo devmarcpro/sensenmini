@@ -35,7 +35,9 @@ function step(dt){
     S.hp=Math.min(maxHp(),S.hp+maxHp()*.06*dt);
     S.mana=Math.min(maxMana(),S.mana+.5*dt);
     if(!isNight()){S.occ='repos';S.repose=S.day+4/24;sceneMode='';
-      cutIn('朝','Réveil','+5 % d\'XP pendant 4 h');}
+      /* le sommeil rend un peu de potentiel — à toutes les stats, sans distinction (E.21) */
+      STATS.forEach(([k])=>{if(S.sx[k])S.sx[k].pot=Math.min(200,S.sx[k].pot+4);});
+      cutIn('朝','Réveil','+5 % d\'XP pendant 4 h · potentiel des stats +4');}
   } else if(S.occ==='combat'||S.occ==='donjon'){
     combatTick(dt);
   } else {
@@ -149,6 +151,7 @@ function explorePulse(){
     const n=cell(c.x+dx,c.y+dy);if(n.seen)continue;
     const d=Math.abs(dx)+Math.abs(dy);if(d<best){best=d;found=n;}}
   S.end=Math.max(0,S.end-5);gainXp('perception_sk',12);gainXp('athletisme',6);
+  gainStat('per',26);                        /* la Perception vient de ce qu'on cherche */
   if(S.end<=0){S.occ='repos';log('Épuisé. Tu t\'arrêtes.');}
   if(!found)return;
   found.seen=true;

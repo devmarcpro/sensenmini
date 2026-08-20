@@ -68,6 +68,7 @@ function castSpell(si){
     float('surchauffe','#C8332B');
     if(S.hp<=0){down();return false;}
   } else S.mana-=cost;
+  gainStat('vol',cost*8);                    /* la Volonté vient du mana qu'on dépense */
   questTick('spell',1);
   sp.casts.forEach(c=>{
     if(c.hp)S.hp-=maxHp()*c.hp;
@@ -133,6 +134,7 @@ function readBook(i){
   S.books.splice(i,1);
   const jet=d20()+readBonus();
   gainXp('lecture',b.diff*40);
+  gainStat('per',b.diff*22);                 /* déchiffrer aiguise l'œil */
   if(jet>=readDD(b)){
     const n=1+Math.floor(lv('lecture')/12);
     for(let k=0;k<n;k++){

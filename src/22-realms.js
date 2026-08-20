@@ -123,7 +123,11 @@ function kingdomAt(x,y){
   }
   return null;
 }
+/* une ville conquise sort de la liste de son ancien royaume : sans ce premier
+   coup d'œil, elle n'existerait plus nulle part — ni marché, ni boutiques, ni PNJ */
 function townAt(x,y){
+  const mienne=myTowns().find(t=>t.x===x&&t.y===y);
+  if(mienne)return mienne;
   const k=kingdomAt(x,y);
   if(!k)return null;
   return kTowns(k).find(t=>t.x===x&&t.y===y)||null;
@@ -178,10 +182,20 @@ function weeklyTowns(r){
   /* mes propres villes */
   myTowns().forEach(t=>{
     const c=cell(t.x,t.y);
+    if(t.abandonne){
+      /* une ville vidée se repeuple si on la laisse respirer : impôt bas et bonne réputation */
+      if(Math.random()<.10*(1-c.corr/100)*(S.tax<=.12?1:.3)*(repG()>0?1.3:.7)){
+        t.abandonne=0;t.pop=1;t.loyaute=50;
+        r.push('<span class="gd">'+t.nom+' se repeuple — une famille s\'y réinstalle</span>');}
+      return;
+    }
     if(t.pop<t.cap&&Math.random()<.15*(1-t.pop/t.cap)*(1-c.corr/100)*(1-S.tax*1.4))t.pop++;
     t.loyaute=Math.max(0,Math.min(100,(t.loyaute===undefined?60:t.loyaute)+(S.tax>.18?-4:2)+(repG()>30?1:0)));
     if(t.loyaute<20&&Math.random()<.25){t.pop=Math.max(0,t.pop-1);
       r.push('<span class="bd">'+t.nom+' : un habitant s\'en va, la loyauté est à '+Math.round(t.loyaute)+'</span>');}
+    if(t.pop<=0){t.abandonne=1;
+      r.push('<span class="bd">'+t.nom+' s\'est vidé — trop d\'impôt, trop peu de raisons de rester</span>');
+      return;}
     const impot=Math.round(t.pop*3*t.prosp*S.tax*10);
     S.tresor+=impot;
     if(impot)r.push(t.nom+' : +'+impot+' or d\'impôt ('+t.pop+' habitants)');
@@ -204,6 +218,12 @@ function conquerir(){
   const t=townAt(S.pos[0],S.pos[1]);
   if(!t)return toast('Aucune ville ici');
   if(!S.gov)return toast('Il faut d\'abord fonder ton royaume');
+  if(myTowns().includes(t)){
+    if(!t.abandonne)return toast(t.nom+' est déjà à toi');
+    /* réoccuper une de ses propres villes vidées : on y remet du monde, pas des armes */
+    t.abandonne=0;t.pop=1;t.loyaute=55;
+    return cutIn('住',t.nom+' réoccupé','les bâtiments tenaient debout — il ne manquait que des gens');
+  }
   const g=garrison(t),val=Math.round(t.pop*.35*2);
   if(g>=val*.25&&!t.abandonne)return toast('La garnison tient encore ('+g+' défenseurs) — décime-la d\'abord');
   const k=kingdomsNear().find(x=>x.id===t.k);

@@ -118,7 +118,8 @@ function combatScene(){
    +'</div>'
    +'<div class="stage"><div class="gridfloor"></div><div class="bigk">戦</div>'
    +'<div class="eName" id="eName">—</div><div class="eInfo" id="eInfo"></div>'
-   +'<div class="duel"><div class="hero" id="hero"><div class="cam" id="heroCam"></div></div>'
+   +'<div class="duel"><div class="escorte" id="escorte"></div>'
+   +'<div class="hero" id="hero"><div class="cam" id="heroCam"></div></div>'
    +'<div class="mob" id="mob"><div class="cam" id="mobCam"></div><b class="pk" id="mobPack"></b></div></div>'
    +'<div class="floaters" id="floaters"></div></div>'
    +'<div class="bar2"><span id="eHp" style="background:#C8332B"></span><em id="eHpT">—</em></div>'
@@ -166,6 +167,11 @@ function renderCombat(){
     const hc=$('heroCam');
     if(hc){const hs=heroSig();if(hc.dataset.sig!==hs){hc.dataset.sig=hs;hc.innerHTML=heroHtml();}}
     const hw=$('hero');if(hw)hw.className='hero'+(S.guard?' garde':'');
+    const esc=$('escorte');
+    if(esc){const es=escorteSig();
+      if(esc.dataset.sig!==es){esc.dataset.sig=es;
+        esc.innerHTML=escortList().slice(0,3).map(x=>
+          '<div class="ec'+(x.hp>0?'':' ko')+'"><div class="cam">'+compHtml(x)+'</div></div>').join('');}}
     const pk=$('mobPack');if(pk)pk.textContent=EE.length>1?'×'+EE.length:'';}
   const t=$('tele'),P=patOf(E),fen=parryWinVs(E);
   if(E.w>=0){

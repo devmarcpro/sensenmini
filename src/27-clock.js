@@ -28,6 +28,12 @@ function weekly(){
         const n=S.world[key(c.x+d[0],c.y+d[1])];
         if(n&&n.corr<100){n.corr=Math.min(100,n.corr+1);inf++;}}}
     if(c.cleared>=3&&c.corr>Math.max(0,c.corr0-25)){c.corr-=2;calm++;}
+    /* Une faille nettoyée ailleurs ne se refermait qu'au retour du joueur :
+       tickClock ne regarde que la case où il se tient. La carte gardait donc
+       des entrées de donjon qui ne s'ouvraient plus, indéfiniment. */
+    if(c.djDone&&S.day>c.djDone&&!(c.x===S.pos[0]&&c.y===S.pos[1])){
+      c.poi=null;c.dj=null;c.djDone=null;c.corr=Math.max(0,c.corr-20);
+    }
     /* le gibier revient : une case qu'on cesse de racler se repeuple
        en quelques semaines (l'epuisement retombe de vingt-cinq par semaine) */
     if(c.vide>0)c.vide=Math.max(0,c.vide-25);

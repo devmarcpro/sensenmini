@@ -607,6 +607,68 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('escorte — compagnons et bêtes ont une silhouette',()=>{
+  const c=nouveau();
+  /* un compagnon humain et une bête apprivoisée */
+  R(c,'S.comps=[{id:"c1",type:"pnj",nom:"X",el:0,lv:3,hp:40,max:40,order:"attaquer",esc:true,dead:0,mode:"permanent"},'
+    +'{id:"c2",type:"bete",cre:"loup",nom:"Y",el:2,lv:3,hp:40,max:40,order:"attaquer",esc:true,dead:0,mode:"permanent"}];');
+  eq(G(c,'escortList().length'),2,'les deux suivent');
+  const h1=G(c,'compHtml(S.comps[0])'),h2=G(c,'compHtml(S.comps[1])');
+  ok(h1.length>200,'un compagnon humain a une silhouette');
+  ok(h2.length>200,'une bête apprivoisée aussi');
+  ok(h1!==h2,'et ce n\'est pas la même : un loup n\'a pas la carrure d\'un homme');
+  /* la bête garde la silhouette de son espèce */
+  ok(h2.split('class="bx"').length-1===G(c,'VOX[ARCH.loup[0]].length'),
+    'le loup apprivoisé garde ses dix pavés de loup');
+  /* la signature ne bouge que si l'escorte bouge */
+  const s1=G(c,'escorteSig()');
+  R(c,'S.comps[1].hp=0;');
+  ok(G(c,'escorteSig()')!==s1,'un compagnon à terre change la signature');
+  /* une créature inconnue ne fait rien exploser */
+  R(c,'S.comps[1].cre="nexistepas";');
+  ok(G(c,'compHtml(S.comps[1])').length>100,'une espèce inconnue retombe sur une silhouette valide');
+});
+
+test('donjon — se génère, se descend, se vide, et referme la faille',()=>{
+  const c=nouveau();
+  /* on se pose sur une entrée : il en existe forcément une dans le voisinage */
+  R(c,'globalThis.__d=null;for(let x=-14;x<14&&!__d;x++)for(let y=-14;y<14&&!__d;y++){'
+    +'const g=genCell(S.pos[0]+x,S.pos[1]+y);if(g.poi==="donjon")__d=[g.x,g.y];}');
+  ok(!!G(c,'__d'),'une entrée de donjon existe dans le voisinage');
+  if(!G(c,'__d'))return;
+  R(c,'S.pos=[__d[0],__d[1]];here().seen=true;S.hp=maxHp();enterDungeon();');
+  eq(G(c,'S.occ'),'donjon','on y entre');
+  const d=G(c,'(()=>{const x=dj();return {etages:x.floors.length,salles:x.floors[0].length,nom:x.nom,theme:x.theme};})()');
+  gte(d.etages,2,'il a au moins deux étages');
+  gte(d.salles,8,'et au moins huit salles par étage');
+  eq(G(c,'!!DJTHEME[dj().theme]'),true,'son thème est connu — '+d.theme);
+  /* la dernière salle du dernier étage est le gardien */
+  eq(G(c,'(()=>{const x=dj();return x.floors[x.floors.length-1].slice(-1)[0].t;})()'),'boss',
+    'le gardien ferme le dernier étage');
+  /* la puissance croît en descendant */
+  const p0=G(c,'djPower()');
+  R(c,'dj().f=dj().floors.length-1;dj().r=0;');
+  gt(G(c,'djPower()'),p0,'plus bas, plus dangereux');
+  /* on descend tout : aucune salle ne doit lever d'exception */
+  R(c,'dj().f=0;dj().r=0;S.hp=maxHp();'
+    +'globalThis.__salles=0;globalThis.__boum=null;'
+    +'try{for(let i=0;i<400&&!dj().clear;i++){S.hp=maxHp();djAdvance();__salles++;}}catch(e){__boum=String(e);}');
+  eq(G(c,'__boum'),null,'aucune salle ne casse — '+(G(c,'__boum')||'aucune'));
+  gt(G(c,'__salles'),10,'on traverse bien tout le donjon — '+G(c,'__salles')+' salles');
+  eq(G(c,'dj().clear'),true,'le gardien tombé, le donjon est vidé');
+  eq(G(c,'S.occ'),'repos','et l\'on en ressort');
+  /* on n'y retourne pas */
+  R(c,'__toast.length=0;enterDungeon();');
+  eq(G(c,'S.occ'),'repos','un donjon vidé ne se rouvre pas');
+  /* la faille se referme d\'elle-même */
+  R(c,'S.day=here().djDone+.1;tickClock(0.001);');
+  eq(G(c,'here().poi'),null,'la cellule redevient ordinaire');
+  eq(G(c,'here().dj'),null,'et son donjon est oublié');
+  /* et une faille nettoyée ailleurs se referme aussi, sans qu'on y retourne */
+  R(c,'globalThis.__l=cell(__d[0]+40,__d[1]+40);__l.poi="donjon";__l.dj={clear:true};__l.djDone=S.day-1;weekly();');
+  eq(G(c,'__l.poi'),null,'une faille nettoyée ailleurs se referme aussi');
+});
+
 test('dette — les paliers mordent, mais l\'ardoise reste payable',()=>{
   const c=nouveau();
   R(c,'S.or=99999;S.mat.pierre=999;S.mat.chene=999;S.mat.limon=999;'

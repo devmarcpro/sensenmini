@@ -315,6 +315,22 @@ function heroHtml(U){
   return boitesHtml(b,U,peau,1);
 }
 
+/* ==================================================================
+   L'ESCORTE
+   Compagnons et bêtes apprivoisées frappaient avec le joueur sans jamais
+   apparaître : ils n'étaient que des pastilles de texte sous la scène.
+   Ils se tiennent maintenant derrière lui, plus petits — un chien de
+   guerre garde sa silhouette de loup, un compagnon celle d'un homme.
+   ================================================================== */
+function compHtml(c){
+  const coul=EL[(typeof compEl==='function'?compEl(c):c.el)||0].c;
+  if(c.type==='bete'&&c.cre&&CREATURE[c.cre])return voxelHtml(c.cre,.6,coul,1);
+  /* un compagnon humain : le squelette humanoïde, sans arme distincte */
+  return boitesHtml(VOX.humanoide,3.1,coul,1);
+}
+/* Ce qui décide de recomposer l'escorte : qui la compose, et dans quel état. */
+const escorteSig=()=>escortList().map(c=>c.id+(c.cre||c.type)+(c.hp>0?1:0)).join(',');
+
 /* La signature de la tenue : tant qu'elle ne bouge pas, on ne recompose rien. */
 const heroSig=()=>[S.race,grip().k].concat(
   ["tete","torse","bras","jambes","pieds","dos","main1","main2"]

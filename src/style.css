@@ -4,7 +4,7 @@
      sert une version avec le code d'une autre — le jeu s'affiche alors en
      morceaux sans que rien ne le signale. On recharge plutôt une fois.
      Les deux valeurs se bougent ensemble ; `npm test` le vérifie. */
-  --css-rev:3;
+  --css-rev:4;
   --ink:#0B0D0C;--sumi:#131817;--panel:#181E1C;--line:#26302C;--line2:#3C4F47;
   --paper:#F4F1E8;--bone:#E6E2D6;--dim:#7E9187;
   --zhu:#C8332B;
@@ -179,6 +179,16 @@ body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
 /* Le duel : le joueur a gauche, la creature a droite, tournes l'un vers
    l'autre. Deux points d'ancrage sans dimension, chacun sa camera. */
 .duel{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-evenly;z-index:2}
+/* L'escorte se tient derriere le joueur, plus petite et plus pale :
+   presente sans voler la lecture du duel. */
+.escorte{position:absolute;left:6%;bottom:24px;display:flex;gap:26px;align-items:flex-end;z-index:1;opacity:.82}
+.escorte .ec{width:0;height:0;position:relative;transform-style:preserve-3d}
+.escorte .ec.ko{opacity:.35}
+.escorte .cam{position:absolute;left:0;top:0;transform-style:preserve-3d;
+  transform:rotateX(-20deg) rotateY(-32deg);animation:bob 3.1s ease-in-out infinite}
+.escorte .bx{position:absolute;transform-style:preserve-3d}
+.escorte i{position:absolute;inset:0;border:1px solid rgba(0,0,0,.28);transform-origin:left top}
+@media(max-width:520px){.escorte{left:2%;gap:16px}}
 .hero,.mob{width:0;height:0;position:relative;transform-style:preserve-3d;z-index:2}
 .hero .cam,.hero .bx{position:absolute;transform-style:preserve-3d}
 .hero .cam{left:0;top:0;transform:rotateX(-20deg) rotateY(-32deg);animation:bob 3.4s ease-in-out infinite}

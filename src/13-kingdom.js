@@ -117,7 +117,22 @@ function weeklyKingdom(r){
   const up=upkeep();
   if(up){
     if(S.tresor>=up){S.tresor-=up;r.push('entretien −'+up+' or');}
-    else{S.dette+=up-S.tresor;S.tresor=0;r.push('<span class="bd">entretien impayé — dette '+Math.round(S.dette)+'</span>');}
+    else{
+      /* La dette se plafonne à deux mois d'entretien. Le GDD interdit la
+         destruction automatique de structures (A.8.1, 14.6) : un territoire
+         négligé ne s'écroule donc jamais tout seul, et son entretien court
+         indéfiniment. Sans plafond, la dette d'un joueur parti trop longtemps
+         atteignait plusieurs milliers d'or et devenait impayable — les malus
+         restaient à leur pire sans aucune sortie. Les paliers gardent tout
+         leur mordant ; seule l'ardoise cesse de gonfler, pour que
+         régulariser reste possible. */
+      const plafond=Math.max(up*8,50);
+      const avant=S.dette;
+      S.dette=Math.min(plafond,S.dette+(up-S.tresor));
+      S.tresor=0;
+      r.push('<span class="bd">entretien impayé — dette '+Math.round(S.dette)
+        +(S.dette>=plafond&&avant<plafond?' — l\'ardoise ne montera plus, mais elle ne s\'efface pas seule':'')+'</span>');
+    }
   }
   /* paliers de dette (14.6) : 1 semaine humeur −5 · 2 semaines productivité −25 %, tourelles hors service ·
      4+ semaines les gardes cessent, un PNJ peut partir chaque semaine. Tout se rétablit à la régularisation. */

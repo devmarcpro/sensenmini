@@ -607,6 +607,67 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('dette — les paliers mordent, mais l\'ardoise reste payable',()=>{
+  const c=nouveau();
+  R(c,'S.or=99999;S.mat.pierre=999;S.mat.chene=999;S.mat.limon=999;'
+    +'claimCell();buildPlot(0,"batiment");placeSlot(0,0,"station","etabli");');
+  gt(G(c,'upkeep()'),0,'un territoire coûte à entretenir');
+  /* cent semaines d'abandon : la dette doit se stabiliser, pas s'envoler */
+  R(c,'S.tresor=0;S.dette=0;S.detteW=0;for(let i=0;i<100;i++)weekly();');
+  const d=G(c,'S.dette'),up=G(c,'upkeep()');
+  ok(d<=Math.max(up*8,50)+.001,'cent semaines d\'abandon plafonnent l\'ardoise — '
+    +Math.round(d)+' pour un entretien de '+up);
+  gt(d,0,'mais la dette existe bel et bien');
+  gte(G(c,'S.detteW'),4,'et les semaines impayées se comptent toujours');
+  /* le GDD l'exige : rien ne se detruit tout seul (A.8.1) */
+  eq(G(c,'S.claims.length'),1,'le territoire n\'est jamais confisqué');
+  eq(G(c,'plots(here()).filter(Boolean).length'),1,'aucune structure ne s\'écroule d\'elle-même');
+  /* et régulariser remet tout d'aplomb */
+  R(c,'S.or=99999;deposit(Math.ceil(S.dette)+100);weekly();');
+  eq(G(c,'S.dette'),0,'déposer de quoi solde l\'ardoise');
+  eq(G(c,'S.detteW'),0,'et les paliers retombent');
+});
+
+test('quêtes — se prennent, se suivent, se rendent, et font monter le rang',()=>{
+  const c=nouveau();
+  /* on se donne un hall pour ne pas dépendre d'une capitale à cent cases */
+  R(c,'S.or=99999;S.mat.pierre=999;S.mat.chene=999;S.mat.limon=999;'
+    +'S.ref["lingot:fer"]=30;claimCell();buildPlot(0,"batiment");'
+    +'placeSlot(0,0,"meuble","hall");');
+  gte(G(c,'countSlot("hall")'),1,'un hall se bâtit sur son territoire');
+  R(c,'globalThis.__gk="guerriers";S.quest=null;newQuest(__gk);');
+  const q=G(c,'S.quest?{type:S.quest.type,need:S.quest.need,or:S.quest.or,txt:S.quest.txt}:null');
+  ok(!!q,'une quête se prend une fois le hall accessible',G(c,'JSON.stringify(__toast.slice(-1))'));
+  if(!q)return;
+  ok(q.need>0,'elle demande quelque chose de chiffré — '+q.txt);
+  gt(q.or,0,'elle promet une récompense');
+  eq(G(c,'(newQuest(__gk),S.quest.txt)'),q.txt,'on ne cumule pas deux quêtes');
+  /* le monde signale, la quête retient — et ce qui ne la concerne pas glisse */
+  R(c,'S.quest.type="killcat";S.quest.cat="humain";S.quest.cur=0;S.quest.need=3;');
+  R(c,'questTick("kill",1,{cat:"bete"});');
+  eq(G(c,'S.quest.cur'),0,'une bête ne compte pas pour un contrat sur des hommes');
+  R(c,'questTick("harvest",5,"fer");');
+  eq(G(c,'S.quest.cur'),0,'une récolte non plus');
+  R(c,'questTick("kill",1,{cat:"humain"});');
+  eq(G(c,'S.quest.cur'),1,'un hors-la-loi, si');
+  /* elle se solde toute seule au compte */
+  R(c,'globalThis.__or0=S.or;questTick("kill",2,{cat:"humain"});');
+  eq(G(c,'S.quest'),null,'atteindre le compte la solde');
+  gt(G(c,'S.or'),G(c,'__or0'),'et paie');
+  gt(G(c,'guildOf(__gk).xp+guildOf(__gk).rank'),0,'la guilde retient ce qui a été fait');
+  /* une livraison ne se solde qu'avec la matière en sac */
+  R(c,'S.quest={g:__gk,tpl:"x",type:"deliver",cur:9,need:4,mat:"fer",or:10,xp:5,txt:"livrer"};'
+    +'delete S.mat.fer;completeQuest();');
+  ok(G(c,'!!S.quest'),'une livraison sans la matière ne passe pas');
+  R(c,'S.mat.fer=10;completeQuest();');
+  eq(G(c,'S.quest'),null,'avec la matière, elle passe');
+  eq(G(c,'S.mat.fer||0'),6,'et la matière est bien prélevée');
+  /* le rang monte quand l'XP le justifie */
+  R(c,'const g=guildOf(__gk);g.rank=0;g.xp=guildRankNeed(0)+5;'
+    +'S.quest={g:__gk,tpl:"x",type:"kill",cur:1,need:1,or:1,xp:0,txt:"x"};completeQuest();');
+  gte(G(c,'guildOf(__gk).rank'),1,'assez d\'XP fait monter d\'un rang');
+});
+
 test('soin — travailler soigne, moins vite que se reposer',()=>{
   const c=nouveau();
   /* Le cas vécu en simulation : un mineur a passé cinquante semaines à un

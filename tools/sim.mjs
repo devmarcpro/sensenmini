@@ -168,6 +168,9 @@ const BOTS={
       /* l'entretien se paie sur le trésor : on y garde de quoi voir venir */
       if(atHome&&S.or>300&&S.tresor<upkeep()*3)deposit(Math.min(S.or-200,upkeep()*4));
       if(!atHome&&!__away){travel(home.x,home.y);return;}
+      /* un ouvrage en cours se laisse finir : rappeler startCraft a chaque tick
+         remet le compteur a zero et l'ouvrage ne se termine jamais */
+      if(S.occ==='atelier'&&S.craft&&craftCan())return;
       /* 2. bâtir : bâtiment, lit, cuisine, lanterne ; puis un second bâtiment avec établi/scierie */
       const P=plots(home);
       const need=[];
@@ -215,7 +218,13 @@ const BOTS={
         if(m){if(S.occ!=='recolte'||S.target!==m){S.target=m;S.occ='recolte';harvT=0;}return;}
         __away=false;return;}
       /* 3. tout est bâti : forger, puis combattre pour l'or, et recruter */
-      if(atHome&&S.occ==='repos'&&!S.resume&&__forge()){__equipBest();return;}
+      /* une tentative de forge par jour : le bot passe sa vie en combat,
+         et sans creneau reserve l'atelier ne servirait jamais */
+      if(atHome&&!S.resume&&S.occ!=='dormir'&&S.occ!=='atelier'&&Math.floor(S.day)>__forgeDay){
+        __forgeDay=Math.floor(S.day);
+        if(S.occ!=='repos'){S.occ='repos';E=null;}
+        if(__forge()){__equipBest();return;}
+      }
       const vil=Object.values(S.world).find(x=>x.seen&&(x.poi==='village'||townAt(x.x,x.y))&&Math.abs(x.x-home.x)+Math.abs(x.y-home.y)<=4);
       const rec=S.npcs.filter(n=>n.rec);
       if(__away==='village'){
@@ -241,7 +250,7 @@ const BOTS={
 };
 /* équipe la meilleure arme et une pièce d'armure par zone, à partir du sac */
 const HELPERS=`
-const __score=itemScore;let __away=false,__recDay=-1,__recTry=0,__vilDay=-1,__vil=[0,0];const __djFail={};
+const __score=itemScore;let __away=false,__recDay=-1,__recTry=0,__forgeDay=-1,__vilDay=-1,__vil=[0,0];const __djFail={};
 /* un bot qui meurt deux fois dans un donjon renonce à celui-là */
 (()=>{const d0=down;down=function(){if(S.occ==='donjon'||S.resume==='donjon'){const k=key(S.pos[0],S.pos[1]);__djFail[k]=(__djFail[k]||0)+1;}return d0.apply(this,arguments);};})();
 function __eat(){
@@ -286,16 +295,18 @@ function __shop(){
    composant, les composants s'assemblent. Le bot ne le fait que s'il a la
    station sous la main et de quoi faire mieux que ce qu'il porte. */
 function __forge(){
-  if(S.occ==='atelier'||S.craft)return false;
+  /* S.craft reste renseigne apres un ouvrage fini — c'est un travail en pause,
+     pas un travail en cours. Seule l'occupation dit qu'on est a l'etabli. */
+  if(S.occ==='atelier'){__count('forge:occupe');return false;}
   const fns=FK2.filter(f=>!FUNC[f].dist&&!FUNC[f].shield);
   /* on forge ce qu'on sait le mieux manier */
   fns.sort((a,b)=>lv(b)-lv(a));
-  const fn=fns[0];if(!fn)return false;
+  const fn=fns[0];if(!fn){__count('forge:pasdarme');return false;}
   const besoin=FUNC[fn].comp.concat(['fixations']);
   const dispo=ct=>Object.keys(S.comp).find(k=>S.comp[k].ct===ct&&S.comp[k].n>0);
   const manque=besoin.filter(ct=>!dispo(ct));
   if(!manque.length){
-    if(sacPlein())return false;
+    if(sacPlein()){__count('forge:sacplein');return false;}
     const picks=besoin.map(ct=>dispo(ct));
     const it=assembleFrom('arme',fn,picks);
     if(it)__forges++;
@@ -306,22 +317,30 @@ function __forge(){
      pas là, rien à faire ici. */
   const ct=manque[0],C=COMP[ct];
   const stock=Object.keys(S.mat).filter(m=>S.mat[m]>=4&&recipeKnown(ct,m));
-  if(!stock.length)return false;
-  /* partFor connaît les formes valides pour ce composant */
-  const p=partFor(ct,stock);
-  if(!p||!MAT[p.mk])return false;
+  if(!stock.length){__count('forge:pasdematiere:'+ct);return false;}
+  /* On choisit la matiere soi-meme. partFor retombe sur une valeur codee
+     en dur ('fer' pour un lingot) quand rien ne convient : c'est bon pour
+     engendrer du butin, c'est un piege pour un forgeron qui n'a pas ce fer. */
+  const cands=stock.filter(m=>(C.forms.includes('brut')&&C.raw.includes(m))
+    ||C.forms.some(f2=>f2!=='brut'&&FORM[f2]&&formOk(f2,m)));
+  if(!cands.length){__count('forge:riendevalable:'+ct);return false;}
+  cands.sort((a,b)=>MAT[b].d-MAT[a].d);
+  const mk=cands[0];
+  const forme=(C.forms.includes('brut')&&C.raw.includes(mk))?'brut'
+    :C.forms.find(f2=>f2!=='brut'&&FORM[f2]&&formOk(f2,mk));
+  const p={ct,f:forme,mk};
   const cout=C.w>.5?2:1;
   if(p.f==='brut'){
-    if(!hasStation(C.st)||(S.mat[p.mk]||0)<cout*2)return false;
-    startCraft({t:'comp',ct,f:'brut',mk:p.mk});return true;
+    if(!hasStation(C.st)||(S.mat[p.mk]||0)<cout*2){__count('forge:brut:'+ct+':'+C.st);return false;}
+    startCraft({t:'comp',ct,f:'brut',mk:p.mk});__count('forge:lance');return true;
   }
   if((S.ref[refKey(p.f,p.mk)]||0)>=cout){
-    if(!hasStation(C.st))return false;
-    startCraft({t:'comp',ct,f:p.f,mk:p.mk});return true;
+    if(!hasStation(C.st)){__count('forge:station:'+C.st);return false;}
+    startCraft({t:'comp',ct,f:p.f,mk:p.mk});__count('forge:lance');return true;
   }
   const F=FORM[p.f];
-  if(!hasStation(F.st)||(S.mat[p.mk]||0)<F.cost)return false;
-  startCraft({t:'form',f:p.f,mk:p.mk});return true;
+  if(!hasStation(F.st)||(S.mat[p.mk]||0)<F.cost){__count('forge:forme:'+p.f+':'+F.st+':'+(S.mat[p.mk]||0));return false;}
+  startCraft({t:'form',f:p.f,mk:p.mk});__count('forge:lance');return true;
 }`;
 
 function snapshot(ctx){
@@ -397,6 +416,8 @@ for(const r of results){
     +(ev.travel||0)+' voyages ('+Math.round(ev.__jours||0)+' jours de marche)');
   const fin=last||{};
   console.log('  equipement : '+(fin.achats||0)+' achats en boutique · '+(fin.forges||0)+' armes forgees');
+  const fr=Object.entries(r.events).filter(([k])=>k.startsWith('forge:')).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(fr.length)console.log('    forge — renoncements : '+fr.map(([k,v])=>k.slice(6)+'×'+v).join('  '));
   if(r.events.__lastToast)console.log('  dernier toast : '+r.events.__lastToast);
   const x=r.extra;
   console.log('  territoire : '+x.claims+' claims · '+x.plots+' parcelles · stations ici '+(x.stations||'—')+' · résidents '+x.rec+' ('+x.assign+' assignés) · trésor '+x.tresor+' · dette '+x.dette+' · vivres '+x.vivres+' · plats '+x.plats+' · recettes '+x.recettes+' · livres '+x.livres);

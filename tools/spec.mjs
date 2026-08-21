@@ -683,6 +683,73 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('consignes — l\'ordre décide, et rien ne s\'interrompt en route',()=>{
+  const c=nouveau();
+  /* à l'arrêt, le plan ne touche à rien */
+  R(c,'plan().on=false;S.occ="repos";S.faim=10;S.hp=1;for(let i=0;i<40;i++)step(.5);');
+  eq(G(c,'S.occ'),'repos','à l\'arrêt, les consignes ne décident de rien');
+  /* la première consigne vraie ET possible l'emporte, les suivantes sont ignorées */
+  R(c,'S.plan={on:true,r:['
+    +'{c:"faimbasse",v:50,a:"reposer",on:true},'
+    +'{c:"toujours",v:0,a:"combattre",on:true}]};'
+    +'S.faim=20;S.hp=maxHp();S.occ="explore";');
+  eq(G(c,'planChoix().a'),'reposer','la première condition vraie l\'emporte');
+  R(c,'S.faim=90;S.occ="explore";');
+  eq(G(c,'planChoix().a'),'combattre','fausse, on passe à la suivante');
+  /* une consigne éteinte est sautée */
+  R(c,'S.faim=20;S.occ="explore";S.plan.r[0].on=false;');
+  eq(G(c,'planChoix().a'),'combattre','une consigne éteinte ne compte pas');
+  /* une action impossible laisse la main à la suivante : sinon une seule
+     ligne mal placée gèlerait tout le plan */
+  R(c,'S.plan={on:true,r:['
+    +'{c:"toujours",v:0,a:"dormir",on:true},'
+    +'{c:"toujours",v:0,a:"reposer",on:true}]};'
+    +'S.day=Math.floor(S.day)+.5;S.occ="explore";');   /* plein jour : on ne dort pas */
+  eq(G(c,'planChoix().a'),'reposer','une action impossible ne bloque pas le plan');
+  /* et le tick l'applique vraiment */
+  R(c,'S.occ="combat";E=null;EE=[];planT=99;step(.1);');
+  eq(G(c,'S.occ'),'repos','le tick engage l\'action choisie');
+  /* Rien ne s'interrompt en cours de route. On sonde planTick directement :
+     passer par step() ne prouverait rien, puisqu'un atelier sans ouvrage et un
+     sommeil en plein jour se terminent d'eux-mêmes avant même que les
+     consignes soient consultées. */
+  for(const [occ,nom] of [['atelier','un ouvrage'],['dormir','un sommeil'],['voyage','un voyage']]){
+    R(c,'S.plan={on:true,r:[{c:"toujours",v:0,a:"combattre",on:true}]};'
+      +'S.resume=null;S.occ="'+occ+'";planT=99;planTick(.1);');
+    eq(G(c,'S.occ'),occ,nom+' ne s\'interrompt pas');
+  }
+  /* ni une reprise en attente */
+  R(c,'S.occ="repos";S.resume="atelier";planT=99;planTick(.1);');
+  eq(G(c,'S.occ'),'repos','une reprise en attente non plus');
+  /* toutes les conditions et toutes les actions doivent tenir debout */
+  const ko=G(c,`(()=>{const ko=[];
+    S.occ='repos';S.hp=maxHp()*.5;S.faim=50;S.end=50;
+    CONDK.forEach(k=>{try{CONDS[k].test(CONDS[k].def!==undefined?CONDS[k].def:0);}
+      catch(e){ko.push('condition '+k+' : '+e.message);}});
+    ACTK.forEach(k=>{
+      try{if(ACTES[k].peut())ACTES[k].fais();}catch(e){ko.push('action '+k+' : '+e.message);}
+      S.occ='repos';E=null;EE=[];});
+    return ko;})()`);
+  eq(ko.length,0,'les '+G(c,'CONDK.length')+' conditions et '+G(c,'ACTK.length')+' actions tiennent',
+    ko.join(' | '));
+  /* une sauvegarde citant une condition disparue ne bloque pas le plan */
+  R(c,'S.plan={on:true,r:['
+    +'{c:"nexistepas",v:0,a:"reposer",on:true},'
+    +'{c:"toujours",v:0,a:"combattre",on:true}]};S.occ="explore";');
+  eq(G(c,'planChoix().a'),'combattre','une consigne devenue invalide est simplement sautée');
+  /* le plan de base est cohérent */
+  R(c,'S.plan={on:true,r:planDefaut()};');
+  eq(G(c,'planDefaut().every(r=>!!CONDS[r.c]&&!!ACTES[r.a])'),true,
+    'le plan de base ne cite que des conditions et des actions connues');
+  ok(G(c,'planDefaut().slice(-1)[0].c')==='toujours',
+    'et se termine par une consigne sans condition — sinon le plan peut ne rien choisir');
+  /* le seuil se règle et reste dans ses bornes */
+  R(c,'planRegler(0,"c","pvbas");planRegler(0,"v",9999);');
+  ok(G(c,'S.plan.r[0].v')<=G(c,'CONDS.pvbas.max'),'un seuil ne dépasse pas son maximum');
+  R(c,'planRegler(0,"v",-50);');
+  gte(G(c,'S.plan.r[0].v'),G(c,'CONDS.pvbas.min'),'ni ne tombe sous son minimum');
+});
+
 test('paramètres — chaque triche fait ce qu\'elle dit',()=>{
   const c=nouveau();
   ok(G(c,'pParam()').length>500,'l\'onglet se rend');

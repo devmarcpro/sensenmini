@@ -36,6 +36,13 @@ function handle(e){
     if(P[openPlot]&&P[openPlot].slots)P[openPlot].slots[openSlot]=null;openSlot=null;paint();return;}
   if(b=t.closest('[data-fold]')){const q=b.dataset.fold.split(':');
     S.fold=S.fold||{};S.fold[q[0]]=S.fold[q[0]]===q[1]?null:q[1];paint();return;}
+  if(b=t.closest('[data-planon]')){plan().on=!plan().on;paint();return;}
+  if(b=t.closest('[data-planadd]')){planAjouter();paint();return;}
+  if(b=t.closest('[data-planreset]')){S.plan={on:plan().on,r:planDefaut()};paint();return;}
+  if(b=t.closest('[data-planoff]')){planRegler(+b.dataset.planoff,'on');paint();return;}
+  if(b=t.closest('[data-planup]')){planMonter(+b.dataset.planup);paint();return;}
+  if(b=t.closest('[data-plandown]')){planDescendre(+b.dataset.plandown);paint();return;}
+  if(b=t.closest('[data-plandel]')){planRetirer(+b.dataset.plandel);paint();return;}
   if(b=t.closest('[data-triche]')){appliquerTriche(b.dataset.triche);return;}
   if(b=t.closest('[data-effacer]')){
     /* double detente : un premier appui arme, un second efface. On desarme
@@ -162,6 +169,10 @@ $('panel').addEventListener('change',e=>{
       S.spells[i][j]=mi;}
     S.spells[i]=S.spells[i].filter(x=>x!==undefined);
     paint();return;}
+  /* les consignes : condition, seuil, action */
+  if(t.dataset.plancond!==undefined){planRegler(+t.dataset.plancond,'c',t.value);paint();return;}
+  if(t.dataset.planacte!==undefined){planRegler(+t.dataset.planacte,'a',t.value);paint();return;}
+  if(t.dataset.planval!==undefined){planRegler(+t.dataset.planval,'v',t.value);paint();return;}
   if(t.dataset.role){const cc=S.world[t.dataset.role];if(cc)cc.claim=t.value;paint();return;}
   if(t.dataset.assign){const n=S.npcs.find(x=>x.id===t.dataset.assign);
     if(n){n.assign=t.value||null;if(n.assign&&!n.cell.includes(',')===false&&!S.claims.includes(n.cell))n.cell=S.claims[0]||n.cell;}

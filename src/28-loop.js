@@ -54,6 +54,8 @@ function step(dt){
     else if(S.occ==='percer')pierce(dt);
     else if(S.occ==='explore'){expT+=dt;if(expT>=3){expT=0;explorePulse();}}
   }
+  /* les consignes decident de ce que le personnage fait de sa journee */
+  planTick(dt);
   rateT=(rateT||0)+dt;
   if(rateT>=60){rateT=0;rollRates();}
   if(auto('marmite')&&(S.faim<40||avgPot()<70)){

@@ -11,6 +11,44 @@ function pAuto(){
   const rt=S.rate||{};
   const est=k=>{const o=(rt[k]||0),e=cadence(k);
     return e.toFixed(1)+(o>0?'':' <i style="font-style:normal;color:var(--terre)">(estimée)</i>');};
+  /* ===== CONSIGNES =====
+     Les automatisations achètent des réflexes ; les consignes disent ce que
+     le personnage FAIT de sa journée. Elles passent en premier parce qu'elles
+     décident de tout le reste. */
+  const P=plan(),actif=planChoix();
+  h+=foldHead('veille','cs','令','CONSIGNES',
+    (P.on?(actif?'en cours : '+ACTES[actif.a].n:'aucune ne s\'applique'):'à l\'arrêt')
+    +' · '+P.r.filter(r=>r.on).length+' / '+P.r.length+' actives','cs');
+  if(foldOpen('veille','cs','cs')){
+    h+='<div class="card"><div class="meta">Une consigne se lit comme une phrase : <b>SI</b> telle chose, <b>ALORS</b> telle action. À chaque examen, la <b>première</b> dont la condition est vraie et dont l\'action est possible l\'emporte — les suivantes ne sont pas consultées. C\'est l\'ordre qui décide, et c\'est tout le pouvoir qu\'on te donne ici.</div>'
+     +'<div class="meta">Rien ne s\'interrompt en cours de route : un ouvrage, un voyage, un sommeil se terminent d\'abord.</div>'
+     +'<div class="row"><button class="btn'+(P.on?' pri':'')+'" data-planon="1">'
+     +(P.on?'令 Consignes actives — arrêter':'令 Suivre les consignes')+'</button>'
+     +'<button class="btn" data-planadd="1" '+(P.r.length>=12?'disabled':'')+'>Ajouter une ligne</button>'
+     +'<button class="btn" data-planreset="1">Repartir du plan de base</button></div></div>';
+    h+=P.r.map((r,i)=>{
+      const C=CONDS[r.c],A=ACTES[r.a];
+      const vivante=r===actif;
+      return '<div class="card'+(vivante?' on':(r.on?'':' off'))+'">'
+       +'<div class="row ligne"><button class="btn" data-planoff="'+i+'" style="flex:none;min-width:34px">'
+       +(r.on?'✓':'—')+'</button>'
+       +'<select data-plancond="'+i+'" style="flex:1">'+CONDK.map(k=>'<option value="'+k+'"'
+         +(k===r.c?' selected':'')+'>'+(/^i/.test(CONDS[k].n)?'s'':'si ')+CONDS[k].n+'</option>').join('')+'</select>'
+       +(C&&C.def!==undefined?'<input type="number" data-planval="'+i+'" value="'+r.v+'" min="'+C.min+'" max="'+C.max+'" '
+         +'style="width:66px;flex:none;background:var(--sumi);color:var(--bone);border:1px solid var(--line2);'
+         +'font-family:var(--px);font-size:11px;padding:5px">':'')
+       +'</div>'
+       +'<div class="row ligne" style="margin-top:4px"><span class="meta" style="flex:none">alors</span>'
+       +'<select data-planacte="'+i+'" style="flex:1">'+ACTK.map(k=>'<option value="'+k+'"'
+         +(k===r.a?' selected':'')+'>'+ACTES[k].g+' '+ACTES[k].n+'</option>').join('')+'</select>'
+       +'<button class="btn" data-planup="'+i+'" style="flex:none" '+(i===0?'disabled':'')+'>▲</button>'
+       +'<button class="btn" data-plandown="'+i+'" style="flex:none" '+(i===P.r.length-1?'disabled':'')+'>▼</button>'
+       +'<button class="btn" data-plandel="'+i+'" style="flex:none;border-color:var(--zhu)">✕</button></div>'
+       +'<div class="meta">'+(C?C.d:'')+(C&&A&&C.d&&A.d?' · ':'')+(A?A.d:'')
+       +(vivante?' <b style="color:var(--jade)">— c\'est elle qui s\'applique</b>':'')+'</div>'
+       +'</div>';
+    }).join('');
+  }
   h+=foldHead('veille','au','自','AUTOMATISATIONS',AK.filter(k=>auto(k)).length+' / '+AK.length+' acquises','au');
   if(foldOpen('veille','au')){
   h+=AK.map(k=>{const a=AUTOS[k],l=auto(k),c=autoCost(k),m=l>=a.max;

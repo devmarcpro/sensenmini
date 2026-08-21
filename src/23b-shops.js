@@ -172,15 +172,9 @@ function shopStock(t){
   return t.stock.offers;
 }
 const shopsOpen=t=>!isNight()&&!t.abandonne&&repTier(repLocale())>0;
-function buyOffer(shopKey,idx){
-  const t=townAt(S.pos[0],S.pos[1]);if(!t)return toast('Aucune ville ici');
-  if(!shopsOpen(t))return toast(isNight()?'Les boutiques sont fermées la nuit':'On ne te vend rien ici');
-  const list=shopStock(t)[shopKey];if(!list)return;
-  const o=list[idx];if(!o)return;
-  if(S.or<o.p)return toast('Il faut '+o.p+' or');
-  if(o.t==='item'&&sacPlein())return toast('Sac plein ('+S.items.length+'/'+sacMax()+') — fonds ou équipe avant');
-  S.or-=o.p;t.or=Math.min(t.orMax*3,t.or+o.p);
-  list.splice(idx,1);
+/* Ce qu'une offre met dans le sac. Achetee ou prise sans payer, c'est la
+   meme marchandise : deux copies de ce code divergeraient au premier ajout. */
+function livrerOffre(o){
   if(o.t==='mat'){S.mat[o.mk]=(S.mat[o.mk]||0)+o.n;if(PLANTE[o.mk])addFood(o.mk,o.n);}
   else if(o.t==='ref')addRef(o.f,o.mk,o.n);
   else if(o.t==='alliage')apprendreAlliage(o.k);
@@ -191,6 +185,17 @@ function buyOffer(shopKey,idx){
   else if(o.t==='book')S.books.push(o.b);
   else if(o.t==='potion')S.potions.push(o.pot);
   else if(o.t==='vivres')S.vivres=(S.vivres||0)+o.n;
+}
+function buyOffer(shopKey,idx){
+  const t=townAt(S.pos[0],S.pos[1]);if(!t)return toast('Aucune ville ici');
+  if(!shopsOpen(t))return toast(isNight()?'Les boutiques sont fermées la nuit':'On ne te vend rien ici');
+  const list=shopStock(t)[shopKey];if(!list)return;
+  const o=list[idx];if(!o)return;
+  if(S.or<o.p)return toast('Il faut '+o.p+' or');
+  if(o.t==='item'&&sacPlein())return toast('Sac plein ('+S.items.length+'/'+sacMax()+') — fonds ou équipe avant');
+  S.or-=o.p;t.or=Math.min(t.orMax*3,t.or+o.p);
+  list.splice(idx,1);
+  livrerOffre(o);
   gainXp('negociation',o.p/5);
   const k=kingdomAt(t.x,t.y);if(k)gainRep(.3,k.race,kingdomHere());
   log('Acheté : '+o.label+' — −'+o.p+' or');

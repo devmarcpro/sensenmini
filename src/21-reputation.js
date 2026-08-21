@@ -45,9 +45,9 @@ const repMulPrix=()=>{const t=repTier(repLocale());
   return t<=1?1.25:t===2?1:t===3?.9:.85;};
 const repMulRelation=()=>{const t=repTier(repLocale());return [.5,.75,1,1.25,1.5][t];};
 /* --- lois --- */
-const LAWTYPE={
-  objet:{n:'possession'},vente:{n:'commerce'},nuit:{n:'commerce nocturne'},corruption:{n:'magie de corruption'},
-};
+/* LAWTYPE nommait les quatre types de loi et personne ne le lisait : le
+   texte de chaque loi (l.txt) dit deja « la possession de X », « la vente de
+   X ». Une table morte de plus, retiree plutot que rebranchee de force. */
 function lawsHere(){
   const k=kingdomAt(S.pos[0],S.pos[1]);
   if(!k)return {i:null,k:null,laws:[]};
@@ -81,6 +81,14 @@ function detection(){
 }
 function punir(l,ki){
   const k=S.kingdoms[ki];
+  /* « Royaume sans gardes (anarchie) → AUCUNE consequence structurelle
+     possible : la loi ne peut mecaniquement pas s'appliquer » (E.26). Elle
+     s'appliquait quand meme : une anarchie infligeait des amendes et
+     envoyait des gardes qu'elle n'a pas. */
+  if(sansGardes(ki)){
+    log('<span class="gd">'+k.nom+' n\'a ni garde ni greffe — la loi y est un mot.</span>');
+    return;
+  }
   if(l.c==='amende'){
     const a=Math.min(S.or,Math.round(60+genLvl()*25));
     S.or-=a;gainRep(-4,k.race,ki);

@@ -51,6 +51,16 @@ const MUT=[
     "+(typeof hasStatus==='function'&&hasStatus(S,'beni')?1:0)",'']]],
   ['statut : infection','cinq qui manquaient',[['src/25-modules.js',
     "-(k==='endu'&&typeof malusInfection==='function'?malusInfection():0)",'']]],
+  /* le hors-la-loi */
+  ['loi : anarchie sans gardes','hors-la-loi',[['src/21-reputation.js',
+    'if(sansGardes(ki)){','if(false){']]],
+  ['loi : prime en anarchie','hors-la-loi',[['src/21b-horslaloi.js',"  if(sansGardes(i)){",'  if(false){']]],
+  ['loi : patrouilles','hors-la-loi',[['src/21b-horslaloi.js',
+    '  if(p<120)return;','  return;']]],
+  ['loi : marchand refuse le vole','hors-la-loi',[['src/12-npc.js',
+    '  if(refuseVole(it))return toast(','  if(false)return toast(']]],
+  ['loi : marque du vol','hors-la-loi',[['src/21b-horslaloi.js',
+    "    if(off.t==='item')marquerVole(off.it);",'']]],
   /* les vehicules */
   ['vehicule : vitesse','vehicules',[['src/28-loop.js','*(1-util().marche)*mv;','*(1-util().marche);']]],
   ['vehicule : cargo','vehicules',[['src/10-craft.js',

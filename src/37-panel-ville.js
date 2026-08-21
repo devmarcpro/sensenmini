@@ -1,6 +1,33 @@
 /* Sensen Mini — 37-panel-ville.js
    Onglet pVille */
 
+/* LA PART D'OMBRE. Elle vit dans le panneau de la ville parce que c'est la
+   qu'elle se joue : un etal se vole, une prime se solde au greffe, et un
+   receleur se trouve la ou l'on vous regarde de travers. */
+function blocOmbre(){
+  const i=kingdomHere(),p=primeIci();
+  const rec=receleurIci(),voles=objetsVoles();
+  if(!p&&!rec&&!voles.length&&sansGardes())return '';
+  let h=foldHead('ville','ombre','闇','PART D\'OMBRE',
+    (p?'prime '+p+' or':'aucune prime')+(voles.length?' · '+voles.length+' pièce(s) marquée(s)':''));
+  if(!foldOpen('ville','ombre'))return h;
+  h+='<div class="card">';
+  if(i!==null&&sansGardes(i))
+    h+='<div class="meta">'+S.kingdoms[i].nom+' n\'a ni garde ni greffe : la loi y est un mot. Rien de ce que tu fais ici ne te suivra.</div>';
+  if(p){
+    h+='<div class="meta">Une prime de <b>'+p+' or</b> pèse sur ta tête dans '+(S.kingdoms[i]?S.kingdoms[i].nom:'ce royaume')+'. '
+      +'Elle suit le ROYAUME, pas la ville : au-delà de 120 or, des patrouilles te cherchent sur les routes.</div>'
+      +'<div class="row"><button class="btn" data-primepay="1" '+(S.or>=p*2?'':'disabled')+'>Solder · '+(p*2)+' or</button></div>';
+  }
+  if(voles.length){
+    h+='<div class="meta">'+voles.length+' pièce'+(voles.length>1?'s':'')+' trop reconnaissable'+(voles.length>1?'s':'')
+      +' : aucun marchand honnête n\'en veut.</div>'
+      +'<div class="row"><button class="btn" data-receler="1" '+(rec?'':'disabled')+'>'
+      +(rec?'Écouler chez le receleur · moitié prix':'aucun receleur ici')+'</button></div>';
+  } else if(rec)h+='<div class="meta">Il y a ici quelqu\'un pour racheter ce qui ne se vend pas au grand jour. Rien sur toi pour l\'instant.</div>';
+  h+='</div>';
+  return h;
+}
 function pVille(){
   const t=townAt(S.pos[0],S.pos[1]),k=kingdomAt(S.pos[0],S.pos[1]);
   let h='';
@@ -53,8 +80,16 @@ function pVille(){
     t.shops.forEach(sk=>{const d=SHOPDEF[sk];if(!d)return;const list=st[sk]||[];
       h+=grp(d.g,d.n.toUpperCase(),open?(list.length?'arrivage de la semaine':'étal vide jusqu\'à la semaine prochaine'):(isNight()?'fermé la nuit':'on ne te sert pas'));
       h+='<div class="meta" style="margin-bottom:6px">'+d.d+'</div>';
-      if(list.length)h+='<div class="matlist">'+list.map((o,i)=>'<button class="mat" data-buy="'+sk+':'+i+'" '+(open&&S.or>=o.p?'':'disabled')+'>'
-        +(o.t==='item'?iconeHtml(o.it,2.7,'coin'):'')+'<b>'+d.g+'</b>'+o.label+'<small>'+o.sub+'</small><small style="color:'+(S.or>=o.p?'var(--terre)':'var(--zhu)')+'">'+o.p+' or</small></button>').join('')+'</div>';
+      /* Deux gestes par etal, et le second n'est pas un bouton dans un
+         bouton : payer, ou prendre. La vignette devient une boite, chacun
+         son geste, et le vol reste visible sans etre suggere. */
+      if(list.length)h+='<div class="matlist">'+list.map((o,i)=>'<div class="mat">'
+        +(o.t==='item'?iconeHtml(o.it,2.7,'coin'):'')+'<b>'+d.g+'</b>'+o.label+'<small>'+o.sub+'</small>'
+        +'<small style="color:'+(S.or>=o.p?'var(--terre)':'var(--zhu)')+'">'+o.p+' or</small>'
+        +'<div class="row" style="margin-top:5px">'
+        +'<button class="btn pri" data-buy="'+sk+':'+i+'" '+(open&&S.or>=o.p?'':'disabled')+' style="padding:3px 8px">acheter</button>'
+        +'<button class="btn" data-voler="'+sk+':'+i+'" '+(open?'':'disabled')+' style="padding:3px 8px">prendre</button>'
+        +'</div></div>').join('')+'</div>';
     });
   }
   /* marché local */
@@ -71,5 +106,6 @@ function pVille(){
      +'<small>'+(f<.9?'abonde ici (×'+f.toFixed(2)+')':f>1.2?'recherché (×'+f.toFixed(2)+')':'prix normal')
      +(d<1?' · douane −'+Math.round((1-d)*100)+'%':'')+'</small>'
      +'<small style="color:var(--jade)">vendre '+priceMat(m,S.mat[m])+' or</small></button>';}).join('')+'</div>';
+  h+=blocOmbre();
   return h;
 }

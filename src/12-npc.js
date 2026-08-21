@@ -258,6 +258,10 @@ function sellMat(k){
 function sellItem(i){
   const it=S.items[i];if(!it)return;
   const b=buyerHere();if(!b)return toast('Personne pour acheter ici');
+  /* C'est ce qui rend le vol couteux meme quand il reussit : on ne revend
+     pas au grand jour ce qu'on a pris. Il faut un receleur, et il donne la
+     moitie. */
+  if(refuseVole(it))return toast(it.nom+' est trop reconnaissable — il faut un receleur (un camp, ou une ville où l\'on te regarde de travers)');
   const prix=Math.round(itemValue(it)*repFactor());
   if(b.or<prix){
     const paye=Math.floor(b.or*.9);

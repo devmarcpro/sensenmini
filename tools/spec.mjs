@@ -737,6 +737,139 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('hors-la-loi — voler, etre recherche, blanchir',()=>{
+  /* On pouvait enfreindre la loi, jamais la CHOISIR : on ne la croisait que
+     par accident, en passant une frontiere avec la mauvaise marchandise.
+     Aucun geste du jeu ne disait « prends-le sans payer ». */
+  const c=nouveau();
+  /* on se pose dans une ville d'un royaume qui a des gardes */
+  /* Une ville de HAMEAU n'appartient a aucun royaume : sans gardes, sans
+     greffe, rien de ce qui suit n'y a de sens. On prend donc une ville qui
+     appartient vraiment a un royaume, et l'on force son regime. */
+  R(c,`globalThis.__enville=(gov)=>{
+    const ks=kingdomsNear();
+    for(const k of ks){
+      const ts=kTowns(k);
+      for(const t of ts){
+        S.pos=[t.x,t.y];here().seen=true;
+        if(kingdomHere()===null)continue;
+        globalThis.__ki=kingdomHere();
+        if(gov)S.kingdoms[__ki].gov=gov;
+        return townAt(t.x,t.y);
+      }
+    }
+    return null;};
+    S.day=Math.floor(S.day)+12/24;`);
+  const t=G(c,'!!__enville("monarchie")');
+  eq(t,true,'on se place dans une ville tenue par un royaume');
+  R(c,'S.rep={g:40,race:{},king:{}};');
+
+  /* --- voler reussit ou echoue sur un jet, et l'echec coute --- */
+  R(c,`globalThis.__cible=(()=>{const tt=townAt(S.pos[0],S.pos[1]);
+    const st=shopStock(tt);const sk=Object.keys(st).find(k=>st[k]&&st[k].length);
+    return sk?[sk,0]:null;})()`);
+  ok(!!G(c,'__cible'),'la ville tient au moins un étal garni');
+  /* main lourde : on rate a coup sur */
+  R(c,'S.prime={};S.sk.discretion.lv=0;S.stats.dex=1;'
+    +'globalThis.__R=Math.random;Math.random=()=>0;volerOffre(__cible[0],__cible[1]);Math.random=__R;');
+  gt(G(c,'primeIci()'),0,'un vol raté met une prime sur ta tête — '+G(c,'primeIci()')+' or');
+  /* main sure : on reussit a coup sur */
+  R(c,`globalThis.__c2=(()=>{const tt=townAt(S.pos[0],S.pos[1]);
+    const st=shopStock(tt);const sk=Object.keys(st).find(k=>st[k]&&st[k].length);
+    return sk?[sk,0,st[sk].length]:null;})();
+    S.prime={};S.sk.discretion.lv=60;S.stats.dex=30;
+    globalThis.__R=Math.random;Math.random=()=>0.999;volerOffre(__c2[0],__c2[1]);Math.random=__R;`);
+  eq(G(c,'primeIci()'),0,'un vol réussi ne laisse aucune trace');
+  eq(G(c,'(()=>{const st=shopStock(townAt(S.pos[0],S.pos[1]));return st[__c2[0]].length;})()'),
+    G(c,'__c2[2]')-1,'et l\'étal a bien perdu sa pièce');
+
+  /* --- la prime suit le royaume, pas la ville --- */
+  R(c,'S.prime={};primeAjout(300,"essai");');
+  const p0=G(c,'primeIci()');
+  gt(p0,0,'la prime s\'inscrit');
+  R(c,'travel(S.pos[0]+1,S.pos[1]);');
+  eq(G(c,'primeIci()'),p0,'quitter la ville ne l\'efface pas — elle suit le royaume');
+  /* et elle envoie des patrouilles au-dela d'un seuil */
+  R(c,'S.prime={};S.prime[__ki]=2000;S.occ="repos";globalThis.__pat=0;'
+    +'for(let i=0;i<400&&!__pat;i++){primePatrouille(3);if(S.occ==="combat")__pat=1;S.occ="repos";}');
+  eq(G(c,'__pat'),1,'passé un seuil, des patrouilles te cherchent sur les routes');
+  R(c,'S.prime={};S.prime[__ki]=10;S.occ="repos";globalThis.__pat2=0;'
+    +'for(let i=0;i<400;i++){primePatrouille(3);if(S.occ==="combat")__pat2=1;S.occ="repos";}');
+  eq(G(c,'__pat2'),0,'une prime légère ne dérange personne');
+
+  /* --- la solder coûte le double --- */
+  R(c,'__enville("monarchie");S.prime={};S.prime[__ki]=100;S.or=500;primePayer();');
+  eq(G(c,'primeIci()'),0,'on peut solder sa dette');
+  eq(G(c,'S.or'),300,'et cela coûte le double de la prime');
+
+  /* --- une anarchie ne peut pas punir --- */
+  R(c,'__enville("anarchie");S.prime={};primeAjout(500,"essai");');
+  eq(G(c,'primeIci()'),0,'une anarchie n\'inscrit aucune prime — elle n\'a ni garde ni greffe');
+  R(c,'S.prime={};S.prime[__ki]=5000;S.occ="repos";globalThis.__pat3=0;'
+    +'for(let i=0;i<300;i++){primePatrouille(3);if(S.occ==="combat")__pat3=1;S.occ="repos";}');
+  eq(G(c,'__pat3'),0,'et n\'envoie jamais de patrouille');
+
+  /* --- une anarchie ne punit pas non plus les lois ordinaires --- */
+  R(c,`__enville('anarchie');
+    const kk=S.kingdoms[__ki];kk.laws2=null;kk.laws=[{t:'x',c:'amende'}];
+    lawsHere();kk.laws2=[{t:'objet',mat:'or',c:'amende',txt:'la possession d or'}];
+    S.mat={or:5};S.or=1000;S.sk.discretion.lv=0;S.stats.per=1;
+    globalThis.__R=Math.random;Math.random=()=>0;
+    for(let i=0;i<20;i++)controle('entree');
+    Math.random=__R;`);
+  eq(G(c,'S.or'),1000,'une anarchie n\'inflige aucune amende — la loi y est un mot');
+  /* alors qu'ailleurs, la meme infraction coute */
+  R(c,`__enville('dictature');
+    const kk2=S.kingdoms[__ki];kk2.laws2=[{t:'objet',mat:'or',c:'amende',txt:'la possession d or'}];
+    S.mat={or:5};S.or=1000;S.sk.discretion.lv=0;S.stats.per=1;
+    globalThis.__R=Math.random;Math.random=()=>0;
+    for(let i=0;i<20;i++)controle('entree');
+    Math.random=__R;`);
+  ok(G(c,'S.or')<1000,'sous un régime qui a des gardes, elle coûte — '+(1000-G(c,'S.or'))+' or');
+
+  /* --- une pièce prise à l'étal porte la marque --- */
+  R(c,`__enville('monarchie');S.items=[];S.rep={g:80,race:{},king:{}};
+    S.sk.discretion.lv=60;S.stats.dex=30;
+    globalThis.__pris=(()=>{
+      const tt=townAt(S.pos[0],S.pos[1]);const st=shopStock(tt);
+      for(const sk of Object.keys(st)){
+        const i=(st[sk]||[]).findIndex(o=>o.t==='item');
+        if(i<0)continue;
+        const R0=Math.random;Math.random=()=>0.999;
+        volerOffre(sk,i);Math.random=R0;
+        return S.items.length?!!S.items[S.items.length-1].vole:null;
+      }
+      return 'aucun objet à l étal';
+    })()`);
+  eq(G(c,'__pris'),true,'une pièce prise à l\'étal garde la marque du vol');
+
+  /* --- ce qu'on a volé ne se revend pas au grand jour --- */
+  R(c,`__enville("monarchie");
+    S.items=[];S.rep={g:80,race:{},king:{}};
+    const it=mkParure('anneau',null,1.2);it.vole=1;S.items.push(it);`);
+  /* on tente vraiment de le vendre : c'est sellItem qui doit refuser, pas
+     une fonction qu'on interroge poliment a cote */
+  R(c,`here().poi=null;S.rep={g:80,race:{},king:{}};
+    globalThis.__vendu=(()=>{
+      if(receleurIci())return 'receleur ici';
+      const av=S.items.length,or0=S.or;
+      sellItem(0);
+      return S.items.length===av&&S.or===or0;
+    })()`);
+  eq(G(c,'__vendu'),true,'un marchand honnête refuse la pièce marquée');
+  /* et il accepte la meme piece sans la marque */
+  R(c,`S.items[0].vole=0;globalThis.__vendu2=(()=>{
+      const av=S.items.length;sellItem(0);return S.items.length<av;})();
+    S.items[0]&&(S.items[0].vole=1);`);
+  eq(G(c,'__vendu2'),true,'la même pièce sans marque, il la prend');
+  R(c,'if(!S.items.length){const it=mkParure("anneau",null,1.2);it.vole=1;S.items.push(it);}');
+  /* chez le receleur, il part a moitie prix */
+  R(c,'here().poi="camp";S.or=0;globalThis.__val=itemValue(S.items[0]);recelerTout();');
+  eq(G(c,'S.items.length'),0,'le receleur prend tout ce qui est marqué');
+  eq(G(c,'S.or'),Math.round(G(c,'__val')*.5),'et n\'en donne que la moitié');
+  eq(G(c,'receleurIci()'),true,'un camp ne demande rien à personne');
+});
+
 test('vehicules — le temps du monde et ce qu on emporte',()=>{
   /* Une heure de marche par cellule, et rien d'autre depuis le premier jour.
      Un vehicule change les deux choses qui decident de ce qu'on peut se

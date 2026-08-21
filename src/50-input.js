@@ -92,6 +92,9 @@ function handle(e){
   if(b=t.closest('[data-cook]')){cook(selFood.slice());selFood=[];paint();return;}
   if(b=t.closest('[data-distill]')){distill(selFood.slice());selFood=[];paint();return;}
   if(b=t.closest('[data-drink]')){drink(+b.dataset.drink);paint();return;}
+  if(b=t.closest('[data-voler]')){const q=b.dataset.voler.split(':');volerOffre(q[0],+q[1]);paint();return;}
+  if(b=t.closest('[data-primepay]')){primePayer();paint();return;}
+  if(b=t.closest('[data-receler]')){recelerTout();paint();return;}
   if(b=t.closest('[data-vehbuild]')){vehConstruire(b.dataset.vehbuild);paint();return;}
   if(b=t.closest('[data-vehrep]')){vehReparer();paint();return;}
   if(b=t.closest('[data-vehdrop]')){vehAbandonner();paint();return;}

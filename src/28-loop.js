@@ -196,6 +196,9 @@ function travel(x,y){
   const mv=vehVitesse(x-S.pos[0],y-S.pos[1],c);
   S.day+=d/24*(1-util().marche)*mv;S.pos=[x,y];c.seen=true;S.target=null;
   vehUser(d);
+  /* une prime ne suit pas la cellule, elle suit le ROYAUME : fuir la ville
+     ne suffit pas, il faut quitter le pays — ou payer (E.26 / 14.4) */
+  primePatrouille(d);
   if(mv<1)gainXp('navigation',6*d);
   if(S.occ!=='repos')S.occ='repos';
   gainXp('athletisme',5*d);

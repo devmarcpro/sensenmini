@@ -86,6 +86,9 @@ function sanitize(){
   /* un vehicule d'une version disparue ne doit pas figer le voyage */
   if(S.vehicule&&!VEHICULE[S.vehicule.k])S.vehicule=null;
   if(S.vehicule&&!(S.vehicule.pv>0))S.vehicule=null;
+  /* une prime sur un royaume qui n'existe plus ne doit pas envoyer de gardes */
+  S.prime=S.prime||{};
+  Object.keys(S.prime).forEach(i=>{if(!S.kingdoms[i]||!(S.prime[i]>0))delete S.prime[i];});
   S.coffres=S.coffres||{};
   for(const k in S.coffres){
     S.coffres[k]=(S.coffres[k]||[]).filter(it=>it&&it.kind);

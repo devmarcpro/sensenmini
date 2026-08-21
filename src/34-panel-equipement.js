@@ -10,28 +10,29 @@ function pEquip(){
       +'<b>'+sl.g+'</b>'+sl.n+'<small>'+(it?it.nom:'vide')+'</small>'
       +(it?'<small style="color:var(--jade)">q'+it.q.toFixed(2)+' · retirer</small>':'<small>—</small>')+'</button>';
   }).join('')+'</div>';
-  h+=grp('盾','DÉFENSE PAR ZONE','réduction plate, zone nue = 0');
-  h+='<div class="card">'+ZK.map(z=>'<div class="meta">'+ZONE[z].g+' '+ZONE[z].n+' ×'+ZONE[z].mult
+  h+=foldHead('eq','def','盾','DÉFENSE PAR ZONE','réduction plate, zone nue = 0',null);
+  if(foldOpen('eq','def',null))h+='<div class="card">'+ZK.map(z=>'<div class="meta">'+ZONE[z].g+' '+ZONE[z].n+' ×'+ZONE[z].mult
     +' — réduction '+armorOf(z).toFixed(1)+(eqOf(SLOTS.find(x=>x.zone===z).k)?'':' <span style="color:var(--zhu)">nue</span>')+'</div>').join('')
     +'<div class="meta" style="margin-top:6px">Vecteur moyen du personnage (explosions, sorts de zone)</div>'+vecBar(avgVec())+'</div>';
   /* sertissures des pièces portées */
   const worn=Object.keys(S.eq).filter(k=>S.eq[k]&&S.eq[k].slots);
   if(worn.length||(S.gems&&S.gems.length)){
-    h+=grp('玉','SERTISSURES',(S.gems||[]).length+' gemme(s) taillée(s) en réserve');
-    h+=worn.map(k=>gemBlock(S.eq[k],'eq:'+k)).join('')||'<p class="hint">Aucune pièce portée n\'a de sertissure.</p>';
+    h+=foldHead('eq','gem','玉','SERTISSURES',(S.gems||[]).length+' gemme(s) taillée(s) en réserve',null);
+    if(foldOpen('eq','gem',null))h+=worn.map(k=>gemBlock(S.eq[k],'eq:'+k)).join('')||'<p class="hint">Aucune pièce portée n\'a de sertissure.</p>';
   }
   /* le coffre : ce que le dos ne porte plus, attaché à sa cellule */
   const cap=coffreOf();
   if(cap){
     const l=coffreList();
-    h+=grp('箱','COFFRE',l.length+' / '+cap+' · '+(here().town||BIOME[here().b].n));
+    h+=foldHead('eq','cof','箱','COFFRE',l.length+' / '+cap+' · '+(here().town||BIOME[here().b].n),null);
+    if(foldOpen('eq','cof',null)){
     h+='<div class="meta" style="margin-bottom:6px">Un coffre appartient à sa cellule : ce qu\'on y range ne se reprend que sur place.</div>';
     h+='<div class="row" style="margin-bottom:8px"><button class="btn" data-rangetout="1" '+(S.items.length&&l.length<cap?'':'disabled')+'>Tout ranger</button></div>';
     if(l.length)h+='<div class="matlist">'+l.map((it,i)=>'<button class="mat" data-reprendre="'+i+'" '+(sacPlein()?'disabled':'')+'>'
       +'<b>'+(it.kind==='arme'?'刀':it.kind==='armure'?'甲':it.kind==='statue'?'像':'具')+'</b>'+it.nom
       +'<small>'+(it.rar?RARITY[it.rar].n+' · ':'')+'q'+it.q.toFixed(2)+(it.aff&&it.aff.length?' · '+it.aff.length+' affixe(s)':'')+'</small>'
       +'<small style="color:var(--jade)">'+(sacPlein()?'sac plein':'reprendre')+'</small></button>').join('')+'</div>';
-    else h+='<p class="hint">Coffre vide.</p>';
+    else h+='<p class="hint">Coffre vide.</p>';}
   }
   h+=grp('袋','OBJETS',S.items.length+' / '+sacMax()+' en sac');
   h+='<div class="meta" style="margin-bottom:6px">Le dos porte 20 + Force×2 objets. Au-delà, le butin banal reste où il tombe — ou passe au creuset si tu as le Fondeur (自 VEILLE).'

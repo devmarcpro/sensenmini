@@ -622,6 +622,63 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('affixes — chacun fait ce que sa fiche annonce',()=>{
+  const c=nouveau();
+  /* Un affixe qui s'affiche sans rien faire est pire qu'un affixe absent :
+     le joueur choisit son équipement sur ce qu'il lit. On vérifie donc que
+     chaque identifiant de la table est effectivement lu quelque part. */
+  const morts=G(c,'AFF.map(a=>a.id)').filter(id=>{
+    const src=readFileSync(join(root,'src','24-combat.js'),'utf8')
+      +readFileSync(join(root,'src','25-modules.js'),'utf8')
+      +readFileSync(join(root,'src','15-companions.js'),'utf8');
+    /* la déclaration elle-même ne compte pas : on cherche un usage */
+    const usages=src.split("id==='"+id+"'").length-1;
+    return usages===0;
+  });
+  eq(morts.length,0,'aucun affixe déclaré n\'est lettre morte',
+    'jamais appliqués : '+morts.join(', '));
+  /* et « porte » change vraiment l'élément du coup */
+  R(c,'S.occ="combat";S.seg=[];S.bonus=0;hitN=0;'
+    +'E=mkEnemy("loup",1,false,false);EE=[E];foc=0;E.hp=1e9;E.max=1e9;'
+    +'weapon().vec=[1,0,0,0,0];'                    /* arme purement Bois */
+    +'weapon().aff=[{id:"porte",p:{n:1,e:4}}];');                     /* chaque coup porte Eau */
+  R(c,'S.end=100;S.seg=[];attack(false);');
+  eq(G(c,'S.seg[S.seg.length-1]'),4,'l\'affixe pose bien son élément dans la chaîne');
+  R(c,'weapon().aff=[];S.end=100;S.seg=[];attack(false);');
+  eq(G(c,'S.seg[S.seg.length-1]'),0,'sans lui, l\'arme retrouve le sien');
+  /* un n de zéro ne doit pas faire de modulo par zéro */
+  R(c,'weapon().aff=[{id:"porte",p:{n:0,e:2}}];S.end=100;S.seg=[];'
+    +'globalThis.__b=null;try{attack(false);}catch(e){__b=String(e);}');
+  eq(G(c,'__b'),null,'un cycle de zéro ne casse rien');
+  ok(Number.isFinite(G(c,'E.hp')),'et les dégâts restent un nombre');
+  /* Les conditionnels doivent vraiment mordre. On mesure le total infligé sur
+     un grand nombre de coups : le hasard des dés se moyenne, l'effet reste. */
+  R(c,'globalThis.__coups=(aff,avant)=>{'
+    +'S.occ="combat";hitN=0;S.seg=[];S.bonus=0;'
+    +'E=mkEnemy("loup",1,false,false);EE=[E];foc=0;E.hp=1e12;E.max=1e12;E.arm=0;'
+    +'weapon().aff=aff;if(avant)avant();'
+    +'const h0=E.hp;for(let i=0;i<400;i++){S.end=100;attack(false);}'
+    +'return h0-E.hp;};');
+  const nu=G(c,'__coups([])');
+  gt(nu,0,'une arme sans affixe fait des dégâts');
+  const nuit=G(c,'__coups([{id:"nuit",p:{p:60}}],()=>{S.day=Math.floor(S.day)+.92;})');
+  gt(nuit,nu,'« la nuit » paie quand il fait nuit — '+Math.round(nuit)+' contre '+Math.round(nu));
+  const seul=G(c,'__coups([{id:"seul",p:{p:60}}])');
+  gt(seul,nu,'« en duel » paie face à une seule créature');
+  const meute=G(c,'__coups([{id:"meute",p:{n:3,p:60}}])');
+  ok(Math.abs(meute-nu)<nu*.25,'« en meute » ne paie pas en duel');
+  const souffle=G(c,'(()=>{S.occ="combat";E=mkEnemy("loup",1,false,false);EE=[E];foc=0;'
+    +'E.hp=1e12;weapon().aff=[{id:"souffle",p:{p:50}}];S.end=100;attack(false);return S.end;})()');
+  const plein=G(c,'(()=>{S.occ="combat";E=mkEnemy("loup",1,false,false);EE=[E];foc=0;'
+    +'E.hp=1e12;weapon().aff=[];S.end=100;attack(false);return S.end;})()');
+  gt(souffle,plein,'« souffle » économise l\'endurance — '+souffle.toFixed(1)+' contre '+plein.toFixed(1));
+  /* et les déclencheurs posent bien leur statut */
+  R(c,'S.occ="combat";E=mkEnemy("loup",1,false,false);EE=[E];foc=0;E.hp=1e12;E.st=[];'
+    +'weapon().aff=[{id:"gel",p:{d:3}},{id:"venin",p:{n:2,d:5}}];S.end=100;attack(false);');
+  eq(G(c,'hasStatus(E,"ralenti")'),true,'« gel » ralentit vraiment');
+  eq(G(c,'hasStatus(E,"poison")'),true,'« venin » empoisonne vraiment');
+});
+
 test('absence — de la seconde au siècle, rien ne casse',()=>{
   const c=nouveau();
   /* Le cœur d'un jeu idle : ce qui se passe pendant qu'on n'est pas là.

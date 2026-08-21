@@ -37,6 +37,17 @@ const AFF=[
   {f:'DÉCLENCHEUR',id:'assomme',r:()=>({n:ri(4,8),d:ri(1,2)}),t:p=>'un coup sur '+p.n+' : étourdit '+p.d+' s'},
   {f:'DÉCLENCHEUR',id:'brule',r:()=>({n:ri(2,5),d:ri(2,4)}),t:p=>'au coup : brûle '+p.n+'/s pendant '+p.d+' s'},
   {f:'MÉCANIQUE',id:'vol',r:()=>({p:ri(3,8)}),t:p=>'vol de vie '+p.p+'%'},
+  /* Sept de plus, sur les mêmes accroches que les douze premiers — aucun
+     n'invente de règle, tous se branchent là où le combat décide déjà
+     quelque chose. Une arme lit mieux quand ses effets parlent de la
+     situation : la nuit, le nombre en face, la chaîne en cours. */
+  {f:'CONDITIONNEL',id:'nuit',r:()=>({p:ri(12,28)}),t:p=>'la nuit : +'+p.p+'%'},
+  {f:'CONDITIONNEL',id:'seul',r:()=>({p:ri(14,30)}),t:p=>'en duel, une seule créature en face : +'+p.p+'%'},
+  {f:'CONDITIONNEL',id:'meute',r:()=>({n:ri(2,3),p:ri(12,26)}),t:p=>'à '+p.n+' créatures ou plus en face : +'+p.p+'%'},
+  {f:'DÉCLENCHEUR',id:'gel',r:()=>({d:ri(2,4)}),t:p=>'au coup : ralentit '+p.d+' s'},
+  {f:'DÉCLENCHEUR',id:'venin',r:()=>({n:ri(2,4),d:ri(4,7)}),t:p=>'au coup : empoisonne '+p.n+'/s pendant '+p.d+' s'},
+  {f:'MÉCANIQUE',id:'souffle',r:()=>({p:ri(10,22)}),t:p=>'coûte '+p.p+'% d\'endurance en moins'},
+  {f:'WU XING',id:'harmonie',r:()=>({p:ri(15,35)}),t:p=>'sur une chaîne résolue : +'+p.p+'% de plus'},
 ];
 const RARITY=[{n:'commun',c:'#7E9187',a:0},{n:'inhabituel',c:'#6FBFA0',a:1},
               {n:'rare',c:'#3E7CB1',a:2},{n:'exceptionnel',c:'#D9A441',a:3}];
@@ -220,12 +231,22 @@ function attack(heavy){
   const w=weapon();if(!E||!w)return;
   const F=FUNC[w.fn],sd=stanceNow();
   const PA=passives();
-  const cost=(heavy?18:sd.end)*(1+PA.endcost);
+  let cost=(heavy?18:sd.end)*(1+PA.endcost);
+  (w.aff||[]).forEach(a=>{if(a.id==='souffle')cost*=1-a.p.p/100;});
   if(heavy&&S.end<cost)return;
   const gasping=S.end<cost;
   S.end=Math.max(0,S.end-cost);endLock=1.5;
   let v=itemVec(w),e=domi(v);
-  /* Communion des cinq : l'élément tourne, payé en mana d'entretien (5.2) */
+  /* « Une attaque sur N porte tel élément ». L'affixe se tirait sur le butin
+     et s'affichait sur la fiche de l'objet, mais n'était appliqué nulle part :
+     le joueur lisait une promesse que le jeu ne tenait pas. Le coup porte
+     désormais vraiment cet élément — il entre dans la chaîne Wu Xing, décide
+     le matchup, et profite de la compétence d'élément correspondante. */
+  (w.aff||[]).forEach(a=>{
+    if(a.id==='porte'&&a.p.n>0&&hitN%a.p.n===0){e=a.p.e;v=V({[a.p.e]:1});}
+  });
+  /* Communion des cinq : l'élément tourne, payé en mana d'entretien (5.2).
+     Elle se paie en mana et se choisit : elle prime sur l'affixe. */
   if(auto('rotation')&&S.seg.length&&S.mana>=4){
     const want=gen(S.seg[S.seg.length-1]);
     if(want!==e){S.mana-=4;e=want;v=V({[want]:1});}
@@ -250,8 +271,17 @@ function attack(heavy){
   if(gasping)base*=.6;
   base*=v.reduce((a,p,i)=>a+p*(1+lv('el_'+EL[i].k)/100),0);
   base*=1+.05*S.seg.length;
-  (w.aff||[]).forEach(a=>{if(a.id==='corr'&&here().corr>=a.p.s)base*=1+a.p.p/100;});
-  if(resolver)base*=1+S.bonus;
+  const enFace=engaged().length;
+  (w.aff||[]).forEach(a=>{
+    if(a.id==='corr'&&here().corr>=a.p.s)base*=1+a.p.p/100;
+    if(a.id==='nuit'&&isNight())base*=1+a.p.p/100;
+    if(a.id==='seul'&&enFace<=1)base*=1+a.p.p/100;
+    if(a.id==='meute'&&enFace>=a.p.n)base*=1+a.p.p/100;});
+  if(resolver){
+    base*=1+S.bonus;
+    /* l'harmonie ne paie que le coup qui ferme la chaîne */
+    (w.aff||[]).forEach(a=>{if(a.id==='harmonie')base*=1+a.p.p/100;});
+  }
   let pierce=PA.pierce;(w.aff||[]).forEach(a=>{if(a.id==='perce'&&hitN%a.p.n===0)pierce=Math.min(1,pierce+a.p.p/100);});
   const dtype=sd.t||F.t;
   hitN++;
@@ -280,7 +310,9 @@ function attack(heavy){
       if(a.id==='vol')S.hp=Math.min(maxHp(),S.hp+applied*a.p.p/100);
       if(a.id==='saigne')addStatus(tgt,'saignement',a.p.d,a.p.n);
       if(a.id==='brule')addStatus(tgt,'brulure',a.p.d,a.p.n);
-      if(a.id==='assomme'&&hitN%a.p.n===0)addStatus(tgt,'etourdi',a.p.d,1);});
+      if(a.id==='assomme'&&hitN%a.p.n===0)addStatus(tgt,'etourdi',a.p.d,1);
+      if(a.id==='gel')addStatus(tgt,'ralenti',a.p.d,1);
+      if(a.id==='venin')addStatus(tgt,'poison',a.p.d,a.p.n);});
     /* la frappe lourde chancelle, le résolveur enracine */
     if(heavy)addStatus(tgt,'etourdi',1+PA.staggerE,1);
     if(resolver){addStatus(tgt,'enracine',2.5,1);if(PA.weaken)addStatus(tgt,'affaibli',4,1);}

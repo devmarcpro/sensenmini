@@ -622,6 +622,45 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('absence — de la seconde au siècle, rien ne casse',()=>{
+  const c=nouveau();
+  /* Le cœur d'un jeu idle : ce qui se passe pendant qu'on n'est pas là.
+     Les valeurs extrêmes viennent de la vraie vie — horloge système reculée,
+     onglet dormant des semaines, veille prolongée du téléphone. */
+  R(c,'S.food={};addFood("viande:0:force",40);S.vivres=200;S.or=0;'
+    +'S.occ="combat";noteRate("kill");noteRate("kill");');
+  eq(G(c,'absence(0)'),false,'une absence nulle ne déclenche rien');
+  eq(G(c,'absence(89)'),false,'moins de quatre-vingt-dix secondes non plus');
+  eq(G(c,'absence(91)'),true,'au-delà, elle se résout');
+  /* les valeurs impossibles ne doivent rien produire, surtout pas des NaN */
+  for(const [v,nom] of [[-3600,'une absence négative'],[NaN,'une absence NaN'],
+                        [Infinity,'une absence infinie']]){
+    R(c,'globalThis.__j0=S.day;globalThis.__o0=S.or;globalThis.__f0=S.faim;');
+    R(c,'try{absence('+(v===Infinity?'Infinity':v===v?v:'NaN')+');}catch(e){globalThis.__boum=String(e);}');
+    ok(Number.isFinite(G(c,'S.day'))&&Number.isFinite(G(c,'S.or'))&&Number.isFinite(G(c,'S.faim')),
+      nom+' ne produit pas de NaN','jour '+G(c,'S.day')+' or '+G(c,'S.or')+' faim '+G(c,'S.faim'));
+  }
+  /* une très longue absence est plafonnée, et ne fait pas boucler l'horloge */
+  R(c,'S.day=10;S.week=Math.floor(S.day/WEEK);globalThis.__j1=S.day;');
+  const t0=Date.now();
+  R(c,'absence(3600*24*365*10);');
+  const ms=Date.now()-t0;
+  ok(ms<3000,'dix ans d\'absence se résolvent en moins de trois secondes — '+ms+' ms');
+  /* S.day compte en JOURS DE JEU, dont chacun dure DAY secondes reelles.
+     Le plafond de huit heures reelles vaut donc bien plus de cent jours de jeu. */
+  const ecoule=(G(c,'S.day')-G(c,'__j1'))*G(c,'DAY');
+  ok(ecoule<=8*3600+1,'et le temps resolu reste plafonne a huit heures reelles — '
+    +(ecoule/3600).toFixed(2)+' h, soit '+((G(c,'S.day')-G(c,'__j1'))).toFixed(0)+' jours de jeu');
+  ok(Number.isFinite(G(c,'S.or'))&&G(c,'S.or')>=0,'la bourse reste un nombre');
+  ok(G(c,'S.faim')>=0&&G(c,'S.faim')<=100,'la faim reste dans ses bornes — '+G(c,'S.faim'));
+  ok(G(c,'S.hp')>=1&&G(c,'S.hp')<=G(c,'maxHp()'),'les points de vie aussi — '+Math.round(G(c,'S.hp')));
+  /* et l'on ne revient pas d'une absence avec un sac qui déborde */
+  ok(G(c,'S.items.length')<=G(c,'sacMax()'),'le sac ne déborde pas au retour');
+  /* sans réserves, on revient affamé mais vivant */
+  R(c,'S.food={};S.vivres=0;S.faim=100;S.hp=maxHp();absence(3600*8);');
+  ok(G(c,'S.hp')>=1,'sans réserves, la faim ne tue pas pendant l\'absence');
+});
+
 test('butin — la richesse suit le danger',()=>{
   const c=nouveau();
   /* Règle explicite du GDD (3.0) : « la richesse suit toujours le danger

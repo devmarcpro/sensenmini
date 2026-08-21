@@ -27,10 +27,12 @@ Server*. Rechargement automatique à chaque sauvegarde.
 ```bash
 npm run dev      # sert le dossier sur http://localhost:5173 et affiche l'URL réseau
 npm run check    # vérifie la syntaxe de chaque module, sans navigateur (2 s)
-npm run spec     # 141 vérifications sur les règles du jeu, sans navigateur (1 s)
+npm run spec     # 247 vérifications sur les règles du jeu, sans navigateur (3 s)
 npm run smoke    # test de fumée dans Edge/Chrome headless : téléphone + ordinateur
 npm test         # spec puis smoke — à lancer avant de livrer
 npm run sim      # simule des parties longues avec des bots (équilibrage, voir plus bas)
+npm run courbe   # trace la progression d'équipement : butin, boutique, atelier
+npm run stamp    # remet à jour la version du cache hors-ligne (fait par npm test)
 npm run icons    # régénère les icônes PNG de l'application (icons/)
 npm run gen      # régénère src/02-data-materials.js depuis le GDD
 npm run build    # reconstruit dist/sensen-mini.html (fichier unique, file://)
@@ -85,9 +87,25 @@ dépasse 90 s. Même logique qu'un rechargement, sans recharger.
 
 **Hors-ligne.** `sw.js` lit `index.html` à l'installation et met en cache tout
 ce qu'il référence — pas de liste de fichiers à maintenir quand on ajoute un
-module. Ensuite : cache d'abord, rafraîchi en arrière-plan ; une mise à jour
-publiée arrive au rechargement suivant. Le service worker ne s'enregistre
-qu'en `http(s)`, jamais en `file://` ni dans le build mono-fichier.
+module. Ensuite : **réseau d'abord**, le cache ne prenant le relais que hors
+ligne. Le service worker ne s'enregistre qu'en `http(s)`, jamais en `file://`
+ni dans le build mono-fichier.
+
+Ce « réseau d'abord » a été payé cher. La stratégie précédente servait le cache
+et le rafraîchissait en arrière-plan, ce qui n'offre **aucune atomicité entre
+les fichiers** : chaque ressource se rafraîchit pour son compte, et l'on peut
+donc charger le nouveau JavaScript avec l'ancienne feuille de style. Le jeu
+s'affiche alors en morceaux — des règles de rendu périmées appliquées à une
+géométrie neuve — sans que rien ne le signale. Deux garde-fous en sont restés :
+
+- `VERSION` dans `sw.js` est un **condensé du contenu réel**, posé par
+  `npm run stamp` (que `npm test` appelle). Dès qu'un fichier change,
+  l'installation se rejoue et les anciens caches disparaissent. Auparavant la
+  version était figée : l'installation ne se rejouait jamais.
+- La feuille de style déclare sa révision (`--css-rev`) et le démarrage la
+  compare à `CSS_REV` (`52-boot.js`). Sur désaccord, il vide les caches et
+  recharge une fois. Un module manquant se voyait déjà ; une feuille périmée,
+  non. Les deux valeurs se bougent ensemble — `npm run spec` le vérifie.
 
 ---
 
@@ -106,7 +124,7 @@ src/24..28              combat, modules, récolte, horloge, boucle
 src/29..45              rendu et panneaux (un fichier par onglet)
 src/46-tips.js          conseils contextuels (onboarding E.19)
 src/50..52              entrées, sauvegarde, démarrage
-tools/                  check, build, serve, smoke, sim, icons
+tools/                  check, build, serve, spec, smoke, sim, courbe, stamp, icons
 ```
 
 **Portée globale partagée, ordre significatif.** Les fichiers ne sont pas des
@@ -146,15 +164,18 @@ sauvegarde. `NEW()` en donne la forme de référence.
 
 ## Tester
 
-Trois outils, trois questions différentes.
+Quatre outils, quatre questions différentes. Aucun ne remplace les autres :
+un jeu peut respecter toutes ses règles, s'afficher parfaitement, et rester
+injouable parce que rien n'y progresse.
 
 **`npm run spec` — les règles tiennent-elles ?** `tools/spec.mjs` charge toute
-la logique dans un contexte Node isolé et exécute 141 vérifications nommées :
+la logique dans un contexte Node isolé et exécute 247 vérifications nommées :
 génération du monde déterministe, catalogue de matériaux cohérent, chaîne Wu
-Xing, combat de groupe, prises en main, gestes des créatures, qualité
-d'artisanat, gemmes, gisements, agriculture, guildes, familles, sac et coffres,
-sauvegarde et rétrocompatibilité, veille, économie, royaume, conquête,
-progression, magie, boutiques, statuts. Chaque cas repart d'un personnage neuf
+Xing, combat de groupe, prises en main, gestes des créatures, bestiaire,
+qualité d'artisanat, gemmes, gisements, agriculture, guildes, quêtes, familles,
+sac et coffres, sauvegarde et rétrocompatibilité, veille, économie, royaume,
+dette, conquête, hameaux, boutiques, donjons, escorte, territoire, progression,
+magie, soin, statuts, et la cohérence entre feuille de style et code. Chaque cas repart d'un personnage neuf
 et d'une graine fixe : deux exécutions donnent le même résultat. Une seconde.
 
 ```bash
@@ -178,7 +199,27 @@ Captures d'écran dans `.shots/`.
 
 **`npm run sim` — le jeu est-il jouable dans la durée ?** Voir plus bas.
 
-`npm test` enchaîne spec puis smoke : c'est ce qu'il faut passer avant de livrer.
+**`npm run courbe` — l'équipement monte-t-il, et par quelle voie ?**
+`tools/courbe.mjs` ne fait jouer personne : il échantillonne les trois sources
+d'équipement et les compare avec `itemScore`, la mesure dont le jeu se sert
+lui-même pour décider si un objet vaut mieux qu'un autre. Le butin à cinq
+niveaux de corruption et de profondeur, les étals d'un hameau pauvre à une
+capitale prospère, l'atelier du débutant au forgeron de légende. Sur la graine
+42 :
+
+| voie | de | à | rapport |
+|---|---|---|---|
+| butin | 9,8 | 37,7 | ×3,8 |
+| boutique | 10,9 | 24,8 | ×2,3 |
+| atelier | 11,8 | 54,1 | ×4,6 |
+
+C'est la hiérarchie voulue : forger domine, le butin surprend, la boutique
+dépanne. L'outil signale de lui-même les décrochages — une capitale qui ne vend
+pas mieux qu'un hameau, un atelier qui plafonne sous le butin — et **sort en
+erreur**, pour que la CI s'arrête dessus.
+
+`npm test` remet à jour la version du cache, puis enchaîne spec et smoke :
+c'est ce qu'il faut passer avant de livrer.
 
 ---
 
@@ -203,7 +244,8 @@ GDD entre parenthèses) :
 | Fondeur, Marmite | `19-idle.js`, `28-loop.js` | automatisations : fondre le butin banal, nourrir cru à défaut de cuisine |
 | matériaux (F.1 / F.8) | `02-data-materials.js` | 176 matériaux **générés** par `tools/gen-materials.mjs` depuis le GDD — ne pas éditer à la main |
 | modules (F.2) | `04-data-magic.js`, `25-modules.js` | 62 modules : statuts, buffs, drain, esquive, invocation, purge ; 18 passifs de manuel |
-| bestiaire (F.3) | `23c-creatures.js` | 30 espèces par biome, meutes, fuite, venin, nuées, embuscade, humains à bourse, corrompus, statue 1:1 |
+| bestiaire (F.3) | `23c-creatures.js` | 44 espèces par biome, meutes, fuite, venin, nuées, embuscade, humains à bourse, corrompus, statue 1:1 ; une porte de puissance tient les grosses bêtes loin des débutants |
+| silhouettes voxel (12 / 12.1) | `28b-voxel.js` | douze squelettes assemblés en pavés CSS 3D — aucun asset. Une espèce = un squelette et une échelle, une instance = la teinte de son élément et le gabarit de son rang (G.5). Le joueur est composé de son équipement réel, l'escorte se tient derrière lui, et ce qu'on récolte a sa propre forme |
 | donjons (E.29) | `17-dungeon.js` | quatre thèmes, onze types de salles (piège, autel, puits, cellule, cache, armurerie…) |
 | multi-ennemis (5.1) | `24-combat.js`, `28-loop.js` | groupe de quatre, cible au tap, le dos coûte +30 %, balayage à l'allonge |
 | prises en main (5.1) | `10-craft.js`, `24-combat.js` | bouclier, deux mains, deux armes, arc — chacune sa contrepartie |

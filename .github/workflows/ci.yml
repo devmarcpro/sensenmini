@@ -38,6 +38,10 @@ jobs:
       - name: Une partie de huit heures tourne sans exception
         run: npm run sim -- --hours 8
 
+      # Les trois voies d equipement doivent monter, et l atelier rester la plus haute
+      - name: La courbe d equipement ne signale rien
+        run: npm run courbe
+
       - name: Captures d'écran
         if: always()
         uses: actions/upload-artifact@v4

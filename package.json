@@ -13,6 +13,7 @@
     "icons": "node tools/icons.mjs",
     "gen": "node tools/gen-materials.mjs",
     "build": "node tools/build.mjs",
-    "stamp": "node tools/stamp.mjs"
+    "stamp": "node tools/stamp.mjs",
+    "courbe": "node tools/courbe.mjs"
   }
 }

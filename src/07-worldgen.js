@@ -101,7 +101,11 @@ function regenStocks(){
 }
 function cellMats(c){
   const l=BIOME[c.b].mats.slice();
-  for(let i=1;i<=c.depth;i++)STRAT_MATS[i].forEach(m=>l.push(m));
+  /* borne sur la table, pas sur la profondeur : pierce() plafonne deja a cinq,
+     mais une sauvegarde importee ou abimee ne le garantit pas, et un cellMats
+     qui leve casse la recolte, le butin et le rendu de la case d'un coup */
+  const dmax=Math.min(c.depth||0,STRAT_MATS.length-1);
+  for(let i=1;i<=dmax;i++)STRAT_MATS[i].forEach(m=>l.push(m));
   if(c.poi==='filon')['fer','argent','or'].forEach(m=>l.push(m));
   if(c.depth>0)l.push(STRATA[Math.min(5,c.depth)].rock);
   return [...new Set(l)];

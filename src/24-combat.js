@@ -158,7 +158,12 @@ function spawn(){
   const inDj=S.occ==='donjon'&&c.dj&&!c.dj.clear;
   const room=inDj?djRoom():null;
   if(inDj&&room&&room.mobs<=0){djAdvance();return;}
-  const nuit=isNight()&&!inDj&&!eclaireIci();
+  /* « vision_nocturne » (F.7). La nuit fait deux choses ici : elle change le
+     peuplement — plus de predateurs, moins de gibier — et elle fait venir les
+     betes par une de plus. Qui voit dans le noir n'y perd plus rien : pour lui
+     la case se peuple comme en plein jour. Ce n'est pas un bonus de degats,
+     c'est une nuit qui cesse d'etre un mur. */
+  const nuit=isNight()&&!inDj&&!eclaireIci()&&!don('nuitvue');
   const power=inDj?djPower():1+c.corr/26*(nuit?1.1:1)+c.depth*0.6;
   const rare=Math.random()<0.02;
   const ck=creaturePool(c,inDj,nuit,power),C=CREATURE[ck];

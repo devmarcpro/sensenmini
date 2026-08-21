@@ -807,6 +807,104 @@ test('parures — six emplacements qui ne recevaient rien',()=>{
     return n;})()`);
   eq(G(c,'__dbl'),0,'aucune parure ne cumule deux dons');
 
+  /* --- AUCUN EFFET DECLARE NE DOIT RESTER SANS EFFET ---
+     C'est le defaut que je trouve le plus souvent dans ce jeu : une ligne de
+     table qui promet quelque chose et que personne ne lit. Plutot que de
+     verifier les onze effets un par un — ce qui laisserait le douzieme
+     passer — on prend une EMPREINTE de l'etat observable du personnage, on
+     pose l'affixe seul, et l'on exige que l'empreinte bouge. Un effet qui ne
+     deplace rien de mesurable est mort, quel qu'il soit. */
+  /* L'empreinte n'interroge que de VRAIS chemins du jeu. Un premier jet
+     mesurait util().marche et recalculait lui-meme le temps de voyage : il
+     passait au vert alors que l'effet n'etait branche nulle part, puisqu'il
+     ne mesurait que ma propre sonde. On appelle donc travel(), step(),
+     spawn(), addStatus(), pMonde() — le code que le joueur declenche. */
+  /* Et elle doit etre DETERMINISTE, sinon la comparaison est vide de sens :
+     un premier jet appelait detection() et step(), donc de l'aleatoire, et
+     l'empreinte differait de la reference a chaque fois — aucun effet ne
+     pouvait jamais paraitre inerte, et le test passait toujours. Un test qui
+     ne peut pas tomber ne protege rien. On fige donc le hasard le temps de
+     la mesure, ce qui laisse le vrai code s'executer sans rien inventer. */
+  R(c,`globalThis.__empreinte=()=>{
+    salirUtil();
+    const R0=Math.random;let s=987654321;
+    Math.random=()=>{s=(s*1103515245+12345)>>>0;return (s>>>4)/0x10000000;};
+    /* Mesurer, c'est jouer : on marche, on dort, on affronte des betes. Tout
+       cela laisse des traces — de l'XP, des cases explorees, un monde qui a
+       bouge. Sans remise en etat, la deuxieme mesure ne mesure plus la meme
+       chose que la premiere, et la comparaison ne veut plus rien dire. */
+    const snap=JSON.parse(JSON.stringify(S));
+    const v=[];
+    try{
+      ['minage','forge','discretion','cuisine','alchimie','athletisme','lecture',
+       'meditation','esquive','negociation','leadership','dressage','herboristerie',
+       'agriculture','taille','assemblage'].forEach(k=>v.push(lv(k)));
+      STATS.forEach(([k])=>v.push(st(k)));
+      v.push(sacMax());
+      /* le poison prend-il ? on le pose vraiment */
+      S.st=[];addStatus(S,'poison',5,1);v.push(hasStatus(S,'poison')?1:0);S.st=[];
+      /* le jet de discretion, tel que les controles de loi le lancent */
+      let d1=0;for(let i=0;i<200;i++)if(detection())d1++;v.push(d1);
+      /* un vrai voyage de trois cases : c'est le temps du monde qui compte */
+      const p0=S.pos.slice(),j0=S.day,o0=S.occ;
+      for(let i=0;i<=3;i++)cell(p0[0]+i,p0[1]).seen=true;
+      travel(p0[0]+3,p0[1]);
+      v.push(+((S.day-j0)*1000).toFixed(2));
+      S.pos=p0;S.day=j0;S.occ=o0;
+      /* une vraie minute de repos, puis une de sommeil : la cicatrisation se
+         mesure en points de vie rendus, par la boucle du jeu */
+      const hp0=S.hp,f0=S.faim;
+      S.occ='repos';S.faim=90;S.hp=Math.round(maxHp()*.3);
+      let a0=S.hp;for(let i=0;i<20;i++)step(1);
+      v.push(+(S.hp-a0).toFixed(2));
+      /* dormir de jour renvoie aussitot au repos : on mesure de nuit */
+      const jn=S.day;S.day=Math.floor(S.day)+23/24;
+      S.occ='dormir';S.hp=Math.round(maxHp()*.3);
+      a0=S.hp;for(let i=0;i<5;i++)step(1);
+      v.push(+(S.hp-a0).toFixed(2));
+      S.day=jn;
+      /* la faim, sur deux minutes, par la vraie boucle */
+      S.occ='explore';S.faim=100;S.hp=Math.round(maxHp()*.3);a0=S.hp;
+      for(let i=0;i<120;i++)step(1);
+      v.push(+S.faim.toFixed(3),+(S.hp-a0).toFixed(2));
+      S.hp=hp0;S.faim=f0;S.occ=o0;
+      /* la nuit peuple-t-elle encore autrement ? on engendre vraiment des
+         rencontres a une heure de nuit et l'on compte ce qui vient */
+      const jj=S.day;S.day=Math.floor(S.day)+23/24;
+      let bete=0,tete='';
+      for(let i=0;i<40;i++){S.occ='combat';spawn();bete+=EE.length;tete+=(EE[0]?EE[0].cre:'-')+',';}
+      v.push(bete,tete.length,tete.slice(0,60));
+      S.day=jj;E=null;EE=[];S.occ=o0;
+      /* et la carte, telle que le panneau la dessine */
+      const html=pMonde();
+      v.push(html.length,(html.match(/class="poi"/g)||[]).length);
+    }finally{
+      Math.random=R0;
+      for(const k in S)delete S[k];
+      Object.assign(S,snap);
+      E=null;EE=[];salirUtil();
+    }
+    return v.join('|');
+  };`);
+  R(c,'S.eq={};S.day=8.5;S.stats.force=10;');
+  /* la reference se reprend juste avant chaque essai : l'empreinte doit etre
+     stable deux fois de suite, sinon rien de ce qui suit n'a de valeur */
+  const nu=G(c,'__empreinte()');
+  eq(G(c,'__empreinte()'),nu,'l\'empreinte est reproductible — sans quoi ce test ne prouve rien');
+  const inertes=G(c,`(()=>{
+    const ko=[];
+    AFFU.forEach(a=>{
+      S.eq={};salirUtil();
+      const p=a.r();
+      S.eq.anneau1={id:'t',kind:'parure',slot:'anneau1',q:1.5,aff:[{id:a.id,p}],
+        parts:[{ct:'fixations',f:'brut',mk:'argent'}]};
+      if(__empreinte()===${JSON.stringify(nu)})ko.push(a.id);
+    });
+    S.eq={};salirUtil();
+    return ko;})()`);
+  ok(inertes.length===0,'chacun des '+G(c,'AFFU.length')+' effets de parure déplace quelque chose de mesurable',
+    'sans effet : '+inertes.join(', '));
+
   /* --- et les effets d'usage restent hors du combat --- */
   R(c,'S.eq={};salirUtil();');
   const dSans=G(c,'wSpeed()');

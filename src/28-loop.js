@@ -32,11 +32,11 @@ function step(dt){
   if(S.occ==='repos'){
     if(S.st&&S.st.length)tickStatus(S,dt,true);
     S.end=Math.min(100,S.end+9*dt);
-    if(S.faim>25)S.hp=Math.min(maxHp(),S.hp+maxHp()*.015*dt*(S.thermal||1));
+    if(S.faim>25)S.hp=Math.min(maxHp(),S.hp+maxHp()*.015*dt*(S.thermal||1)*(1+util().soin));
     if(S.resume&&S.end>=98&&((S.resume!=='combat'&&S.resume!=='donjon')||S.hp>=maxHp()*.9)){S.occ=S.resume;S.resume=null;sceneMode='';}
   } else if(S.occ==='dormir'){
     S.end=Math.min(100,S.end+9*dt);
-    S.hp=Math.min(maxHp(),S.hp+maxHp()*.06*dt);
+    S.hp=Math.min(maxHp(),S.hp+maxHp()*.06*dt*(1+util().soin));
     S.mana=Math.min(maxMana(),S.mana+.5*dt);
     if(!isNight()){S.occ='repos';S.repose=S.day+4/24;sceneMode='';
       /* le sommeil rend un peu de potentiel — à toutes les stats, sans distinction (E.21) */
@@ -52,7 +52,7 @@ function step(dt){
        personnage à un point de vie pour toujours : la faim le ramène à 1 sans
        le tuer (A.9), la récolte ne rendait rien, et seul un arrêt volontaire
        pouvait le remettre d'aplomb. Rien ne le disait. */
-    if(S.faim>25)S.hp=Math.min(maxHp(),S.hp+maxHp()*.004*dt*(S.thermal||1));
+    if(S.faim>25)S.hp=Math.min(maxHp(),S.hp+maxHp()*.004*dt*(S.thermal||1)*(1+util().soin));
     if(S.occ==='recolte')harvestTick(dt);
     else if(S.occ==='atelier')craftTick(dt);
     else if(S.occ==='percer')pierce(dt);
@@ -187,7 +187,10 @@ function travel(x,y){
   const d=Math.abs(x-S.pos[0])+Math.abs(y-S.pos[1]);if(!d)return;
   const c=cell(x,y);
   if(!c.seen&&d>1)return toast('Cellule inconnue — approche-toi d\'abord');
-  S.day+=d/24;S.pos=[x,y];c.seen=true;S.target=null;   /* une heure de marche par cellule */
+  /* Une heure de marche par cellule — moins si l'on porte de quoi aller
+     vite. Le temps du monde est la vraie monnaie d'un jeu qui tourne tout
+     seul : gagner un quart d'heure par case, c'est gagner des semaines. */
+  S.day+=d/24*(1-util().marche);S.pos=[x,y];c.seen=true;S.target=null;
   if(S.occ!=='repos')S.occ='repos';
   gainXp('athletisme',5*d);
   log('Voyage vers '+(c.town||BIOME[c.b].n)+' ('+x+','+y+')');

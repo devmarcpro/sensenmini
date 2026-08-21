@@ -13,8 +13,14 @@ function pMonde(){
     const tt=kk?kTowns(kk).find(t2=>t2.x===x&&t2.y===y):null;
     h+='<div class="cell'+(dx===0&&dy===0?' here':'')+(c.seen?'':' unknown')+'" data-go="'+x+','+y+'"'
       +' style="background:'+(c.seen?BIOME[c.b].c:'#0F1413')+'">'
+      /* « detection_filons » et « detection_tresors » (F.7). Un don ne
+         revele pas la case — le brouillard reste — il en revele le POINT
+         D'INTERET. On voit qu'il y a un filon la-bas sans savoir ce qu'on
+         traversera pour y aller. Cela change une exploration au hasard en
+         une exploration dirigee, et c'est une facon de jouer entiere. */
       +(tt?'<span class="poi" style="color:#000">'+(tt.type==='capitale'?'城':tt.type==='ville'?'市':'村')+'</span>'
-        :(c.seen&&c.poi?'<span class="poi">'+POI[c.poi].g+'</span>':''))
+        :((c.seen||(c.poi==='filon'&&don('filons'))||(c.poi==='donjon'&&don('tresors')))&&c.poi
+          ?'<span class="poi"'+(c.seen?'':' style="opacity:.55"')+'>'+POI[c.poi].g+'</span>':''))
       +(kk?'<span class="kd" style="background:'+(myTowns().some(t2=>t2.x===x&&t2.y===y)?'#6FBFA0':'#C8332B')+'"></span>':'')
       +(c.seen?'<span class="dg" style="background:'+dgc+'"></span>':'?')+'</div>';
   }

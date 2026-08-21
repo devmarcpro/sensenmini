@@ -7,13 +7,14 @@
     "dev": "node tools/serve.mjs",
     "check": "node tools/check.mjs",
     "spec": "node tools/spec.mjs",
-    "test": "node tools/stamp.mjs && node tools/spec.mjs && node tools/smoke.mjs",
+    "test": "node tools/stamp.mjs && node tools/spec.mjs && node tools/atteignable.mjs && node tools/smoke.mjs",
     "smoke": "node tools/smoke.mjs",
     "sim": "node tools/sim.mjs",
     "icons": "node tools/icons.mjs",
     "gen": "node tools/gen-materials.mjs",
     "build": "node tools/build.mjs",
     "stamp": "node tools/stamp.mjs",
-    "courbe": "node tools/courbe.mjs"
+    "courbe": "node tools/courbe.mjs",
+    "mort": "node tools/atteignable.mjs"
   }
 }

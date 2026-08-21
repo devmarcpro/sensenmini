@@ -1164,7 +1164,12 @@ test('butin — la richesse suit le danger',()=>{
   gt(paisible,0,'une case paisible laisse tomber quelque chose');
   gt(mortelle,paisible*1.15,'une terre corrompue rend mieux — q'+mortelle.toFixed(2)
     +' contre q'+paisible.toFixed(2));
-  gt(fond,mortelle,'et la profondeur ajoute encore — q'+fond.toFixed(2));
+  /* Un simple « strictement superieur » sur une moyenne de trois cents tirages
+     ne prouve rien : il passait par chance alors que le plafond de risque
+     rendait la profondeur STRICTEMENT sans effet. On exige donc un ecart que
+     le bruit ne peut pas fabriquer. */
+  gt(fond,mortelle*1.08,'et la profondeur ajoute encore — q'+fond.toFixed(2)
+    +' contre q'+mortelle.toFixed(2)+' en surface');
   /* mais jamais sans borne : le plafond protège l'atelier */
   ok(fond<paisible*1.6,'le lieu ne rattrape pas ce qu\'un forgeron accompli sait faire',
     'q'+fond.toFixed(2)+' contre q'+paisible.toFixed(2));

@@ -33,7 +33,7 @@ function filier(enfant,p1,p2){
 }
 /* nouer les familles d'un village fraîchement peuplé, et lui donner ses enfants */
 function linkFamilies(list){
-  const libres=list.filter(n=>n.age>=20).sort(()=>Math.random()-.5);
+  const libres=melange(list.filter(n=>n.age>=20));
   const couples=[];
   for(let i=0;i+1<libres.length;i+=2){
     if(Math.random()<.7&&Math.abs(libres[i].age-libres[i+1].age)<25&&marier(libres[i],libres[i+1]))

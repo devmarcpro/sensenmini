@@ -118,13 +118,13 @@ const SHOPGEN={
     if(Math.random()<.5)o.push(offMat(t,'soie',ri(1,3)));
     return o;},
   'épicier'(t){const o=[];
-    const crops=Object.keys(MAT).filter(k=>MAT[k].crop&&MAT[k].nutr>0&&!MAT[k].tox).sort(()=>Math.random()-.5).slice(0,3);
+    const crops=tirerN(Object.keys(MAT).filter(k=>MAT[k].crop&&MAT[k].nutr>0&&!MAT[k].tox),3);
     crops.forEach(mk=>o.push(offMat(t,mk,ri(5,12))));
     for(let i=0;i<2;i++){const el=ri(0,4);o.push(offFood(t,foodKey('viande',el,MEATGRP[el]),ri(3,6)));}
     o.push(offVivres(t,ri(4,10)));o.push(offMat(t,'eaupure',ri(4,8)));
     return o;},
   joaillier(t){const o=[];
-    const gems=GEMK.filter(g=>g!=='cristalmana'&&g!=='diamant').sort(()=>Math.random()-.5).slice(0,ri(2,4));
+    const gems=tirerN(GEMK.filter(g=>g!=='cristalmana'&&g!=='diamant'),ri(2,4));
     gems.forEach(g=>o.push(offMat(t,g,ri(1,2),1.2)));
     if(t.prosp>1&&Math.random()<.4)o.push(offMat(t,'diamant',1,1.4));
     if(t.prosp>1&&Math.random()<.5)o.push(offMat(t,'cristalmana',1,1.3));

@@ -89,7 +89,7 @@ function pAuto(){
    +';color:'+(rk[i]?e.c:'var(--dim)')+'">'+e.g+' '+e.n+(rk[i]?'':' — manquant')+'</span>').join('')+'</div>'
    +'<div class="meta">'+(weapon()?'en main : '+weapon().nom+' ('+EL[domi(itemVec(weapon()))].n+')':'aucune arme en main')+'</div>'
    +'</div>';
-  h+=rackList().map((it,i)=>'<div class="card"><h3><span>'+it.nom+'</span><i>'
+  h+=rackList().map((it,i)=>'<div class="card"><h3><span>'+iconeHtml(it,1.9,'mini')+it.nom+'</span><i>'
     +EL[domi(itemVec(it))].g+' '+EL[domi(itemVec(it))].n+'</i></h3>'
     +'<div class="meta">'+FUNC[it.fn].d[0]+'d'+FUNC[it.fn].d[1]+' '+DT[FUNC[it.fn].t]
     +' · qualité '+it.q.toFixed(2)+' · dureté '+it.dur.toFixed(1)+'</div>'

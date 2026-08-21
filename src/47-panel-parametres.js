@@ -111,7 +111,7 @@ const TRICHES={
     const arme=CLASSE[S.classe]&&FUNC[CLASSE[S.classe].kit]?CLASSE[S.classe].kit:'epee';
     const mk=fn=>{const p=FUNC[fn].comp.map(ct=>partFor(ct,mats));p.push(partFor('fixations',mats));
       const it=mkItem('arme',fn,p,2.2);it.rar=3;it.slots=2;
-      it.aff=AFF.slice().sort(()=>Math.random()-.5).slice(0,3).map(a=>({id:a.id,p:a.r()}));
+      it.aff=tirerN(AFF,3).map(a=>({id:a.id,p:a.r()}));
       return it;};
     S.eq.main1=mk(arme);
     if(!FUNC[arme].dist&&hands(S.eq.main1)===1)S.eq.main2=mk('bouclier');
@@ -119,7 +119,7 @@ const TRICHES={
       const ct=pick(ARMPARTS),major=partFor(ct,mats);
       const it=mkItem('armure',sl.k,[major,partFor('sangles',mats),partFor('fixations',mats)],2.2);
       it.cons=COMP[ct].cons;it.nom=armorName(sl.k,it.cons,major.mk);it.rar=3;
-      it.aff=AFF.slice().sort(()=>Math.random()-.5).slice(0,2).map(a=>({id:a.id,p:a.r()}));
+      it.aff=tirerN(AFF,2).map(a=>({id:a.id,p:a.r()}));
       S.eq[sl.k]=it;});}],
   artefact:['un artefact',()=>{if(typeof dropArtefact==='function')dropArtefact(4);}],
   carte:['quinze cases révélées',()=>{

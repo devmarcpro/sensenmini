@@ -36,7 +36,7 @@ const GUILDS=[
 const RANKS=['Novice','Compagnon','Adepte','Expert','Maître'];
 function mkKingdom(i){
   const race=pick(Object.keys(RACE)),gov=pick(GK2);
-  const pool=LAWS.slice().sort(()=>Math.random()-.5);
+  const pool=melange(LAWS);
   return {id:i,nom:pick(TOWN)+pick([' du Nord',' des Cendres',' Ancien',' Libre','',' du Val']),
     race,gov,laws:pool.slice(0,GOV[gov].law).map(t=>({t,c:pick(CONSEQ)})),
     rep:0,diplo:null,or:ri(6000,15000)};

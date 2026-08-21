@@ -212,6 +212,11 @@ body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
 .ico .bx{position:absolute;transform-style:preserve-3d}
 .ico i{position:absolute;inset:0;border:1px solid rgba(0,0,0,.35);transform-origin:left top}
 .ico.gros{width:56px;height:56px;perspective:360px}
+/* dans une annonce plein ecran, l objet trouve prend la place de l ideogramme */
+.ico.cut1{width:64px;height:64px;perspective:420px}
+@media(max-width:430px){.ico.cut1{width:48px;height:48px;perspective:320px}}
+/* dans un titre, l icone se range sur la ligne du texte */
+.ico.mini{width:26px;height:26px;perspective:200px;margin-right:5px}
 /* posee dans un coin de vignette, l icone ne pousse rien */
 .ico.coin{position:absolute;right:3px;top:3px;width:36px;height:36px;perspective:260px}
 .mat{position:relative}

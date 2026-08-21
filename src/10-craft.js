@@ -65,7 +65,7 @@ function assembleFrom(kind,fn,picks){
   it.slots=kind==='arme'?craftSlots(q):0;
   S.items.push(it);
   gainXp('assemblage',parts.reduce((a,p)=>a+MAT[p.mk].d,0)*20);questTick('craft',1);
-  cutIn('鍛',it.nom,QNAME(q)+' · qualité '+q.toFixed(2));
+  cutIn('鍛',it.nom,QNAME(q)+' · qualité '+q.toFixed(2),false,it);
   return it;
 }
 function assembleArmor(slotK,picks){
@@ -84,7 +84,7 @@ function assembleArmor(slotK,picks){
   it.slots=craftSlots(q);
   S.items.push(it);
   gainXp('assemblage',parts.reduce((a,p)=>a+MAT[p.mk].d,0)*20);questTick('craft',1);
-  cutIn('鍛',it.nom,QNAME(q)+' · qualité '+q.toFixed(2));
+  cutIn('鍛',it.nom,QNAME(q)+' · qualité '+q.toFixed(2),false,it);
   return it;
 }
 function mkItem(kind,fn,parts,q){

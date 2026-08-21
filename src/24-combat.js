@@ -513,7 +513,15 @@ function dropLoot(c,rare){
      à corruption zéro contre 10,7 à soixante-dix, soit rien. Le lieu pèse
      désormais sur la qualité, sans jamais rattraper ce qu'un forgeron
      accompli sait faire de ses mains. */
-  const risque=Math.min(1.30,1+c.corr/250+c.depth*.02);
+  /* Le plafond mentait sur ses propres regles. Il tombait a 1,30 alors que
+     corruption et profondeur pouvaient monter a 1,50 : au-dela de soixante-
+     quinze de corruption, plus rien n'augmentait, et la profondeur — l'autre
+     axe de danger — ne comptait alors plus DU TOUT, puisque le plafond etait
+     deja atteint sans elle. Descendre au fond d'une terre mortelle ne payait
+     pas un gramme de plus que d'y rester en surface. Le plafond ne sert plus
+     que de garde-fou contre une sauvegarde abimee ; les deux axes courent
+     jusqu'au bout, et la profondeur pese desormais autant qu'elle coute. */
+  const risque=Math.min(1.60,1+c.corr/250+c.depth*.04);
   const qLoot=()=>+((0.7+Math.random()*0.9+(rare?.3:0))*risque).toFixed(2);
   let it;
   if(Math.random()<.5){
@@ -534,7 +542,7 @@ function dropLoot(c,rare){
   /* sertissures tirées au loot (A.12) : commun 0 · inhabituel 0-1 · rare 1-2 · exceptionnel 2-3 dont une occupée */
   it.slots=rar===0?0:rar===1?ri(0,1):rar===2?ri(1,2):ri(2,3);
   if(rar===3&&typeof randomGem==='function'){const g=randomGem(c);if(g&&!(GEMSPEC[g.spec].arme&&it.kind!=='arme')){it.gems=[g];applyGemVec(it);applyGemQ(it);}}
-  it.aff=AFF.slice().sort(()=>Math.random()-.5).slice(0,RARITY[rar].a).map(a=>({id:a.id,p:a.r()}));
+  it.aff=tirerN(AFF,RARITY[rar].a).map(a=>({id:a.id,p:a.r()}));
   it.aff.forEach(a=>{if(a.id==='vecaff'){const v=it.vec.slice();v[a.p.e]+=a.p.p/100;it.vec=rnd4(norm(v));}});
   if(rar>=2)it.nom=pick(NAME_A)+' '+it.nom+' '+pick(NAME_B);
   /* le sac a un fond : au-delà, le banal reste par terre, ou part au creuset */
@@ -553,5 +561,5 @@ function dropLoot(c,rare){
     if(pire){const g=scrapItem(pire.i);log('Sac plein — '+pire.x.nom+' fondu pour faire place (+'+g+' or)');}
   }
   S.items.push(it);questTick('loot',1,rar);
-  cutIn('宝',it.nom,RARITY[rar].n+' · '+(it.aff.length?it.aff.length+' affixe(s)':'sans affixe')+(it.slots?' · '+it.slots+' sertissure'+(it.slots>1?'s':''):''));
+  cutIn('宝',it.nom,RARITY[rar].n+' · '+(it.aff.length?it.aff.length+' affixe(s)':'sans affixe')+(it.slots?' · '+it.slots+' sertissure'+(it.slots>1?'s':''):''),false,it);
 }

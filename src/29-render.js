@@ -11,7 +11,11 @@ function log(h){S.log.unshift(h);if(S.log.length>7)S.log.pop();
 let cutQ=[],cutBusy=false;
 /* `hors` : une annonce d'interface (sauvegarde chargée…) s'affiche sans entrer
    dans la chronique, qui ne raconte que le monde */
-function cutIn(k,t,sub,hors){if(!hors)chronique(k,t,sub);cutQ.push([k,t,sub]);if(!cutBusy)nextCut();}
+/* `it` : quand l'annonce porte sur un objet, on montre l'objet lui-meme au
+   lieu de l'ideogramme. Trouver une epee et voir l'epee vaut mieux que lire
+   « 宝 ». La chronique, elle, garde l'ideogramme : elle est sauvegardee, et
+   l'on ne veut pas y serialiser cent objets. */
+function cutIn(k,t,sub,hors,it){if(!hors)chronique(k,t,sub);cutQ.push([k,t,sub,it]);if(!cutBusy)nextCut();}
 /* ===== LA CHRONIQUE =====
    Le journal ne garde que sept lignes, et un idle se joue par absences :
    on revient après huit heures et l'on veut savoir ce qui est arrivé.
@@ -34,7 +38,8 @@ function nextCut(){
   cutBusy=true;const c=cutQ.shift();
   if(typeof sfx==='function')sfx(c[0]==='練'?'lvl':c[0]==='宝'||c[0]==='遺'?'loot':'cut');
   const d=document.createElement('div');d.className='cut';
-  d.innerHTML='<b>'+c[0]+'</b><div class="t">'+c[1]+(c[2]?'<small>'+c[2]+'</small>':'')+'</div>';
+  const tete=c[3]&&typeof iconeHtml==='function'?iconeHtml(c[3],4.2,'cut1'):'<b>'+c[0]+'</b>';
+  d.innerHTML=tete+'<div class="t">'+c[1]+(c[2]?'<small>'+c[2]+'</small>':'')+'</div>';
   document.body.appendChild(d);
   setTimeout(()=>{d.className='cut out';setTimeout(()=>{d.remove();nextCut();},180);},1700);
   log('<span class="hi">'+c[0]+' '+c[1]+'</span>');

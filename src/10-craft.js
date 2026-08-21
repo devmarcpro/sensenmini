@@ -138,7 +138,8 @@ function itemScore(it){
 /* ===== CE QU'ON PEUT PORTER (A.4.2 : poids porté) =====
    La Force décide de ce que le dos supporte. Un sac plein ne bloque rien :
    le butin banal reste sur place — ou passe au creuset si le Fondeur est là. */
-const sacMax=()=>20+st('force')*2+(typeof util==='function'?util().poids:0);
+const sacMax=()=>20+st('force')*2+(typeof util==='function'?util().poids:0)
+  +(typeof vehCargo==='function'?vehCargo():0);
 const sacPlein=()=>S.items.length>=sacMax();
 /* fond un objet : un tiers de sa valeur */
 function scrapItem(i){const it=S.items[i];if(!it)return 0;const g=Math.round(itemValue(it)/3);S.or+=g;S.items.splice(i,1);return g;}

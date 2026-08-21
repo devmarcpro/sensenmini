@@ -1,6 +1,41 @@
 /* Sensen Mini — 30-panel-monde.js
    Onglet pMonde */
 
+/* L'ATTELAGE. Il vit dans le panneau du monde parce qu'il ne sert qu'a une
+   chose : decider d'un trajet. On y lit le vent, l'usure, ce que le vehicule
+   ajoute au dos, et l'on y construit. */
+function blocVehicule(){
+  const v=vehicule(),D=vehDef();
+  let h=foldHead('monde','veh','車','ATTELAGE',v?D.n+' · '+Math.round(v.pv)+'/'+D.pv:'aucun');
+  if(!foldOpen('monde','veh'))return h;
+  h+='<div class="card">';
+  if(v){
+    const ici=vehUtile();
+    h+='<h3><span>'+D.g+' '+D.n+'</span><i>'+Math.round(v.pv)+' / '+D.pv+'</i></h3>'
+     +'<div class="meta">'+D.d+'</div>'
+     +'<div class="meta">'+(ici
+        ? 'utilisable ici · voyage <b>×'+vehVitesse(1,0).toFixed(2)+'</b> vers l\'est, <b>×'
+          +vehVitesse(0,1).toFixed(2)+'</b> vers le nord · <b>+'+D.cargo+'</b> de charge'
+        : '<span style="color:var(--zhu)">inutilisable ici — '+(D.eau?'il faut une côte, un marécage ou une eau':'la terre ferme')+'</span>')+'</div>'
+     +(D.voile?'<div class="meta">vent de '+ventNom()+' · Navigation '+lv('navigation')+' — plus elle monte, moins le vent contraire coûte</div>':'')
+     +'<div class="row"><button class="btn" data-vehrep="1" '+(v.pv<D.pv?'':'disabled')+'>Réparer · '
+       +costTxt(D.cout.map(([r,n])=>[r,Math.max(1,Math.round(n/4))]))+'</button>'
+     +'<button class="btn" data-vehdrop="1">Abandonner</button></div>';
+  } else {
+    h+='<div class="meta">Rien à l\'attelage. Une heure de marche par cellule, et tout ce que tu portes sur le dos.</div>';
+  }
+  h+='</div>';
+  h+='<div class="matlist">'+VEHK.map(k=>{
+    const D2=VEHICULE[k],b=vehBlocage(k);
+    return '<button class="mat" data-vehbuild="'+k+'" '+(b?'disabled':'')+'><b>'+D2.g+'</b>'+D2.n
+      +'<small>'+D2.d+'</small>'
+      +'<small>voyage ×'+D2.vit.toFixed(2)+' · +'+D2.cargo+' de charge · '+D2.pv+' de structure · '
+        +(D2.eau?'sur l\'eau':'sur terre')+(D2.voile?' · à voile':'')+'</small>'
+      +'<small>'+costTxt(D2.cout)+' · Menuiserie '+D2.lv+'</small>'
+      +'<small style="color:'+(b?'var(--zhu)':'var(--jade)')+'">'+(b||'construire')+'</small></button>';
+  }).join('')+'</div>';
+  return h;
+}
 function pMonde(){
   const R=5;
   let h='<p class="hint">Une seule génération continue : la carte n\'est qu\'une fenêtre sur le monde voxel. Le danger sort des couches de bruit, jamais de la distance — et il dérive chaque semaine selon ce que tu nettoies ou laisses pourrir.</p>';
@@ -31,5 +66,6 @@ function pMonde(){
   h+='<div class="row"><button class="btn'+(S.occ==='combat'?' pri':'')+'" data-occ="combat">戦 Combattre</button>'
    +'<button class="btn'+(S.occ==='explore'?' pri':'')+'" data-occ="explore">歩 Explorer</button>'
    +'<button class="btn'+(S.occ==='repos'?' pri':'')+'" data-occ="repos">休 Se reposer</button></div>';
+  h+=blocVehicule();
   return h;
 }

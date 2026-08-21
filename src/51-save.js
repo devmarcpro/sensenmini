@@ -83,6 +83,9 @@ function sanitize(){
   S.items=(S.items||[]).filter(it=>it&&it.kind);
   /* le ratelier tient des armes, et rien d autre */
   S.ratelier=(S.ratelier||[]).filter(it=>it&&it.kind==='arme');
+  /* un vehicule d'une version disparue ne doit pas figer le voyage */
+  if(S.vehicule&&!VEHICULE[S.vehicule.k])S.vehicule=null;
+  if(S.vehicule&&!(S.vehicule.pv>0))S.vehicule=null;
   S.coffres=S.coffres||{};
   for(const k in S.coffres){
     S.coffres[k]=(S.coffres[k]||[]).filter(it=>it&&it.kind);

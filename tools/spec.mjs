@@ -737,6 +737,81 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('vehicules — le temps du monde et ce qu on emporte',()=>{
+  /* Une heure de marche par cellule, et rien d'autre depuis le premier jour.
+     Un vehicule change les deux choses qui decident de ce qu'on peut se
+     permettre : le TEMPS d'un trajet et ce qu'on peut EMPORTER. */
+  const c=nouveau();
+  /* Le biome de la case d'ARRIVEE decide si le vehicule suit : on met donc
+     toute la bande au meme biome, sinon on mesure un trajet a moitie
+     navigable et l'on ne sait plus ce qu'on mesure. */
+  R(c,`globalThis.__bande=(b)=>{for(let i=-2;i<=9;i++){const cc=cell(S.pos[0]+i,S.pos[1]);cc.b=b;cc.seen=true;}
+      for(let i=-2;i<=9;i++){const cc=cell(S.pos[0],S.pos[1]+i);cc.b=b;cc.seen=true;}
+      return here();};
+    globalThis.__terre=()=>__bande('plaine');
+    globalThis.__eau=()=>__bande('cote');
+    globalThis.__voyage=(dx)=>{const j=S.day;
+      for(let i=0;i<=Math.abs(dx);i++)cell(S.pos[0]+i,S.pos[1]).seen=true;
+      const p=S.pos.slice();travel(p[0]+dx,p[1]);const d=S.day-j;
+      S.pos=p;S.day=j;return d;};`);
+
+  /* --- a pied : une heure par cellule --- */
+  R(c,'S.vehicule=null;S.eq={};salirUtil();__terre();');
+  const aPied=G(c,'__voyage(4)');
+  near(aPied*24,4,.01,'à pied, une heure par cellule — '+(aPied*24).toFixed(2)+' h pour quatre');
+
+  /* --- la charrette : plus lente qu'un char, mais elle porte --- */
+  R(c,'S.stats.force=10;salirUtil();');
+  const sacNu=G(c,'sacMax()');
+  R(c,'S.vehicule={k:"charrette",pv:VEHICULE.charrette.pv,crie:0};__terre();');
+  ok(G(c,'__voyage(4)')<aPied*.85,'une charrette raccourcit vraiment le trajet');
+  eq(G(c,'sacMax()'),sacNu+G(c,'VEHICULE.charrette.cargo'),'et elle porte ce qu\'elle annonce');
+
+  /* --- une charrette ne flotte pas, une barque ne roule pas --- */
+  R(c,'__eau();');
+  eq(G(c,'vehUtile()'),false,'une charrette est inutilisable sur l\'eau');
+  eq(G(c,'sacMax()'),sacNu,'et n\'y porte plus rien');
+  near(G(c,'__voyage(4)')*24,4,.01,'on y marche, tout simplement');
+  R(c,'S.vehicule={k:"barque",pv:VEHICULE.barque.pv,crie:0};');
+  eq(G(c,'vehUtile()'),true,'une barque, elle, y est chez elle');
+  ok(G(c,'__voyage(4)')<aPied,'et la côte devient une route');
+  R(c,'__terre();');
+  eq(G(c,'vehUtile()'),false,'mais sur terre ferme elle ne sert à rien');
+
+  /* --- le vent : un voilier ne va pas aussi vite dans tous les sens --- */
+  R(c,'__eau();S.vehicule={k:"voilier",pv:VEHICULE.voilier.pv,crie:0};S.sk.navigation.lv=0;');
+  const sens=G(c,'[vehVitesse(1,0),vehVitesse(-1,0),vehVitesse(0,1),vehVitesse(0,-1)]');
+  ok(Math.max(...sens)>Math.min(...sens)*1.25,
+    'à la voile, le cap compte — ×'+Math.min(...sens).toFixed(2)+' à ×'+Math.max(...sens).toFixed(2));
+  /* la Navigation rabote le vent contraire, sans jamais l'annuler */
+  const pire=G(c,'(()=>{let p=0,d=null;for(const a of [[1,0],[-1,0],[0,1],[0,-1]]){'
+    +'const v=vehVitesse(a[0],a[1]);if(v>p){p=v;d=a;}}globalThis.__pire=d;return p;})()');
+  R(c,'S.sk.navigation.lv=40;');
+  const pireForme=G(c,'vehVitesse(__pire[0],__pire[1])');
+  ok(pireForme<pire,'un bon navigateur tire des bords — ×'+pire.toFixed(2)+' puis ×'+pireForme.toFixed(2));
+  gt(pireForme,G(c,'VEHICULE.voilier.vit'),'mais le vent contraire coûte toujours quelque chose');
+  /* une draisine ne connaît pas le vent */
+  R(c,'__terre();S.vehicule={k:"draisine",pv:VEHICULE.draisine.pv,crie:0};');
+  eq(G(c,'vehVitesse(1,0)'),G(c,'vehVitesse(0,-1)'),'une draisine va au même pas dans tous les sens');
+
+  /* --- l'usure, et l'épave --- */
+  R(c,'__terre();S.vehicule={k:"charrette",pv:VEHICULE.charrette.pv,crie:0};');
+  const neuf=G(c,'vehVitesse(1,0)');
+  R(c,'S.vehicule.pv=VEHICULE.charrette.pv*.2;');
+  gt(G(c,'vehVitesse(1,0)'),neuf,'une charrette fatiguée va moins vite');
+  R(c,'S.mat={};S.vehicule.pv=1;vehUser(40);');
+  eq(G(c,'S.vehicule'),null,'à bout, elle devient épave');
+  gt(G(c,'Object.keys(S.mat).length'),0,'et l\'on en récupère la moitié des matières');
+
+  /* --- réparer coûte, et rend --- */
+  R(c,'S.vehicule={k:"charrette",pv:5,crie:1};S.carry=Object.keys(STATION);'
+    +'S.mat={};S.ref={};VEHICULE.charrette.cout.forEach(([r,n])=>{'
+    +'if(r.indexOf("form:")===0)S.ref[r.slice(5)+":fer"]=n;'
+    +'else Object.keys(MAT).filter(m=>MAT[m].c===r).slice(0,1).forEach(m=>S.mat[m]=n);});'
+    +'vehReparer();');
+  eq(G(c,'S.vehicule.pv'),G(c,'VEHICULE.charrette.pv'),'une réparation remet la structure au complet');
+});
+
 test('meubles — sept de plus, et chacun change une regle',()=>{
   /* Le catalogue F.6 en declare seize ; dix etaient poses. Un meuble qui ne
      fait qu'ajouter du confort est un doublon du tapis : chacun de ceux-ci

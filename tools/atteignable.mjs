@@ -210,6 +210,25 @@ bilan('statuts que quelque chose pose',Object.keys(G('STATUS')),new Set([
   ...G('Object.keys(PATTERN).map(k=>PATTERN[k].st).filter(Boolean)'),
 ]),'lu dans le code : appels a addStatus, statuts de sorts et de patterns');
 
+/* Les vehicules : chacun doit etre constructible un jour, c'est-a-dire que
+   sa station existe, que sa competence plafonne quelque part d'atteignable
+   et que chaque matiere de son cout s'obtienne. Un vehicule qui demande une
+   forme qu'aucune station ne produit est une entree de catalogue. */
+const vehOk=new Set(G('VEHK').filter((k,i)=>{
+  const D=G('VEHICULE[VEHK['+i+']]');
+  if(!G('!!STATION["'+D.st+'"]'))return false;
+  return D.cout.every(([r])=>r.startsWith('form:')?G('!!FORM["'+r.slice(5)+'"]'):G('!!CAT["'+r+'"]'));
+}));
+bilan('vehicules constructibles',G('VEHK'),vehOk,
+  'station connue, et chaque matiere du cout comptable');
+/* et chacun doit avoir un terrain ou il serve : un bateau veut de l eau */
+const vehTerrain=new Set(G('VEHK').filter((k,i)=>{
+  const D=G('VEHICULE[VEHK['+i+']]');
+  return D.eau?[...bio].some(b=>G('!!BIOME_EAU["'+b+'"]')):[...bio].some(b=>!G('!!BIOME_EAU["'+b+'"]'));
+}));
+bilan('vehicules qui ont un terrain',G('VEHK'),vehTerrain,
+  'un bateau sans eau nulle part ne sert a rien');
+
 /* Les parures, et surtout : les emplacements d'equipement. Six d'entre eux
    n'avaient aucune source — c'est exactement le genre de trou qu'un audit
    doit tenir ferme une fois bouche. */

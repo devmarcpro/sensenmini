@@ -23,6 +23,10 @@ addSk('leadership','Leadership','Vie');addSk('agriculture','Agriculture','Vie');
 addSk('alchimie','Alchimie','Artisanat');addSk('cuisine','Cuisine','Artisanat');addSk('meditation','Méditation','Magie');addSk('mana','Contrôle du Mana','Magie');
 DK.filter(d=>DOMAIN[d].b==='grimoire').forEach(d=>addSk('m_'+d,'Magie — '+DOMAIN[d].n,'Magie'));
 addSk('perception_sk','Perception','Vie');
+/* La Navigation ne sert qu'a une chose, et c'est assez : tirer des bords.
+   Un char a voile face au vent perd les trois quarts de son avantage ; elle
+   en reprend une part, jusqu'a la moitie du malus a haut niveau (E.24). */
+addSk('navigation','Navigation','Vie');
 const SK=Object.keys(SKILLS);
 const xpNext=N=>100*Math.pow(N+1,1.6);
 const sf=N=>1+N*0.02;

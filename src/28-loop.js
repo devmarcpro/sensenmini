@@ -190,7 +190,13 @@ function travel(x,y){
   /* Une heure de marche par cellule — moins si l'on porte de quoi aller
      vite. Le temps du monde est la vraie monnaie d'un jeu qui tourne tout
      seul : gagner un quart d'heure par case, c'est gagner des semaines. */
-  S.day+=d/24*(1-util().marche);S.pos=[x,y];c.seen=true;S.target=null;
+  /* Un vehicule ne remplace pas la marche : il la multiplie. Une charrette
+     ne sert a rien sur l'eau, une barque a rien sur terre, et un char a
+     voile face au vent vaut a peine mieux que ses jambes (E.24). */
+  const mv=vehVitesse(x-S.pos[0],y-S.pos[1],c);
+  S.day+=d/24*(1-util().marche)*mv;S.pos=[x,y];c.seen=true;S.target=null;
+  vehUser(d);
+  if(mv<1)gainXp('navigation',6*d);
   if(S.occ!=='repos')S.occ='repos';
   gainXp('athletisme',5*d);
   log('Voyage vers '+(c.town||BIOME[c.b].n)+' ('+x+','+y+')');

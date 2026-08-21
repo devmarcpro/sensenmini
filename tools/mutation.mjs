@@ -28,7 +28,7 @@ const B=join(dirname(fileURLToPath(import.meta.url)),'..');
 
 /* [nom, suite a lancer, [[fichier, cherche, remplace], ...]] */
 const MUT=[
-  ['parure : marche','parures',[['src/28-loop.js','S.day+=d/24*(1-util().marche);','S.day+=d/24;']]],
+  ['parure : marche','parures',[['src/28-loop.js','*(1-util().marche)*mv;','*mv;']]],
   ['parure : cicatrisation','parures',[
     ['src/28-loop.js','*.06*dt*(1+util().soin));','*.06*dt);'],
     ['src/28-loop.js','*.015*dt*(S.thermal||1)*(1+util().soin));','*.015*dt*(S.thermal||1));'],
@@ -36,7 +36,7 @@ const MUT=[
   ['parure : vision nocturne','parures',[['src/24-combat.js',"&&!don('nuitvue');",';']]],
   ['parure : metier','parures',[['src/08-state.js',"+(typeof utilSk==='function'?utilSk(k):0);",';']]],
   ['parure : statistique','parures',[['src/25-modules.js',"+(typeof utilStat==='function'?utilStat(k):0)",'']]],
-  ['parure : charge','parures',[['src/10-craft.js',"+(typeof util==='function'?util().poids:0);",';']]],
+  ['parure : charge','parures',[['src/10-craft.js',"+(typeof util==='function'?util().poids:0)",'']]],
   ['parure : faim','parures',[['src/28-loop.js','*(1-util().faim));','));']]],
   ['parure : immunite poison','parures',[['src/20-status.js',
     "if(tgt===S&&k==='poison'&&typeof don==='function'&&don('antipoison'))return;",'']]],
@@ -51,6 +51,15 @@ const MUT=[
     "+(typeof hasStatus==='function'&&hasStatus(S,'beni')?1:0)",'']]],
   ['statut : infection','cinq qui manquaient',[['src/25-modules.js',
     "-(k==='endu'&&typeof malusInfection==='function'?malusInfection():0)",'']]],
+  /* les vehicules */
+  ['vehicule : vitesse','vehicules',[['src/28-loop.js','*(1-util().marche)*mv;','*(1-util().marche);']]],
+  ['vehicule : cargo','vehicules',[['src/10-craft.js',
+    "+(typeof vehCargo==='function'?vehCargo():0);",';']]],
+  ['vehicule : terrain','vehicules',[['src/22b-vehicules.js',
+    'return D.eau?surEau(c):!surEau(c);','return true;']]],
+  ['vehicule : vent','vehicules',[['src/22b-vehicules.js','m*=1+malus-aide;','']]],
+  ['vehicule : usure','vehicules',[['src/22b-vehicules.js',
+    'm*= 1+(1-v.pv/D.pv)*.45;','']]],
   /* les meubles */
   ['meuble : bibliotheque','meubles',[['src/25-modules.js',
     "+(typeof meubleIci==='function'?Math.min(6,meubleIci('bibliotheque')*3):0);",';']]],

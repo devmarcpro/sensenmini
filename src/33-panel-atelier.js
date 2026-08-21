@@ -37,6 +37,29 @@ function pAtelier(){
   h+=any?tr:'<p class="hint">Aucune transformation possible : il faut la station et la matière.</p>';
   /* composants */
   }
+  /* ===== FONTE (palier industriel, 4.2.2) =====
+     Elle n'apparaît que si l'on connaît au moins une recette : tant qu'on n'a
+     rien trouvé dans les ruines, chez un marchand de capitale ou à un haut
+     rang de guilde, l'établi n'a pas à parler de ce qui n'existe pas encore. */
+  const sues=ALK.filter(alliageConnu);
+  if(sues.length){
+    const pretes=sues.filter(k=>!allierBlocage(k)).length;
+    h+=foldHead('atelier','al','鋳','FONTE',pretes+' / '+sues.length+' réalisable'+(pretes>1?'s':''),null);
+    if(foldOpen('atelier','al',null)){
+      h+='<div class="meta" style="margin-bottom:8px">Un composite est <b>statistiquement supérieur et élémentairement muet</b> : son vecteur Wu Xing est plat, donc les multiplicateurs s\'amortissent et la chaîne devient terne. Le fer pur d\'un forgeron reste meilleur pour un jeu d\'éléments — puissance brute contre expressivité. Combustible en réserve : <b>'+combustibleDispo().toFixed(1)+'</b>.</div>';
+      h+=sues.map(k=>{
+        const A=ALLIAGE[k],bl=allierBlocage(k);
+        return '<div class="card'+(bl?' off':'')+'"><h3><span>'+A.g+' '+A.n+'</span>'
+         +'<i>'+STATION[A.st].n+' · Forge '+A.lv+'</i></h3>'
+         +'<div class="meta">'+A.d+'</div>'
+         +'<div class="meta">'+A.de.map(([m,n])=>n+' × '+matName(m)).join(' + ')
+         +' + '+A.feu+' de combustible → '+A.rend+' × '+matName(k)+'</div>'
+         +vecBar(matVec(k))
+         +'<div class="row"><button class="btn'+(bl?'':' pri')+'" data-allier="'+k+'" '+(bl?'disabled':'')+'>'
+         +(bl||'Fondre')+'</button></div></div>';
+      }).join('');
+    }
+  }
   h+=foldHead('atelier','co','部','COMPOSANTS','forme → composant');
   if(foldOpen('atelier','co')){
   let cp='',inconnues=0;

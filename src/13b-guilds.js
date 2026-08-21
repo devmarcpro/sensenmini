@@ -163,6 +163,14 @@ function completeQuest(){
 }
 /* le présent du rang : ce que la guilde ouvre à ses gradés */
 function guildGift(gk,rank){
+  /* aux hauts rangs, une recette industrielle avant tout le reste (4.2.2) */
+  if(rank>=3){
+    const inconnus=ALK.filter(k=>!alliageConnu(k));
+    if(inconnus.length&&Math.random()<.55){
+      const k=pick(inconnus);apprendreAlliage(k);
+      return 'recette : '+ALLIAGE[k].n;
+    }
+  }
   const f=GUILDGIFT[gk];if(!f)return null;
   const gift=f(gk);
   if(gift.t==='livre'){

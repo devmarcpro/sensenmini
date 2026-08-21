@@ -62,6 +62,10 @@ function mkShopArmor(sl,ct,mk,q){
 }
 const offFood=(t,k,n)=>{const i=foodInfo(k);return {t:'food',k,n,label:i.n+' × '+n,sub:'nutrition '+i.nutr+(i.grp?' · potentiel '+i.grp:''),
   p:Math.max(1,Math.round((2+i.nutr*.6)*n*buyMul(t)))};};
+/* une recette industrielle a l'etal : chere, et on ne l'achete qu'une fois */
+const offAlliage=(t,k)=>({t:'alliage',k,label:'Recette : '+ALLIAGE[k].n,
+  sub:ALLIAGE[k].d+' · '+STATION[ALLIAGE[k].st].n+' · Forge '+ALLIAGE[k].lv,
+  p:Math.round((180+MAT[k].d*22)*buyMul(t))});
 function offBook(t){
   const g=Math.random()<.6,dm=pick(DK.filter(d=>DOMAIN[d].b===(g?'grimoire':'manuel')));
   const b={id:'b'+(S.nid++),dom:dm,diff:ri(3,8)};
@@ -84,6 +88,12 @@ const SHOPGEN={
     o.push(offRef(t,'lingot','fer',ri(2,5)));
     const tool=pick(Object.keys(OUTIL));
     o.push(offItem(t,mkShopItem('outil',tool,['fer','chene'],qVille(t))));
+    /* une capitale prospere tient parfois une recette industrielle (4.2.2) :
+       c'est l'autre voie, pour qui ne descend pas dans les ruines */
+    if(rangVille(t)>=2&&t.prosp>.9){
+      const inconnus=ALK.filter(k=>!alliageConnu(k));
+      if(inconnus.length&&Math.random()<.5)o.push(offAlliage(t,pick(inconnus)));
+    }
     return o;},
   armurier(t){const o=[];
     for(let i=0;i<ri(2,3);i++){const sl=pick(SLOTS.filter(x=>x.zone)).k;const ct=pick(['plaque','anneaux','peau','rembourrage']);
@@ -145,6 +155,7 @@ function buyOffer(shopKey,idx){
   list.splice(idx,1);
   if(o.t==='mat'){S.mat[o.mk]=(S.mat[o.mk]||0)+o.n;if(PLANTE[o.mk])addFood(o.mk,o.n);}
   else if(o.t==='ref')addRef(o.f,o.mk,o.n);
+  else if(o.t==='alliage')apprendreAlliage(o.k);
   else if(o.t==='comp'){const tier=Math.round(o.q*4)/4,k=o.ct+'|'+o.f+'|'+o.mk+'|'+tier;const c=S.comp[k];
     if(c){c.q=(c.q*c.n+o.q*o.n)/(c.n+o.n);c.n+=o.n;}else S.comp[k]={ct:o.ct,f:o.f,mk:o.mk,q:o.q,n:o.n};}
   else if(o.t==='item')S.items.push(o.it);

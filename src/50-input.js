@@ -36,6 +36,7 @@ function handle(e){
     if(P[openPlot]&&P[openPlot].slots)P[openPlot].slots[openSlot]=null;openSlot=null;paint();return;}
   if(b=t.closest('[data-fold]')){const q=b.dataset.fold.split(':');
     S.fold=S.fold||{};S.fold[q[0]]=S.fold[q[0]]===q[1]?null:q[1];paint();return;}
+  if(b=t.closest('[data-allier]')){allier(b.dataset.allier);paint();return;}
   if(b=t.closest('[data-carry]')){toggleCarry(b.dataset.carry);paint();return;}
   if(b=t.closest('[data-auto]')){buyAuto(b.dataset.auto);paint();return;}
   if(b=t.closest('[data-tips]')){if(S.tips===false)tipsReset();else tipsOff();paint();return;}

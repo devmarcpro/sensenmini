@@ -13,6 +13,12 @@ const a=gdd.findIndex(l=>l.startsWith('### F.1 ')),b=gdd.findIndex(l=>l.startsWi
 const f1=gdd.slice(a,b),pal=gdd.slice(b,c);
 
 /* ----- clés : sans accent, sans espace ; quelques renommages pour coller aux clés existantes ----- */
+/* Palier industriel (4.2.2) : un composite a un vecteur PLAT — statistiquement
+   superieur, elementairement muet. Le fer pur reste meilleur pour une chaine
+   Wu Xing que l acier d une ruine : puissance brute contre expressivite, sans
+   aucun nerf a ecrire. */
+const WXCOMPOSITE={bronze:{3:.55,1:.25,2:.20},laiton:{3:.55,1:.25,4:.20},
+  acier:{3:.60,1:.25,4:.15},aciertrempe:{3:.55,1:.20,4:.15,2:.10}};
 const RENAME={'granitnoirgabbro':'granitnoir','liegechenelieges':'liege','liegechenelie':'liege','palmierstipe':'palmier','robinierfauxacacia':'robinier',
   'aluminiumbauxite':'aluminium','chromechromite':'chrome','calcitespath':'calcite','selgemme':'sel','houille':'charbon','osfossile':'osfossile',
   'tufvolcanique':'tuf','pierreponce':'ponce','brechevolcanique':'breche','meteoriteferreuse':'meteorite','guanosalpetredegrotte':'guano',
@@ -84,21 +90,23 @@ mats.forEach(m=>{if(WX[m.key])m.wx=WX[m.key];});
 
 /* ----- répartition par biome et par strate ----- */
 const BIOMES={
-  plaine:{n:'Plaine tempérée',c:'#6E8E5A',fert:1.0,mats:['pin','chene','hetre','frene','orme','pommier','lin','coton','chanvre','paille','ble','orge','carotte','chou','oignon','limon','terrefertile','argile','cuivre','gres','craie','calcaire','silex','ocre','baies','camomille']},
-  foret:{n:'Forêt tempérée',c:'#3F6B45',fert:.9,mats:['chene','hetre','bouleau','erable','noyer','cerisier','charme','chataignier','tilleul','if','pin','champignons','herbes','framboise','myrtille','cuir','fourrure','os','sauge','achillee','ortie','amanite','pierre','limon']},
-  foretmana:{n:'Forêt de mana',c:'#4B7F86',fert:.8,mats:['ebene','if','sequoia','amethyste','opale','quartz','cristalmana','soie','ambre','emeraude','herbes','sauge','fluorine','mica','champignons']},
-  desert:{n:'Désert aride',c:'#C9A25E',fert:.2,mats:['gres','sable','sel','cuivre','os','topaze','racines','palmier','acacia','soufre','salpetre','turquoise','gypse','silex','ocre','etain']},
-  cendres:{n:'Désert de cendres',c:'#7A5348',fert:.1,mats:['basalte','obsidienne','cendre','charbon','anthracite','soufre','rubis','tuf','ponce','pyrite','bitume','cinabre','boiscalcine','rhyolite','andesite']},
-  toundra:{n:'Toundra',c:'#8FA3A8',fert:.3,mats:['glace','neige','limon','laine','fourrure','calcaire','racines','bouleau','saule','tourbe','schiste','grenat','gravier']},
-  taiga:{n:'Taïga',c:'#4C6B5C',fert:.6,mats:['pin','sapin','epicea','meleze','chene','fer','os','laine','fourrure','champignons','tourbe','ardoise','charbon','myrtille','cedre']},
-  marecage:{n:'Marécage',c:'#57654A',fert:.7,mats:['limon','argile','lin','cuir','charbon','eaupure','tourbe','saule','aulne','roseau','lignite','os','champignons','belladone','peuplier']},
-  marcorr:{n:'Marécage corrompu',c:'#4A4257',fert:.3,mats:['os','obsidienne','charbon','ecaille','onyx','cinabre','bitume','soufre','osfossile','ammonite','belladone','amanite','boiscalcine','plomb']},
-  montagne:{n:'Montagne',c:'#8A8A82',fert:.2,mats:['pierre','fer','calcaire','argent','basalte','granit','marbre','quartzite','gneiss','etain','zinc','plomb','nickel','ardoise','jade','grenat','diorite']},
-  montcris:{n:'Montagne cristalline',c:'#7E8FB0',fert:.1,mats:['granitnoir','mithril','cristalmana','saphir','adamant','diamant','quartz','amethyste','opale','titane','platine','tungstene','cobalt','geode','kimberlite','peridotite','fluorine','meteorite']},
-  cote:{n:'Côte',c:'#7FA9A0',fert:.5,mats:['gres','sel','lin','ecaille','saphir','eaupure','sable','coquillage','palmier','teck','boisflotte','roseau','argile','turquoise','bambou','olivier','cypres']},
+  plaine:{n:'Plaine tempérée',c:'#6E8E5A',fert:1.0,mats:['pin','chene','hetre','frene','orme','pommier','lin','coton','chanvre','paille','ble','orge','carotte','chou','oignon','limon','terrefertile','argile','cuivre','gres','craie','calcaire','silex','ocre','baies','camomille','robinier','platane','noisetier','liege','terre','travertin']},
+  foret:{n:'Forêt tempérée',c:'#3F6B45',fert:.9,mats:['chene','hetre','bouleau','erable','noyer','cerisier','charme','chataignier','tilleul','if','pin','champignons','herbes','framboise','myrtille','cuir','fourrure','os','sauge','achillee','ortie','amanite','pierre','limon','noisetier','robinier','buis','terre','boispetrifie']},
+  foretmana:{n:'Forêt de mana',c:'#4B7F86',fert:.8,mats:['ebene','if','sequoia','amethyste','opale','quartz','cristalmana','soie','ambre','emeraude','herbes','sauge','fluorine','mica','champignons','boisfer','buis']},
+  desert:{n:'Désert aride',c:'#C9A25E',fert:.2,mats:['gres','sable','sel','cuivre','os','topaze','racines','palmier','acacia','soufre','salpetre','turquoise','gypse','silex','ocre','etain','eucalyptus','boispetrifie','phosphorite']},
+  cendres:{n:'Désert de cendres',c:'#7A5348',fert:.1,mats:['basalte','obsidienne','cendre','charbon','anthracite','soufre','rubis','tuf','ponce','pyrite','bitume','cinabre','boiscalcine','rhyolite','andesite','breche','antimoine','boispetrifie']},
+  toundra:{n:'Toundra',c:'#8FA3A8',fert:.3,mats:['glace','neige','limon','laine','fourrure','calcaire','racines','bouleau','saule','tourbe','schiste','grenat','gravier','tourbecomp','terre']},
+  taiga:{n:'Taïga',c:'#4C6B5C',fert:.6,mats:['pin','sapin','epicea','meleze','chene','fer','os','laine','fourrure','champignons','tourbe','ardoise','charbon','myrtille','cedre','noisetier','terre','tourbecomp']},
+  marecage:{n:'Marécage',c:'#57654A',fert:.7,mats:['limon','argile','lin','cuir','charbon','eaupure','tourbe','saule','aulne','roseau','lignite','os','champignons','belladone','peuplier','argileref','tourbecomp','terre','guano']},
+  marcorr:{n:'Marécage corrompu',c:'#4A4257',fert:.3,mats:['os','obsidienne','charbon','ecaille','onyx','cinabre','bitume','soufre','osfossile','ammonite','belladone','amanite','boiscalcine','plomb','argileref','guano']},
+  montagne:{n:'Montagne',c:'#8A8A82',fert:.2,mats:['pierre','fer','calcaire','argent','basalte','granit','marbre','quartzite','gneiss','etain','zinc','plomb','nickel','ardoise','jade','grenat','diorite','serpentinite','calcite','amiante','manganese','aluminium','buis']},
+  montcris:{n:'Montagne cristalline',c:'#7E8FB0',fert:.1,mats:['granitnoir','mithril','cristalmana','saphir','adamant','diamant','quartz','amethyste','opale','titane','platine','tungstene','cobalt','geode','kimberlite','peridotite','fluorine','meteorite','serpentinite','amiante']},
+  cote:{n:'Côte',c:'#7FA9A0',fert:.5,mats:['gres','sel','lin','ecaille','saphir','eaupure','sable','coquillage','palmier','teck','boisflotte','roseau','argile','turquoise','bambou','olivier','cypres','acajou','balsa','liege','boisfer','eucalyptus','phosphorite','travertin']},
 };
-const STRAT_MATS=[[],['calcaire','fer','schiste','dolomie','etain','charbon','conglomerat'],['pierre','argent','charbon','zinc','marbre','quartz','osfossile','graphite'],
-  ['basalte','or','ambre','nickel','plomb','gneiss','ammonite','soufre','malachite'],['granit','mithril','onyx','cobalt','peridotite','grenat','geode','lapis','chrome'],
+const STRAT_MATS=[[],['calcaire','fer','schiste','dolomie','etain','charbon','conglomerat','travertin','argileref','guano'],
+  ['pierre','argent','charbon','zinc','marbre','quartz','osfossile','graphite','calcite','aluminium','phosphorite'],
+  ['basalte','or','ambre','nickel','plomb','gneiss','ammonite','soufre','malachite','serpentinite','manganese','antimoine','breche','boispetrifie'],
+  ['granit','mithril','onyx','cobalt','peridotite','grenat','geode','lapis','chrome','bismuth','amiante'],
   ['granitnoir','adamant','cristalmana','tungstene','titane','diamant','meteorite','kimberlite','platine']];
 /* tout ce qui est cité existe-t-il ? */
 const all=new Set(mats.map(m=>m.key));
@@ -112,7 +120,8 @@ const fmt=m=>{
   if(m.iso!==undefined)o.push('iso:'+Math.round(m.iso/10));
   if(m.lum)o.push('lum:'+m.lum);
   if(m.ela)o.push('ela:'+m.ela);
-  if(m.wx)o.push('wx:'+JSON.stringify(m.wx).replace(/"/g,''));
+  const wx=WXCOMPOSITE[m.key]||m.wx;
+  if(wx)o.push('wx:'+JSON.stringify(wx).replace(/"/g,''));
   if(m.nutr!==undefined)o.push('nutr:'+m.nutr);
   if(m.grp)o.push('grp:\''+m.grp+'\'');
   if(m.tox)o.push('tox:1');
@@ -161,6 +170,10 @@ const TOWN=['Grispierre','Val-Muet','Fontcendre','Haute-Ronce','Sombreverse','Pi
   'Sel-du-Nord','Bassefeuille','Cormorance','Roche-Fendue','Ambrelune','Bois-Dormant','Clairvive','Ferrebrume',
   'Mortefontaine','Aubépine','Gué-des-Loups','Saint-Orme','Vieille-Forge','Brumaille','Les Tanneries','Ronce-Basse',
   'Porte-Grise','Cendrefeuille','Mont-Sauvage','Écluse-Noire','Hautefeuille','La Charbonnière','Pont-de-Sel'];
+/* Trente noms pour un monde sans bord : on croisait deux Ferrebrume a dix cases
+   l'une de l'autre. Un qualificatif tire a part porte l'ensemble a plus de deux
+   cents, sans toucher a la liste d'origine ni au determinisme. */
+const TOWNQ=['le-Haut','le-Bas','la-Neuve','le-Vieux','sur-Ronce','en-Bois','la-Grange','le-Gue','les-Eaux'];
 const STRATA=[
   {n:'Terre et grès',rock:'gres',prof:'surface'},
   {n:'Calcaire et ardoise',rock:'calcaire',prof:'−30'},

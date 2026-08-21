@@ -683,6 +683,85 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('matières — aucune n\'est inaccessible',()=>{
+  const c=nouveau();
+  /* Vingt-huit matières du catalogue n'étaient nulle part : ni dans un biome,
+     ni dans une strate, et rien ne les produisait. Seize pour cent du
+     catalogue en contenu mort. */
+  const orphelines=G(c,`(()=>{
+    const vu={};
+    Object.keys(BIOME).forEach(b=>BIOME[b].mats.forEach(m=>vu[m]=1));
+    STRAT_MATS.forEach(l=>l.forEach(m=>vu[m]=1));
+    STRATA.forEach(s=>vu[s.rock]=1);
+    ['fer','argent','or'].forEach(m=>vu[m]=1);
+    CK.forEach(k=>(CREATURE[k].mats||[]).forEach(m=>vu[m]=1));
+    if(typeof PARTS!=='undefined')PARTS.forEach(p=>vu[p.k]=1);
+    if(typeof GEMK!=='undefined')GEMK.forEach(g=>vu[g]=1);
+    Object.keys(MAT).filter(m=>MAT[m].crop).forEach(m=>vu[m]=1);
+    ALK.forEach(k=>vu[k]=1);
+    return Object.keys(MAT).filter(m=>!vu[m]);})()`);
+  eq(orphelines.length,0,'toutes les matières ont une source',
+    'introuvables : '+orphelines.slice(0,8).join(', '));
+});
+
+test('alliages — le palier industriel se gagne et se paie',()=>{
+  const c=nouveau();
+  /* on ne fond pas ce qu'on ne sait pas faire */
+  eq(G(c,'ALK.some(alliageConnu)'),false,'on commence sans aucune recette');
+  ok(G(c,'pAtelier()').indexOf('FONTE')<0,'et l\'établi n\'en parle pas');
+  R(c,'apprendreAlliage("acier");');
+  eq(G(c,'alliageConnu("acier")'),true,'une recette s\'apprend');
+  ok(G(c,'pAtelier()').indexOf('FONTE')>=0,'et la section paraît');
+  /* la station, la compétence, la matière, le combustible : quatre verrous */
+  R(c,'S.carry=[];S.sk.forge.lv=60;S.mat={fer:20,charbon:20};');
+  ok(/fourneau/i.test(G(c,'allierBlocage("acier")')||''),'sans haut fourneau, rien',
+    G(c,'allierBlocage("acier")'));
+  R(c,'S.carry=["hautfourneau"];S.sk.forge.lv=5;');
+  ok(/Forge/.test(G(c,'allierBlocage("acier")')||''),'sans la compétence non plus');
+  R(c,'S.sk.forge.lv=60;S.mat={charbon:20};');
+  ok(/fer/i.test(G(c,'allierBlocage("acier")')||''),'sans la matière non plus');
+  R(c,'S.mat={fer:20};');
+  ok(/combustible/i.test(G(c,'allierBlocage("acier")')||''),'sans combustible non plus');
+  /* tout réuni, la fonte produit et consomme */
+  R(c,'S.mat={fer:20,charbon:20};globalThis.__f0=S.mat.fer;globalThis.__c0=S.mat.charbon;allier("acier");');
+  eq(G(c,'allierBlocage("acier")'),null,'tout réuni, plus rien ne bloque');
+  gt(G(c,'S.mat.acier||0'),0,'la fonte produit de l\'acier — '+G(c,'S.mat.acier'));
+  ok(G(c,'S.mat.fer')<G(c,'__f0'),'elle consomme le minerai');
+  ok(G(c,'S.mat.charbon')<G(c,'__c0'),'et le combustible');
+  gt(G(c,'S.sk.forge.xp+S.sk.forge.lv'),0,'et elle fait progresser la Forge');
+  /* l'anthracite en fait plus avec moins */
+  R(c,'S.mat={charbon:10};globalThis.__ch=combustibleDispo();S.mat={anthracite:10};');
+  gt(G(c,'combustibleDispo()'),G(c,'__ch'),'l\'anthracite vaut mieux que la houille');
+  /* ===== L'ÉQUILIBRAGE PAR LE WU XING (4.2.2) =====
+     Un composite doit être statistiquement supérieur ET élémentairement muet :
+     c'est le nerf que le GDD n'écrit pas, parce que le vecteur le fait. */
+  gt(G(c,'MAT.acier.d'),G(c,'MAT.fer.d'),'l\'acier est plus dur que le fer');
+  const platitude=v=>Math.max(...v)-Math.min(...v);
+  const vAcier=G(c,'matVec("acier")'),vFer=G(c,'matVec("fer")');
+  ok(platitude(vAcier)<platitude(vFer),'mais son vecteur est plus plat — '
+    +vAcier.map(x=>x.toFixed(2)).join('/')+' contre '+vFer.map(x=>x.toFixed(2)).join('/'));
+  /* Ce que « élémentairement muet » veut dire, concrètement : les
+     multiplicateurs s'amortissent. Le composite ne monte jamais aussi haut
+     contre une cible bien choisie, et ne tombe jamais aussi bas contre une
+     mauvaise. C'est l'expressivité qu'on échange contre la brutalité. */
+  const ecart=k=>{
+    const g=[0,1,2,3,4].map(e=>G(c,'vmult(matVec("'+k+'"),V({'+e+':1}),multOff)'));
+    return {haut:Math.max.apply(null,g),bas:Math.min.apply(null,g)};
+  };
+  const eFer=ecart('fer'),eAcier=ecart('acier');
+  ok(eAcier.haut<eFer.haut,'le composite ne monte pas aussi haut — '
+    +eAcier.haut.toFixed(2)+' contre '+eFer.haut.toFixed(2));
+  ok(eAcier.bas>eFer.bas,'ni ne tombe aussi bas — '
+    +eAcier.bas.toFixed(2)+' contre '+eFer.bas.toFixed(2));
+  /* une station de palier ne se bâtit pas sans son aînée */
+  R(c,'S.or=99999;S.mat.pierre=999;S.mat.chene=999;S.mat.limon=999;S.ref["lingot:fer"]=99;S.mat.soufre=99;S.mat.fer=99;'
+    +'S.carry=[];claimCell();buildPlot(0,"batiment");__toast.length=0;'
+    +'placeSlot(0,0,"station","hautfourneau");');
+  eq(G(c,'!!plots(here())[0].slots[0]'),false,'un haut fourneau ne se bâtit pas sans forge');
+  R(c,'placeSlot(0,0,"station","forge");placeSlot(0,1,"station","hautfourneau");');
+  eq(G(c,'!!plots(here())[0].slots[1]'),true,'avec la forge, il se bâtit');
+});
+
 test('bestiaire — le jeu retient ce qu\'on a croisé',()=>{
   const c=nouveau();
   eq(G(c,'bestiaireVus()'),0,'on commence sans rien connaître');

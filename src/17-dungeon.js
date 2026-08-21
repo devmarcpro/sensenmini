@@ -95,6 +95,9 @@ function djReward(room){
     const cts=mk2=>Object.keys(COMP).filter(ct=>COMP[ct].raw.includes(mk2)||COMP[ct].forms.some(f=>f!=='brut'&&FORM[f]&&formOk(f,mk2)));
     let mk2=null;for(let i=0;i<20&&!mk2;i++){const m=pick(ex);if(cts(m).length)mk2=m;}
     if(mk2)learnRecipe(pick(cts(mk2)),mk2);
+    /* les ruines profondes gardent les recettes industrielles (4.2.2) */
+    const inconnus=ALK.filter(k=>!alliageConnu(k));
+    if(inconnus.length&&Math.random()<.22+lvl*.06)apprendreAlliage(pick(inconnus));
     const g=pick(GEMK);S.mat[g]=(S.mat[g]||0)+ri(1,2);
     cutIn('隠','Cache','une recette et '+matName(g));}
   if(room.t==='armurerie'){dropLoot(c,false);if(Math.random()<.5)dropLoot(c,false);}

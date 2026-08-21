@@ -72,6 +72,10 @@ function placeSlot(pi,si,kind,k){
   const c=here(),P=plots(c),b=P[pi];
   if(!b||b.t!=='batiment')return;
   if(b.slots[si])return toast('Emplacement occupé');
+  /* une station de palier industriel se batit APRES son ainee : un haut
+     fourneau prolonge une forge, un laminoir prolonge une enclume */
+  if(kind==='station'&&STATION[k].base&&!stationsHere().has(STATION[k].base))
+    return toast('Il faut d\'abord '+STATION[STATION[k].base].n+' sur cette cellule');
   const cost=kind==='station'?STATION[k].cost:MEUBLE[k].cost;
   if(!payCost(cost))return toast('Matériaux insuffisants : '+costTxt(cost));
   b.slots[si]={t:kind,k};

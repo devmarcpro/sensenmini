@@ -67,6 +67,13 @@ const STATION={
   enchantement:{n:"Table d'enchantement",g:'呪',sk:'enchantement',p:50,cost:[['form:taillee',6],['form:lingot',4]]},
   cuisine:{n:'Cuisine',g:'厨',sk:'cuisine',p:40,cost:[['roche',8],['bois',6]]},
   alambic:{n:'Alambic',g:'蒸',sk:'alchimie',p:45,cost:[['form:lingot',4],['roche',6]]},
+  /* Palier industriel (4.2.2) : deux stations qui prolongent les premieres.
+     Elles coutent cher et se batissent APRES leur ainee — c'est ce qui fait
+     du palier une fin de partie et non un raccourci. */
+  hautfourneau:{n:'Haut fourneau',g:'鎔',sk:'forge',p:160,base:'forge',
+    cost:[['form:lingot',10],['roche',24],['mineral',12]]},
+  laminoir:{n:'Laminoir',g:'圧',sk:'forge',p:140,base:'enclume',
+    cost:[['form:lingot',16],['metal',20]]},
 };
 /* ===== OBJETS (A.4.1 / 6.2) ===== */
 const DT={tranchant:'tranchant',percant:'perforant',contondant:'contondant'};

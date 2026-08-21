@@ -72,7 +72,10 @@ function detection(){
   const {i,k}=lawsHere();
   /* plus le régime est sévère, plus il y a d'yeux — et un village en a davantage */
   const dd=11+(k?GOV[k.gov].law*1.6:0)+(here().poi==='village'?3:0);
-  const jet=d20()+lv('discretion')/2+st('per')/4;
+  /* « pas_silencieux » (F.7) : le don ne rend pas meilleur, il rend INAUDIBLE
+     — huit points de jet, de quoi passer la plupart des controles sans jamais
+     monter la competence. C'est une autre facon de jouer, pas un bonus. */
+  const jet=d20()+lv('discretion')/2+st('per')/4+(don('silence')?8:0);
   gainXp('discretion',30);
   return jet<dd;
 }

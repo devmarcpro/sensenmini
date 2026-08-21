@@ -14,6 +14,7 @@ function pEquip(){
     return '<button class="mat'+(it?'':'')+'" data-unslot="'+sl.k+'" '+(it?'':'disabled')+'>'
       +(it?iconeHtml(it,2.7,'coin'):'')
       +'<b>'+sl.g+'</b>'+sl.n+'<small>'+(it?it.nom:'vide')+'</small>'
+      +(it&&it.kind==='parure'?'<small style="color:var(--jade)">'+affListe(it).join(' · ')+'</small>':'')
       +(it?'<small style="color:var(--jade)">q'+it.q.toFixed(2)+' · retirer</small>':'<small>—</small>')+'</button>';
   }).join('')+'</div>';
   h+=foldHead('eq','def','盾','DÉFENSE PAR ZONE','réduction plate, zone nue = 0',null);
@@ -61,7 +62,7 @@ function pEquip(){
     if(ouv){
       s+='<div class="meta">'+(it.kind==='statue'?'trophée de chasse — valeur '+it.val+' or':itemLine(it))+'</div>'
        +(it.parts.length?'<div class="meta">'+it.parts.map(p=>COMP[p.ct].n+' — '+formeNom(p.f,p.mk)).join(' + ')+'</div>':'')
-       +(it.aff&&it.aff.length?'<div class="meta" style="color:var(--jade)">'+it.aff.map(a=>AFF.find(x=>x.id===a.id).t(a.p)).join(' · ')+'</div>':'')
+       +(it.aff&&it.aff.length?'<div class="meta" style="color:var(--jade)">'+affListe(it).join(' · ')+'</div>':'')
        +vecBar(itemVec(it))
        +(it.slots?gemBlock(it,'bag:'+i,true):'');
     }

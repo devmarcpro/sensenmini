@@ -26,7 +26,10 @@ let S=NEW();
 const key=(x,y)=>x+','+y;
 function cell(x,y){const k=key(x,y);if(!S.world[k])S.world[k]=genCell(x,y);return S.world[k];}
 const here=()=>cell(S.pos[0],S.pos[1]);
-const lv=k=>S.sk[k]?S.sk[k].lv:0;
+/* Une parure peut porter « +4 en Minage » (F.7). Le niveau se lit ici et
+   nulle part ailleurs : c'est le seul endroit ou brancher l'effet sans le
+   repeter dans trente formules. */
+const lv=k=>(S.sk[k]?S.sk[k].lv:0)+(typeof utilSk==='function'?utilSk(k):0);
 const avgPot=()=>SK.reduce((a,k)=>a+S.sk[k].pot,0)/SK.length;
 const combatLvl=()=>{const l=SK.filter(k=>['Armes','Éléments','Types de dégâts','Défense','Magie','Constructions'].includes(SKILLS[k].grp))
   .map(lv).sort((a,b)=>b-a).slice(0,5);return (l.reduce((a,b)=>a+b,0)/5).toFixed(1);};

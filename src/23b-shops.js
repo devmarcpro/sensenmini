@@ -79,6 +79,13 @@ function offEffet(t,e){
   return {t:'potion',pot,label:'Fiole : '+POTEFF[e].n,sub:POTEFF[e].sub(q),
     p:Math.round((45+q*55+(e==='poisonlame'?70:0))*buyMul(t))};
 }
+/* une parure a l etal : son sous-titre EST la liste de ce qu elle fait */
+function offParure(t,kind,q){
+  const it=mkParure(kind,pick(PARURE[kind].mats),q);
+  return {t:'item',it,label:it.nom,
+    sub:affListe(it).join(' · '),
+    p:Math.round(parureValeur(it)*1.5*buyMul(t))};
+}
 function offPotion(t,k){
   const q=+quality(ri(5,30)).toFixed(2),plantes=ri(0,2);
   const pot={k,v:+(q*(1+plantes*.35)).toFixed(2),dur:Math.round(60*q*(1+plantes*.5)),n:QNAME(q)+' de '+BUFFN[k]};
@@ -125,6 +132,8 @@ const SHOPGEN={
     const lvl=ri(6,18);
     o.push(offComp(t,'sangles','tissu','lin',lvl));o.push(offComp(t,pick(['rembourrage','peau']),pick(['rembourrage']).length?'tissu':'tanne','laine',lvl));
     if(Math.random()<.5)o.push(offMat(t,'soie',ri(1,3)));
+    /* le tailleur habille le dos et la taille */
+    o.push(offParure(t,Math.random()<.6?'cape':'ceinture',qVille(t,.35)));
     return o;},
   'épicier'(t){const o=[];
     const crops=tirerN(Object.keys(MAT).filter(k=>MAT[k].crop&&MAT[k].nutr>0&&!MAT[k].tox),3);
@@ -138,6 +147,13 @@ const SHOPGEN={
     if(t.prosp>1&&Math.random()<.4)o.push(offMat(t,'diamant',1,1.4));
     if(t.prosp>1&&Math.random()<.5)o.push(offMat(t,'cristalmana',1,1.3));
     if(Math.random()<.5)o.push(offMat(t,pick(['lapis','turquoise','malachite']),ri(1,2)));
+    /* Le joaillier ne vendait que des pierres brutes. Il monte aussi ce
+       qu'on en fait : anneaux, amulettes, talismans — les seuls objets du
+       jeu dont l'effet ne se joue pas au combat. */
+    for(let i=0;i<ri(1,3);i++){
+      const kind=pick(['anneau','amulette','talisman']);
+      o.push(offParure(t,kind,qVille(t,.35)));
+    }
     return o;},
   herboriste(t){const o=[];
     o.push(offMat(t,'herbes',ri(4,10)));o.push(offMat(t,'champignons',ri(3,8)));

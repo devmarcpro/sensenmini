@@ -128,12 +128,17 @@ const craftSlots=q=>q>=1.6?2:q>=1?1:0;
 function itemScore(it){
   if(it.kind==='arme'){const F=FUNC[it.fn];return F.d[0]*(F.d[1]+1)/2*F.spd*(it.durBase/20)*it.q*(1+(it.aff||[]).length*.12);}
   if(it.kind==='armure')return it.durBase*it.q*(1+(it.aff||[]).length*.12);
+  /* On ne compare pas une parure a une cuirasse : elles ne se disputent pas
+     le meme emplacement. Son score ne sert qu'a departager deux parures, et
+     ce qui compte alors, ce sont les effets — pas la matiere. */
+  if(it.kind==='parure')return 6*it.q*(1+(it.aff||[]).length)
+    +((it.aff||[]).some(a=>{const d=AFFU.find(x=>x.id===a.id);return d&&d.don;})?12:0);
   return it.dur;
 }
 /* ===== CE QU'ON PEUT PORTER (A.4.2 : poids porté) =====
    La Force décide de ce que le dos supporte. Un sac plein ne bloque rien :
    le butin banal reste sur place — ou passe au creuset si le Fondeur est là. */
-const sacMax=()=>20+st('force')*2;
+const sacMax=()=>20+st('force')*2+(typeof util==='function'?util().poids:0);
 const sacPlein=()=>S.items.length>=sacMax();
 /* fond un objet : un tiers de sa valeur */
 function scrapItem(i){const it=S.items[i];if(!it)return 0;const g=Math.round(itemValue(it)/3);S.or+=g;S.items.splice(i,1);return g;}
@@ -150,6 +155,8 @@ function autoScrap(){
 }
 function itemValue(it){
   if(it.val)return it.val;
+  /* une parure n'a ni lame ni plaque : sa valeur est dans ses effets */
+  if(it.kind==='parure')return parureValeur(it);
   if(!it.parts||!it.parts.length)return 1;
   const wsum=it.parts.reduce((a,p)=>a+COMP[p.ct].w,0);
   const base=it.parts.reduce((a,p)=>a+MAT[p.mk].v*(COMP[p.ct].w/wsum)*3,0);
@@ -181,8 +188,16 @@ function equipItem(i){
     else if(S.eq.main1&&!S.eq.main2&&hands(S.eq.main1)===1)slot='main2';
     else slot='main1';
   }
+  /* Deux anneaux, deux accessoires : si le premier est pris et le second
+     libre, la parure va au second. Sans cela, un anneau chasserait toujours
+     l'autre et l'on ne porterait jamais les deux. */
+  if(it.kind==='parure'){
+    if(slot==='anneau1'&&S.eq.anneau1&&!S.eq.anneau2)slot='anneau2';
+    if(slot==='acc1'&&S.eq.acc1&&!S.eq.acc2)slot='acc2';
+  }
   const old=S.eq[slot];
   S.eq[slot]=it;S.items.splice(i,1);
+  salirUtil();
   if(old)S.items.push(old);
   /* la main libérée n'existe plus si l'arme prend les deux */
   if(slot==='main1'&&hands(it)===2&&S.eq.main2){

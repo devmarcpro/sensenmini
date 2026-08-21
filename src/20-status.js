@@ -36,6 +36,9 @@ const DOMSTAT={feu:'brulure',eau:'ralenti',foudre:'etourdi',terre:'enracine',
   metal:'saignement',corruption:'affaibli'};
 function addStatus(tgt,k,dur,val){
   if(!tgt)return;
+  /* « immunite_poison » (F.7) : le don ne reduit pas le poison, il l'empeche.
+     Un don ne se chiffre pas — on l'a ou on ne l'a pas. */
+  if(tgt===S&&k==='poison'&&typeof don==='function'&&don('antipoison'))return;
   tgt.st=tgt.st||[];
   const dure=STATUS[k].dur;
   /* une maladie ne s'empile pas : elle se prolonge */

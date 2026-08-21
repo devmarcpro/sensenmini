@@ -9,6 +9,7 @@
    mal tout de suite, elle rend tout plus lourd — moins de souffle, donc
    moins de coups avant de manquer d'air. */
 const st=k=>((S.stats&&S.stats[k])||5)+Math.round(buffOf(k))
+  +(typeof utilStat==='function'?utilStat(k):0)
   -(k==='endu'&&typeof malusInfection==='function'?malusInfection():0);
 const maxMana=()=>20+st('vol')*3+lv('meditation')*2+Math.round(gemMana());
 /* slots : la progression d'arme débloque de la complexité de build */

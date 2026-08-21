@@ -519,6 +519,23 @@ function dropLoot(c,rare){
   const rar=rare?ri(2,3):(Math.random()<.05+c.corr/300+c.depth*.04?2:1);
   /* les matériaux du lieu, plus un fond commun : chaque composant reçoit une matière qui lui convient */
   const mats=cellMats(c).concat(['fer','chene','cuir','os']);
+  /* Une trouvaille sur six est une PARURE. Elle ne remplace ni l'arme ni
+     l'armure : elle va dans l'un des six emplacements qui n'avaient jamais
+     rien recu, et ce qu'elle donne ne se joue pas en combat. */
+  if(Math.random()<.17){
+    const kind=pick(PARK),P=PARURE[kind];
+    const dispo=P.mats.filter(m=>mats.includes(m));
+    const mk=dispo.length&&Math.random()<.6?pick(dispo):pick(P.mats);
+    const it2=mkParure(kind,mk,+((0.85+Math.random()*0.6+(rare?.35:0))*Math.min(1.6,1+c.corr/250+c.depth*.04)).toFixed(2));
+    if(it2){
+      it2.rar=rar;
+      if(!sacPlein()){
+        S.items.push(it2);questTick('loot',1,rar);
+        cutIn('環',it2.nom,RARITY[rar].n+' · '+affListe(it2).join(' · '),false,it2);
+      }
+      return;
+    }
+  }
   /* « La richesse suit toujours le danger » (3.0) — c'était écrit, ce n'était
      pas fait. La corruption pilotait la RARETÉ (donc les affixes) et la
      fréquence des trouvailles, mais la qualité de la pièce était tirée à plat :

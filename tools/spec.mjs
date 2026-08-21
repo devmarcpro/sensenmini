@@ -737,6 +737,83 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('parures — six emplacements qui ne recevaient rien',()=>{
+  /* La fiche d'equipement declare quatorze emplacements. Huit se
+     remplissaient. Les six autres — deux anneaux, une amulette, le dos, deux
+     accessoires — n'avaient AUCUNE source : ni butin, ni boutique, ni
+     atelier. Six lignes vides depuis le premier jour. */
+  const c=nouveau();
+
+  /* --- tous les emplacements ont desormais de quoi les remplir --- */
+  R(c,`globalThis.__remplis=(()=>{
+    const s=new Set();
+    for(let i=0;i<4000;i++){
+      const it=mkParure(pick(PARK),null,1+Math.random());
+      if(it)s.add(it.slot);
+    }
+    /* deux anneaux et deux accessoires : le second se prend a l'equipement */
+    S.eq={};S.items=[];
+    for(let i=0;i<6;i++){const it=mkParure('anneau',null,1.2);S.items.push(it);equipItem(0);}
+    if(S.eq.anneau2)s.add('anneau2');
+    S.eq={};S.items=[];
+    for(let i=0;i<6;i++){const it=mkParure('ceinture',null,1.2);S.items.push(it);equipItem(0);}
+    if(S.eq.acc2)s.add('acc2');
+    /* les huit d'origine */
+    ['tete','torse','bras','jambes','pieds','main1','main2','muni'].forEach(k=>s.add(k));
+    return [...s];
+  })()`);
+  const manquants=G(c,'SLOTS.map(s=>s.k).filter(k=>!__remplis.includes(k))');
+  eq(manquants.length,0,'chacun des quatorze emplacements peut recevoir quelque chose',
+    'vides : '+manquants.join(', '));
+
+  /* --- un effet d'usage se lit vraiment dans le jeu --- */
+  R(c,'S.eq={};S.items=[];S.sk.minage.lv=10;salirUtil();');
+  const mSans=G(c,'lv("minage")');
+  R(c,'S.eq.anneau1={id:"x",kind:"parure",slot:"anneau1",q:1.2,aff:[{id:"usk",p:{k:"minage",n:4}}],parts:[{ct:"fixations",f:"brut",mk:"argent"}]};salirUtil();');
+  eq(G(c,'lv("minage")'),mSans+4,'un anneau de métier monte vraiment la compétence');
+
+  R(c,'S.eq={};S.stats.force=10;salirUtil();');
+  const sacSans=G(c,'sacMax()');
+  R(c,'S.eq.dos={id:"y",kind:"parure",slot:"dos",q:1.2,aff:[{id:"poids",p:{n:30}}],parts:[{ct:"fixations",f:"brut",mk:"cuir"}]};salirUtil();');
+  eq(G(c,'sacMax()'),sacSans+30,'une cape de portage agrandit vraiment le sac');
+
+  /* --- la faim vient moins vite, sans jamais s'arrêter --- */
+  R(c,'S.eq={};salirUtil();S.faim=100;for(let i=0;i<900;i++){S.faim=Math.max(0,S.faim-1/90*(1-util().faim));}');
+  const faimNue=G(c,'S.faim');
+  R(c,'S.eq.acc1={id:"z",kind:"parure",slot:"acc1",q:1.2,aff:[{id:"faim",p:{p:30}}],parts:[{ct:"fixations",f:"brut",mk:"cuir"}]};salirUtil();'
+    +'S.faim=100;for(let i=0;i<900;i++){S.faim=Math.max(0,S.faim-1/90*(1-util().faim));}');
+  gt(G(c,'S.faim'),faimNue,'une ceinture ralentit vraiment la faim');
+  /* et deux ceintures ne la suppriment pas */
+  R(c,'S.eq.acc2={id:"z2",kind:"parure",slot:"acc2",q:1.2,aff:[{id:"faim",p:{p:30}}],parts:[{ct:"fixations",f:"brut",mk:"cuir"}]};'
+    +'S.eq.dos={id:"z3",kind:"parure",slot:"dos",q:1.2,aff:[{id:"faim",p:{p:30}}],parts:[{ct:"fixations",f:"brut",mk:"cuir"}]};salirUtil();');
+  ok(G(c,'util().faim')<=.6,'trois pièces n\'annulent pas la faim — le plafond tient');
+
+  /* --- les dons : on les a, ou on ne les a pas --- */
+  R(c,'S.eq={};S.st=[];salirUtil();addStatus(S,"poison",10,5);');
+  eq(G(c,'hasStatus(S,"poison")'),true,'sans le don, le poison prend');
+  R(c,'S.st=[];S.eq.amulette={id:"a",kind:"parure",slot:"amulette",q:1.5,aff:[{id:"antipoison",p:{}}],parts:[{ct:"fixations",f:"brut",mk:"jade"}]};salirUtil();'
+    +'addStatus(S,"poison",10,5);');
+  eq(G(c,'hasStatus(S,"poison")'),false,'avec lui, il ne prend pas du tout');
+  eq(G(c,'don("antipoison")'),true,'et le don se lit tel quel');
+
+  /* --- une parure ne porte jamais deux dons : sinon un seul objet règle tout --- */
+  R(c,`globalThis.__dbl=(()=>{let n=0;
+    for(let i=0;i<6000;i++){
+      const it=mkParure(pick(PARK),null,1.6);
+      if(!it)continue;
+      const dons=it.aff.filter(a=>{const d=AFFU.find(x=>x.id===a.id);return d&&d.don;}).length;
+      if(dons>1)n++;
+    }
+    return n;})()`);
+  eq(G(c,'__dbl'),0,'aucune parure ne cumule deux dons');
+
+  /* --- et les effets d'usage restent hors du combat --- */
+  R(c,'S.eq={};salirUtil();');
+  const dSans=G(c,'wSpeed()');
+  R(c,'S.eq.anneau1={id:"q",kind:"parure",slot:"anneau1",q:1.5,aff:[{id:"marche",p:{p:15}},{id:"soin",p:{p:80}}],parts:[{ct:"fixations",f:"brut",mk:"or"}]};salirUtil();');
+  eq(G(c,'wSpeed()'),dSans,'une parure ne touche jamais à la vitesse d\'arme');
+});
+
 test('alchimie — une plante donne un effet, pas un multiplicateur',()=>{
   /* L'alchimie ne distillait que des potions de STATISTIQUE : +3 en Force
      pendant une minute. C'etait un doublon de la cuisine — un multiplicateur

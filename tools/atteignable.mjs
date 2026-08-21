@@ -210,6 +210,28 @@ bilan('statuts que quelque chose pose',Object.keys(G('STATUS')),new Set([
   ...G('Object.keys(PATTERN).map(k=>PATTERN[k].st).filter(Boolean)'),
 ]),'lu dans le code : appels a addStatus, statuts de sorts et de patterns');
 
+/* Les parures, et surtout : les emplacements d'equipement. Six d'entre eux
+   n'avaient aucune source — c'est exactement le genre de trou qu'un audit
+   doit tenir ferme une fois bouche. */
+const parureAff=RUN(`(()=>{
+  const aff=new Set(),slots=new Set();
+  for(let i=0;i<20000;i++){
+    const it=mkParure(pick(PARK),null,1+Math.random()*.7);
+    if(!it)continue;
+    slots.add(it.slot);
+    it.aff.forEach(a=>aff.add(a.id));
+  }
+  return {aff:[...aff],slots:[...slots]};
+})()`);
+bilan('effets de parure tirables',G('AFFUK'),new Set(parureAff.aff),
+  'vingt mille parures engendrees, toutes qualites');
+/* Le second anneau et le second accessoire ne se tirent pas : ils se
+   prennent a l equipement, quand le premier est deja occupe. */
+const slotsOk=new Set([...parureAff.slots,'anneau2','acc2',
+  ...G('SLOTS.filter(s=>s.zone||s.hand).map(s=>s.k)'),'muni']);
+bilan('emplacements qu on peut remplir',G('SLOTS.map(s=>s.k)'),slotsOk,
+  'les six emplacements de parure n avaient aucune source jusqu ici');
+
 /* Une potion d'effet s'obtient de deux facons : on la distille depuis une
    plante, ou on l'achete. Une fiole qu'aucune plante ne donne et qu'aucun
    etal ne tient serait une entree de catalogue et rien d'autre. */

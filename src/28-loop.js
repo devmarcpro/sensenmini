@@ -6,7 +6,10 @@
 let harvT=0,expT=0,uiT=9,ptrDown=false,craftT=0,endLock=0,respawnT=0,hitFx=0,spellT=0,manaT=0,rateT=0;
 function step(dt){
   tickClock(dt);
-  S.faim=Math.max(0,S.faim-dt/90*(S.race==='sylvide'?.5:1));
+  /* une ceinture bien faite ne remplit pas le ventre : elle le vide moins vite */
+  S.faim=Math.max(0,S.faim-dt/90*(S.race==='sylvide'?.5:1)*(1-util().faim));
+  /* l'equipement change entre deux images : on recalcule au plus une fois par tour */
+  salirUtil();
   tickBuffs(dt);
   tickLame(dt);
   if(buffOf('regenhp'))S.hp=Math.min(maxHp(),S.hp+buffOf('regenhp')*dt);

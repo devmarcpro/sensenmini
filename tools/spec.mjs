@@ -652,6 +652,41 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('meubles — chacun apporte ce que sa fiche promet',()=>{
+  const c=nouveau();
+  R(c,'S.or=99999;S.mat.pierre=999;S.mat.chene=999;S.mat.limon=999;S.mat.lin=999;'
+    +'S.mat.os=999;S.ref["lingot:fer"]=40;S.mat.quartz=999;'
+    +'claimCell();buildPlot(0,"batiment");placeSlot(0,0,"meuble","lit");');
+  const base=G(c,'comfort()');
+  gt(base,0,'un logis avec un lit a du confort');
+  /* chaque meuble en apporte, et ceux dont la fiche promet plus en donnent plus */
+  const gain=k=>{
+    R(c,'(()=>{const b=plots(here())[0];for(let i=1;i<b.slots.length;i++)b.slots[i]=null;})();'
+      +'placeSlot(0,1,"meuble","'+k+'");');
+    return G(c,'comfort()')-base;
+  };
+  const table=gain('table'),tapis=gain('tapis'),trophee=gain('trophee');
+  gt(table,0,'une table apporte du confort — +'+table);
+  gt(tapis,table,'un tapis en apporte plus qu\'une table — +'+tapis+' contre +'+table);
+  gt(trophee,tapis,'un trophée plus encore — +'+trophee+' contre +'+tapis);
+  /* et la fiche annonce le bon chiffre */
+  ok(MEUBLE_DIT(G(c,'MEUBLE.tapis.d'),tapis),'la fiche du tapis annonce +'+tapis);
+  ok(MEUBLE_DIT(G(c,'MEUBLE.trophee.d'),trophee),'celle du trophée annonce +'+trophee);
+  /* aucun meuble ne doit être décoratif au point de ne rien apporter */
+  const nuls=G(c,'Object.keys(MEUBLE)').filter(k=>{
+    R(c,'(()=>{const b=plots(here())[0];for(let i=1;i<b.slots.length;i++)b.slots[i]=null;})();');
+    R(c,'try{placeSlot(0,1,"meuble","'+k+'");}catch(e){}');
+    const pose=G(c,'!!plots(here())[0].slots[1]');
+    if(!pose)return false;                 /* trop cher pour ce test, pas un défaut */
+    const g=G(c,'comfort()')-base;
+    const service=/range|loge|éclaire|froid|boutique|quêtes/.test(G(c,'MEUBLE.'+k+'.d'));
+    return g<=0&&!service;
+  });
+  eq(nuls.length,0,'aucun meuble ne coûte des matériaux pour rien',nuls.join(', '));
+});
+/* la fiche doit citer le confort qu'elle apporte : on cherche « +N » dedans */
+const MEUBLE_DIT=(d,n)=>new RegExp('\\+'+n+'\\b').test(d);
+
 test('affixes — chacun fait ce que sa fiche annonce',()=>{
   const c=nouveau();
   /* Un affixe qui s'affiche sans rien faire est pire qu'un affixe absent :

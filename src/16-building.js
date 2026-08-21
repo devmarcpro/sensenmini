@@ -18,11 +18,11 @@ const PLOT={
 const PK=Object.keys(PLOT);
 const MEUBLE={
   lit:{n:'Lit',g:'床',cost:[['bois',4],['vegetal',2]],d:'loge un résident'},
-  table:{n:'Table',g:'机',cost:[['bois',3]],d:'meuble — +1 humeur par type distinct dans le bâtiment'},
+  table:{n:'Table',g:'机',cost:[['bois',3]],d:'+1 de confort — chaque type de meuble distinct en apporte autant'},
   coffre:{n:'Coffre',g:'箱',cost:[['bois',5]],d:'range 30 objets sur cette cellule — ce que le dos ne porte plus'},
   grandcoffre:{n:'Grand coffre',g:'櫃',cost:[['bois',10],['form:lingot',2]],d:'range 60 objets sur cette cellule'},
-  tapis:{n:'Tapis',g:'毯',cost:[['vegetal',6]],d:'meuble'},
-  trophee:{n:'Trophée',g:'角',cost:[['fossile',3]],d:'meuble'},
+  tapis:{n:'Tapis',g:'毯',cost:[['vegetal',6]],d:'+3 de confort — un logis où l\'on vit, pas où l\'on range'},
+  trophee:{n:'Trophée',g:'角',cost:[['fossile',3]],d:'+4 de confort — ce qu\'on a abattu se raconte'},
   lanterne:{n:'Lanterne',g:'灯',cost:[['form:lingot',2],['mineral',2]],d:'éclaire la cellule — la nuit n\'y attire plus les prédateurs'},
   foyer:{n:'Foyer',g:'炉',cost:[['roche',10],['form:lingot',2]],d:'annule le froid sur la cellule'},
   etal:{n:'Étal',g:'店',cost:[['bois',6],['form:lingot',2]],d:'boutique passive — les PNJ achètent seuls'},
@@ -183,9 +183,17 @@ function rangerTout(){
   log(n?'Rangé '+n+' objet'+(n>1?'s':'')+' dans le coffre':'Rien à ranger');
 }
 /* humeur d'un bâtiment : +1 par type de meuble distinct (max 10), +5 si bien rempli (7.5) */
+/* Le confort d'un bâtiment. La variété compte d'abord — un logis n'est pas
+   dix lits — mais certains meubles pèsent plus que leur simple présence.
+   Le GDD (3494) donne un effet propre au tapis et au trophée ; sans lui,
+   ils coûtaient des matériaux pour ne valoir ni plus ni moins qu'une table.
+   Le foyer et la lanterne, qui rendent déjà un service sur la cellule,
+   apportent en plus un peu de confort à ceux qui y vivent. */
+const MEUBLECONF={tapis:2,trophee:3,foyer:2,lanterne:1};
 function buildingComfort(b){
   const types=new Set(b.slots.filter(sl=>sl&&sl.t==='meuble').map(sl=>sl.k));
-  return Math.min(10,types.size)+(b.slots.filter(sl=>sl).length>=9?5:0);
+  let bonus=0;types.forEach(k=>{bonus+=MEUBLECONF[k]||0;});
+  return Math.min(10,types.size)+bonus+(b.slots.filter(sl=>sl).length>=9?5:0);
 }
 function comfort(){let best=0;eachBuilding(b=>{if(b.slots.some(sl=>sl&&sl.k==='lit'))best=Math.max(best,buildingComfort(b));});return best;}
 /* stations : celles du bâti de la cellule courante, plus celles que tu portes */

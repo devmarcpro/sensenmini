@@ -786,6 +786,93 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('symetrie — les creatures se battent avec nos regles',()=>{
+  /* « Supprimer le plus possible l'asymetrie : les PNJ doivent etre construits
+     comme le joueur » (E.3.5). Le joueur depensait de l'endurance a chaque
+     coup ; une creature frappait indefiniment, son rythme ne dependant que
+     d'un delai. Et son armure n'etait qu'un chiffre de fiche. */
+  const c=nouveau();
+  R(c,'S.occ="combat";E=null;EE=[];spawn();');
+
+  /* --- toute creature a un souffle, et il la freine --- */
+  eq(G(c,'EE.every(e=>e.end>0&&e.endMax>0)'),true,'chaque créature naît avec un souffle');
+  R(c,'E.end=0;');
+  eq(G(c,'crePeutFrapper(E)'),false,'à sec, elle ne peut plus déclarer de coup');
+  R(c,'for(let i=0;i<40;i++)creEndTick(E,.5);');
+  eq(G(c,'crePeutFrapper(E)'),true,'et elle le reprend avec le temps');
+  /* la depense est reelle */
+  R(c,'E.end=E.endMax;globalThis.__e0=E.end;creDepense(E);');
+  ok(G(c,'E.end')<G(c,'__e0'),'un coup parti lui coûte du souffle — '
+    +G(c,'__e0')+' puis '+Math.round(G(c,'E.end')));
+  /* et la recuperation est suspendue juste apres */
+  R(c,'globalThis.__e1=E.end;creEndTick(E,.3);');
+  eq(G(c,'E.end'),G(c,'__e1'),'et la reprise est suspendue un instant, comme la nôtre');
+
+  /* --- une creature epuisee ne frappe VRAIMENT plus --- */
+  R(c,`EE.forEach(e=>{e.hp=1e9;e.max=1e9;e.end=e.endMax;});
+    S.hp=maxHp()*99;globalThis.__pv=()=>{const h=S.hp;
+      for(let i=0;i<400;i++)combatTick(.1);return h-S.hp;};`);
+  const frais=G(c,'__pv()');
+  R(c,'EE.forEach(e=>{e.end=0;e.endLock=999;e.w=-1;e.tt=0;});S.hp=maxHp()*99;');
+  const asec=G(c,'__pv()');
+  ok(asec<frais,'à sec, elle ne fait presque plus de dégâts — '
+    +frais.toFixed(0)+' puis '+asec.toFixed(0));
+
+  /* La depense doit se voir DANS LE COMBAT, pas seulement en appelant
+     creDepense a la main : une creature qui frappe longtemps doit finir par
+     manquer de souffle, sinon le frein n'existe que sur le papier. */
+  R(c,`EE.forEach(e=>{e.hp=1e9;e.max=1e9;e.end=e.endMax;e.endLock=0;});
+    S.hp=maxHp()*999;S.guard=false;
+    globalThis.__bas=0;
+    for(let i=0;i<600;i++){combatTick(.1);if(E&&E.end<E.endMax*.5)__bas=1;}`);
+  eq(G(c,'__bas'),1,'en combat, elle finit vraiment par manquer de souffle');
+
+  /* La qualite de son equipement doit suivre son NIVEAU : sans cela un chef
+     de bande porte le meme acier qu'un premier bandit croise. */
+  const q2=G(c,`creEquipe({},'bandit',2).arme.q`);
+  const q30=G(c,`creEquipe({},'bandit',30).arme.q`);
+  gt(q30,q2*1.4,'la qualite de son equipement suit son niveau — q'+q2+' a 2, q'+q30+' a 30');
+
+  /* --- un humanoide porte un vrai equipement, derive de sa classe et de son niveau --- */
+  const eqBas=G(c,'(()=>{const e=creEquipe({},"bandit",2);return e?{arme:!!e.arme,zones:Object.keys(e.zones).length,mk:e.arme?e.arme.parts[0].mk:null}:null;})()');
+  const eqHaut=G(c,'(()=>{const e=creEquipe({},"bandit",30);return e?{arme:!!e.arme,zones:Object.keys(e.zones).length,mk:e.arme?e.arme.parts[0].mk:null}:null;})()');
+  eq(!!eqBas&&eqBas.arme,true,'un bandit porte une vraie arme');
+  gt(eqBas.zones,0,'et de vraies pièces d\'armure — '+eqBas.zones+' zones');
+  ok(eqBas.mk!==eqHaut.mk,'et la matière suit le niveau — '+eqBas.mk+' à 2, '+eqHaut.mk+' à 30');
+  /* le metier decide de la couverture */
+  const chef=G(c,'Object.keys(creEquipe({},"chef",20).zones).length');
+  const braco=G(c,'Object.keys(creEquipe({},"braconnier",20).zones).length');
+  gt(chef,braco,'un chef de bande couvre plus de zones qu\'un braconnier — '+chef+' contre '+braco);
+  /* une bete n'a pas d'equipement, et c'est honnete */
+  eq(G(c,'creEquipe({},"loup",20)'),null,'un loup n\'a jamais porté de plates');
+
+  /* --- ET SON ARMURE REDUIT VRAIMENT CE QU'ELLE ENCAISSE --- */
+  R(c,`S.stats.force=120;S.eq={};S.items=[];
+    const p=FUNC.epee.comp.map(ct=>partFor(ct,['fer','chene','cuir']));
+    p.push(partFor('fixations',['fer']));
+    S.items.push(mkItem('arme','epee',p,1.2));equipItem(0);
+    globalThis.__frappe=(e)=>{let s=0;
+      for(let i=0;i<300;i++){e.hp=1e9;E=e;EE=[e];S.end=100;hitN=0;
+        const h=e.hp;attack(false);s+=h-e.hp;}
+      return s/300;};
+    /* un CHEF DE BANDE par defaut : cinq zones couvertes sur cinq. Avec un
+       bandit — trois sur cinq — l'ecart se noyait dans le bruit du tirage de
+       zone, et le test mesurait le hasard plutot que l'armure. */
+    globalThis.__cible=(nu,ck)=>{const e=mkEnemy(ck||'chef',12,false,false,'');
+      e.hp=1e9;e.max=1e9;if(nu)e.eqReel=null;return e;};`);
+  const nu=G(c,'__frappe(__cible(true))');
+  const arme=G(c,'__frappe(__cible(false))');
+  ok(arme<nu*.95,'un chef de bande équipé encaisse moins qu\'un chef nu — '
+    +nu.toFixed(1)+' contre '+arme.toFixed(1));
+  /* et la COUVERTURE compte : un braconnier, deux zones sur cinq, se protège
+     bien moins qu'un chef qui les couvre toutes */
+  const braEq=G(c,'__frappe(__cible(false,"braconnier"))');
+  const braNu=G(c,'__frappe(__cible(true,"braconnier"))');
+  ok((nu-arme)/nu>(braNu-braEq)/braNu,
+    'et un braconnier se protège bien moins qu\'un chef — '
+    +Math.round((nu-arme)/nu*100)+' % contre '+Math.round((braNu-braEq)/braNu*100)+' %');
+});
+
 test('passifs — aucun ne promet ce que personne ne lit',()=>{
   /* Un grimoire ajoute un sort ; un MANUEL change tous les coups. Les quatre
      ecoles de manuel etaient maigres — six frappes, six postures, TROIS
@@ -1777,7 +1864,7 @@ test('consignes — le plan apprend les verbes des nouveaux systemes',()=>{
      qui est exactement comment une ligne de plan morte finit par exister. */
   const etats=G(c,'CONDK.filter(k=>k!=="toujours"&&(CONDS[k].def===undefined||CONDS[k].liste))');
   const eprouvees=['nuit','jour','gibierrare','caseepuisee','ennemidur','enville','aucampement',
-    'malade','empoisonne','vehiculeuse','potiondispo','froid','aubordeleau'];
+    'malade','empoisonne','vehiculeuse','potiondispo','froid','aubordeleau','regionraclee'];
   const bascules=G(c,`(()=>{
     const poses={
       nuit:[()=>{S.day=Math.floor(S.day)+23/24;},()=>{S.day=Math.floor(S.day)+12/24;}],
@@ -1796,6 +1883,9 @@ test('consignes — le plan apprend les verbes des nouveaux systemes',()=>{
          poser le froid ne change rien et la bascule paraitrait inerte */
       froid:[()=>{globalThis.__ft3=globalThis.__ft3||feltTemp;feltTemp=()=>-30;},
              ()=>{globalThis.__ft3=globalThis.__ft3||feltTemp;feltTemp=()=>18;}],
+      /* la region raclee : on vide la case courante ET une voisine */
+      regionraclee:[()=>{here().vide=200;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{cell(S.pos[0]+dx,S.pos[1]+dy).vide=200;});},
+                    ()=>{here().vide=0;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{cell(S.pos[0]+dx,S.pos[1]+dy).vide=0;});}],
       /* l'eau : on la pose sur la case, et le gel la reprend */
       aubordeleau:[()=>{here().b='cote';globalThis.__tc=tempC;tempC=()=>18;meteo=()=>'clair';},
                    ()=>{here().b='plaine';if(globalThis.__tc)tempC=__tc;}],
@@ -2823,7 +2913,7 @@ test('affixes — chacun fait ce que sa fiche annonce',()=>{
     blesse:['globalThis.__av=()=>EE.forEach(e=>addStatus(e,"saignement",99,1));','globalThis.__av=null;'],
     premier:['hitN=0;','hitN=0;'],
     montee:['hitN=0;','hitN=0;'],
-    garde:['S.guard=true;','S.guard=false;'],
+
     cycle:['S.seg=[0,1,2];','S.seg=[];'],
   };
   const inertes=Object.keys(situations).filter(id=>{
@@ -2836,6 +2926,33 @@ test('affixes — chacun fait ce que sa fiche annonce',()=>{
   });
   ok(inertes.length===0,'chacun des affixes de situation change vraiment les dégâts',
     'sans effet : '+inertes.join(', '));
+  /* « garde » ne touche pas aux degats donnes mais a ceux qu'on ENCAISSE :
+     on le mesure donc de l'autre cote, sinon on cherche un effet la ou il
+     n'a jamais eu de raison d'etre. */
+  /* il faut porter quelque chose : l'affixe AMPLIFIE la reduction, il n'en
+     cree pas — sur un torse nu, multiplier zero par 1,6 fait toujours zero,
+     et c'est le comportement voulu */
+  /* __armeAff remet S.eq a zero : l'armure doit donc se reposer APRES lui,
+     sinon la seconde mesure se fait torse nu et l'on compare deux choses
+     differentes. */
+  R(c,`globalThis.__armure=()=>{
+      ZK.forEach(z=>{const sl=SLOTS.find(x=>x.zone===z).k;
+        const maj=partFor('plaque',['fer']);
+        S.eq[sl]=mkItem('armure',sl,[maj,partFor('sangles',['fer']),partFor('fixations',['fer'])],1.4);
+        S.eq[sl].cons=COMP.plaque.cons;});
+      salirUtil();};
+    __armeAff([]);__armure();S.guard=true;
+    /* une creature qui frappe FORT : avec un coup faible, le plancher a un
+       point de degats masque toute reduction et l'on ne mesure plus rien */
+    EE[0].dmg=400;S.stats.endu=40;
+    globalThis.__encaisse=()=>{let s=0;
+      for(let i=0;i<200;i++){const h=S.hp=maxHp()*9;S.hp=h;resolveHit(1,EE[0]);s+=h-S.hp;}
+      return s/200;};`);
+  const nuGarde=G(c,'__encaisse()');
+  R(c,`__armeAff([{id:'garde',p:{p:60}}]);__armure();S.guard=true;`);
+  ok(G(c,'__encaisse()')<nuGarde,'« garde » réduit ce qu\'on encaisse, garde levée — '
+    +nuGarde.toFixed(1)+' puis '+G(c,'__encaisse()').toFixed(1));
+
   /* et les deux qui touchent au rythme plutot qu'aux degats */
   R(c,'__armeAff([]);S.end=100;attack(true);globalThis.__c1=100-S.end;');
   R(c,'__armeAff([{id:"lourdeur",p:{p:40}}]);S.end=100;attack(true);globalThis.__c2=100-S.end;');

@@ -77,6 +77,17 @@ const CONDS={
   potiondispo:{n:'on a une fiole de',u:'',liste:1,def:'soin',
     d:'la fiole choisie est en réserve',
     test:v=>(S.potions||[]).some(p=>p.e===v)},
+  regionraclee:{n:'la région est épuisée pour de bon',
+    d:'plus rien à tirer ici ni chez les voisines — il faut partir loin',
+    test:()=>{
+      /* la case courante RACLEE A FOND, pas seulement entamee : c'est ce qui
+         distingue « passer a cote » de « quitter la region ». Un seuil sur les
+         voisines ne se declenchait jamais — le personnage les vide une par une
+         et n'en a jamais plusieurs de vidées en meme temps. */
+      if(vide(here())<3)return false;
+      let n=0;
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])if(vide(cell(S.pos[0]+dx,S.pos[1]+dy))>=2)n++;
+      return n>=1;}},
   aubordeleau:{n:'il y a de l\'eau ici',d:'de quoi pêcher, si le gel ne la prend pas',
     test:()=>!pecheBlocage()},
   froid:{n:'on souffre du froid ou du chaud',d:'le climat mord — un abri, un foyer, une fiole',
@@ -100,6 +111,15 @@ const ACTES={
     fais:()=>{const l=cellMats(here()).filter(m=>canHarvest(m)&&stockOf(here(),m)>0)
         .sort((a,b)=>MAT[b].d-MAT[a].d);
       if(l.length){S.target=l[0];S.occ='recolte';harvT=0;}}},
+  /* « CHANGER DE CASE » ne regarde que les huit voisines. Sur soixante jours,
+     l'instrument de partie longue l'a mesure : le personnage tournait dans un
+     mouchoir de poche et ne rencontrait plus une seule espece nouvelle apres
+     le premier mois. Un monde infini qu'on ne traverse pas est un monde fini.
+     « S'eloigner » part droit devant, plusieurs cases d'un coup, vers ce qu'on
+     n'a jamais vu — et change de direction quand la route se ferme. */
+  seloigner:{n:`s'éloigner`,g:`遠`,d:`quitter la région pour de bon, plusieurs cases d'un coup`,
+    peut:()=>!!consigneLoin(),
+    fais:()=>{const t=consigneLoin();if(t){t.seen=true;travel(t.x,t.y);}}},
   pecher:{n:'pêcher',g:'漁',d:'l\'eau nourrit sans combat et sans territoire',
     peut:()=>!pecheBlocage()&&S.occ!=='peche',
     fais:()=>{S.occ='peche';E=null;pechT=0;}},
@@ -217,6 +237,25 @@ function consigneVillage(){
   }
   return best;
 }
+/* Une case a plusieurs pas, dans la direction la MOINS explorée. On garde le
+   cap d'une fois sur l'autre — partir au hasard revient a tourner en rond un
+   peu plus large — et l'on ne change que lorsque le devant se remplit. */
+function consigneLoin(){
+  const dirs=[[1,0],[0,1],[-1,0],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+  /* combien de cases deja vues dans chaque direction, a portee de marche */
+  const vu=d=>{let n=0;
+    for(let k=2;k<=6;k++){const z=S.world[key(S.pos[0]+d[0]*k,S.pos[1]+d[1]*k)];if(z&&z.seen)n++;}
+    return n;};
+  let best=null,bn=99;
+  dirs.forEach(d=>{const n=vu(d);if(n<bn){bn=n;best=d;}});
+  if(!best)return null;
+  S.cap=best;
+  for(let n=5;n>=2;n--){
+    const t=cell(S.pos[0]+best[0]*n,S.pos[1]+best[1]*n);
+    if(t.poi!=='donjon'&&!t.town)return t;
+  }
+  return null;
+}
 function consigneVoisine(){
   const ici=here();
   let best=null,bs=-1;
@@ -254,7 +293,21 @@ function planDefaut(){
     {c:'pvbas',v:40,a:'reposer',on:true},
     {c:'nuit',v:0,a:'dormir',on:true},
     {c:'sacplein',v:90,a:'fondre',on:true},
+    /* Quand le gibier se fait rare, on s'ELOIGNE au lieu de passer a la case
+       d'a cote. L'instrument de partie longue a mesure la difference : avec
+       « changer de case », le personnage tournait dans un mouchoir de poche et
+       ne rencontrait plus une seule espece nouvelle apres le premier mois.
+       Un monde infini qu'on ne traverse pas est un monde fini. */
+    /* LE PLAN DE BASE PASSE A LA CASE D'A COTE, et « s'eloigner » reste a
+       la main du joueur. La mesure sur soixante jours tranche : passer a cote
+       donne 128 mises a mort, 13 especes et un equipement qui progresse
+       jusqu'au bout ; partir loin donne 75, 16 especes, et un equipement qui
+       plafonne a mi-partie faute de butin. Pour un jeu qui tourne seul, le
+       rythme de la boucle passe avant le tourisme — et un joueur qui veut
+       voir du pays remplace cette ligne par « s'eloigner », qui existe
+       precisement pour cela. Le choix lui revient, chiffres a l'appui. */
     {c:'gibierrare',v:0,a:'ailleurs',on:true},
+    {c:'regionraclee',v:0,a:'seloigner',on:true},
     /* on ne se bat pas dans les rues : sans cette ligne, entrer dans un
        village suffisait a figer le plan. Eteins-la si tu veux y flaner. */
     {c:'enville',v:0,a:'ailleurs',on:true},

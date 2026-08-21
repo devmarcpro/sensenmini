@@ -92,6 +92,11 @@ const MUT=[
   ['vehicule : usure','vehicules',[['src/22b-vehicules.js',
     'm*= 1+(1-v.pv/D.pv)*.45;','']]],
   ['passif : l allonge ouvre le balayage','passifs',[['src/24-combat.js','const port=F.reach+(PA.reach||0);','const port=F.reach;']]],
+  /* la symetrie */
+  ['symetrie : le souffle des creatures','symetrie',[['src/28-loop.js',"    if(e.w<0&&!crePeutFrapper(e))continue;",'']]],
+  ['symetrie : la depense','symetrie',[['src/28-loop.js','{creDepense(e);resolveHit(S.guard?1:0,e);}','resolveHit(S.guard?1:0,e);']]],
+  ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,pickZone()):tgt.arm)",'tgt.arm']]],
+  ['symetrie : l equipement au niveau','symetrie',[['src/24c-symetrie.js','const q=Math.max(.5,Math.min(1.8,.5+lv/25));','const q=1;']]],
   /* les lieux */
   ['lieux : ils se referment','lieux',[['src/07b-lieux.js','  if(D.hebdo)c.lieuW=S.week;','']]],
   ['lieux : le cercle demande son prix','lieux',[['src/07b-lieux.js',"      if((S.mat.cristalmana||0)<1)return toast('Il faut un cristal de mana à poser au centre');",'']]],

@@ -171,6 +171,20 @@ function mkEnemy(ck,power,rare,boss,suffixe){
     st:[],cdStun:0,stg:0,pats:C.pat||['simple'],pat:'simple'};
   /* chacune a son propre télégraphe : une embuscade est déjà à mi-course */
   e.tt=e.embuscade?e.delay*.7:0;e.w=-1;
+  /* SYMETRIE (E.3.5) : elle a un souffle comme le joueur, et si c'est un
+     humanoide, un equipement forge pour de vrai — arme et armure derivees de
+     sa classe et de son niveau, jamais d'un chiffre ecrit a la main. */
+  e.lvC=Math.round(power);
+  creEndInit(e);
+  if(typeof creEquipe==='function'){
+    e.eqReel=creEquipe(e,ck,Math.round(power));
+    if(e.eqReel&&e.eqReel.arme){
+      /* ce qu'elle porte decide de ce qu'elle fait : son arme lui donne son
+         type de degats et sa cadence, comme au joueur */
+      const A=FUNC[e.eqReel.arme.fn];
+      e.dt=A.t;e.wind=e.wind*(1.6/Math.max(.6,A.spd));
+    }
+  }
   noteBestiaire(ck,'v');
   return e;
 }
@@ -338,7 +352,6 @@ function attack(heavy){
       case 'blesse':if(E&&(hasStatus(E,'saignement')||hasStatus(E,'brulure')||hasStatus(E,'poison')))mulAff*=1+P2.p/100;break;
       case 'premier':if(hitN<=1)mulAff*=1+P2.p/100;break;
       case 'montee':mulAff*=1+Math.min(P2.m,hitN*P2.p)/100;break;
-      case 'garde':if(S.guard)mulAff*=1+P2.p/100;break;
       case 'cycle':mulAff*=1+S.seg.length*P2.p/100;break;
     }
   });
@@ -391,7 +404,10 @@ function attack(heavy){
     const em=vmult(v,tgt.vec,multOff);d*=em;
     (w.aff||[]).forEach(a=>{if(a.id==='contre'&&tgt.vec[a.p.e]>0)d*=1+a.p.p/100*tgt.vec[a.p.e];});
     /* armure : une part des dégâts, pas un seuil — une dague rapide n'est pas annulée par un cuir épais */
-    const armEff=tgt.arm*(1-pierce);
+    /* « l'armure d'un PNJ REDUIT les degats qu'il encaisse » (E.3.5) : on lit
+       ce qu'il PORTE sur la ZONE touchee, et non un chiffre de fiche : un bandit qui ne couvre
+       que trois zones sur cinq se prend parfois un coup la ou il est nu. */
+    const armEff=(typeof creArmure==='function'?creArmure(tgt,pickZone()):tgt.arm)*(1-pierce);
     const dmg=Math.max(1,d*(1-armEff/(armEff+10)));
     const applied=Math.min(dmg,tgt.hp);      /* XP plafonnée aux PV restants (5.3) */
     tgt.hp-=dmg;dpsA+=dmg;
@@ -517,7 +533,11 @@ function resolveHit(q,atk){
   } else {
     const inc=raw*(q===1?.20:1);
     const cost=q===1?(12+inc/4)*(1+passives().gardecost):0;
-    const red=(it?armorOf(zk)*consMult(it.cons,atk.dt):0)+buffOf('def')*2+passives().def+GB.red;
+    let red=(it?armorOf(zk)*consMult(it.cons,atk.dt):0)+buffOf('def')*2+passives().def+GB.red;
+    /* « garde levee : +N % de reduction » — sur ce qu'on ENCAISSE, la ou le
+       nom et la fiche le disent tous les deux */
+    if(S.guard){const wg=weapon();
+      (wg&&wg.aff||[]).forEach(a=>{if(a.id==='garde')red*=1+a.p.p/100;});}
     if(GB.red>0)gainXp('bouclier',Math.min(GB.red,inc)*.8);
     const fin=Math.max(1,inc-red);
     const evite=raw-fin;
@@ -581,6 +601,15 @@ function kill(who){
   S.or+=g;
   if(K.drop)S.mat[K.drop]=(S.mat[K.drop]||0)+1+(K.rare?2:0);
   if(K.cre&&CREATURE[K.cre].cat!=='humain'&&CREATURE[K.cre].cat!=='corrompu')creatureDrops(K);
+  /* « ce qu'il porte decide de ce qu'il encaisse — et de ce qu'il laisse »
+     (E.3.5). Un humanoide abattu laisse une piece de son propre equipement,
+     abimee : le butin cesse d'etre un tirage sans rapport avec ce qu'on
+     vient d'affronter. */
+  if(K.eqReel&&Math.random()<.30&&!sacPlein()){
+    const b2=creButin(K);
+    if(b2){S.items.push(b2);questTick('loot',1,0);
+      cutIn('取',b2.nom,'pris sur '+K.nom.toLowerCase(),false,b2);}
+  }
   /* la statue 1:1 — trophée de chasse ultime (F.3) */
   if(Math.random()<.0005&&K.cre){const C=CREATURE[K.cre];
     S.items.push({id:'i'+(S.nid++),kind:'statue',nom:'Statue de '+C.n.toLowerCase()+' (1:1)',parts:[],q:1,dur:0,durBase:0,de:0,mana:0,vec:[.2,.2,.2,.2,.2],rar:3,val:C.lv*40+40,slots:0});

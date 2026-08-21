@@ -137,6 +137,11 @@ function combatTick(dt){
        elle est INFIABLE — ce qui n'est pas la meme chose, et se joue autrement. */
     if(hasStatus(e,'confusion')&&e.w>=0&&Math.random()<dt*.9){e.w=-1;e.tt=0;continue;}
     if(e.stg>0)continue;
+    /* Le souffle des creatures (E.3.5). A sec, elle NE DECLARE PAS de coup :
+       c'est le frein qui manquait — jusqu'ici le joueur seul s'essoufflait,
+       et un long combat etait une course qu'il perdait toujours. */
+    creEndTick(e,dt);
+    if(e.w<0&&!crePeutFrapper(e))continue;
     /* à distance, on tient la créature à l'écart : elle met plus de temps à revenir au
        contact — sauf si son geste porte lui aussi à distance */
     const kite=(isDist(weapon())&&e===E&&!patOf(e).dist)?.62:1;
@@ -148,8 +153,8 @@ function combatTick(dt){
       const cible=e===E;                      /* la garde réflexe ne couvre que la cible regardée */
       const fen=parryWinVs(e),reste=e.wEff-e.w;
       if(cible&&fen>0&&auto('garde')&&reste<=fen*.55&&S.end>=14)
-        resolveHit(Math.random()<.12*auto('garde')?2:1,e);
-      else if(e.w>=e.wEff)resolveHit(S.guard?1:0,e);
+        {creDepense(e);resolveHit(Math.random()<.12*auto('garde')?2:1,e);}
+      else if(e.w>=e.wEff){creDepense(e);resolveHit(S.guard?1:0,e);}
     }
     if(!E)return;
   }

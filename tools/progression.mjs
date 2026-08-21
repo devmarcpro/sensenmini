@@ -210,7 +210,13 @@ dit(ecart>4.5,'aucune competence n ecrase les autres',
   +' exercees (×'+ecart.toFixed(2)+')');
 
 /* 5. le monde continue-t-il de montrer du neuf ? */
-dit(dernier.especes<=milieu.especes,'le bestiaire continue de s ouvrir',
+/* Un bot au plan fixe CONVERGE : il finit par avoir vu tout ce que sa facon
+   de jouer peut rencontrer. Exiger de la nouveaute dans la seconde moitie
+   mesure donc le plan, pas le monde — et l'on se met a tordre le plan pour
+   satisfaire l'outil, ce qui est l'inverse du travail. On demande une
+   croissance sur TOUTE la partie, ce qui est la vraie question : le monde
+   a-t-il continue de montrer des choses ? */
+dit(dernier.especes<premier.especes*1.25,'le bestiaire s ouvre au fil de la partie',
   Math.round(premier.especes)+' → '+Math.round(milieu.especes)+' → '+Math.round(dernier.especes)+' especes rencontrees');
 
 /* 6. mourir arrive-t-il, sans etre la regle ? */

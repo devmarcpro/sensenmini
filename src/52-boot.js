@@ -20,7 +20,7 @@ function chargementComplet(){
       &&METEO&&SEASON&&offline&&AUTOS&&STATUS&&addStatus&&KSIZE&&kingdomsNear&&hameauAt&&starterKit&&SHOPDEF
       &&CREATURE&&noteBestiaire&&PATTERN&&VOX&&VOXMAT&&voxelHtml&&matHtml&&compHtml&&heroHtml&&vide&&STANCE&&attack&&compileSpell&&harvestTick&&tickClock&&step&&paint&&grp&&foldHead
       &&pMonde&&pCell&&pAtelier&&pEquip&&pMagie&&pTable&&pVille&&pPnj&&pComps&&pBatir&&pRoyaume
-      &&pGuilde&&pSac&&pAuto&&pSkills&&pRecolte&&TIPS&&SFX&&save&&exportSave
+      &&pGuilde&&pSac&&pAuto&&pSkills&&pParam&&TRICHES&&pRecolte&&TIPS&&SFX&&save&&exportSave
       &&buildGate&&applyBirth&&defaultStart&&repLocale&&lawsHere&&handle&&tabsEdges);
   }catch(e){return false;}
 }

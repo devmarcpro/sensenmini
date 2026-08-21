@@ -41,18 +41,8 @@ function pAuto(){
   } else h+='<p class="hint">Rien de notable encore. La chronique retient les seuils franchis, les trouvailles et les morts — pas les coups.</p>';
   /* partie : sons, sauvegarde, nouvelle partie */
   }
-  h+=foldHead('veille','pa','保','PARTIE',S.nom+' · semaine '+S.week);
-  if(foldOpen('veille','pa')){
-  h+='<div class="card"><div class="row"><button class="btn" data-sfx="1">'+(S.sfx===false?'Sons : coupés':'Sons : actifs')+'</button>'
-   +'<button class="btn" data-export="1">Exporter la sauvegarde</button><button class="btn" data-import="1">Importer</button>'
-   +'<button class="btn" data-newgame="1" style="margin-left:auto;border-color:var(--zhu)">'+(newGameArmed?'Confirmer : tout effacer':'Nouvelle partie')+'</button></div>'
-   +'<div class="meta">La sauvegarde vit dans ce navigateur. Pour la passer d\'un appareil à l\'autre : exporter ici, coller là-bas.</div>'
-   +(saveIO==='export'?'<textarea id="saveTxt" readonly style="width:100%;height:90px;margin-top:6px;font-family:var(--px);font-size:10px;background:var(--sumi);color:var(--bone);border:1px solid var(--line2)">'+exportSave()+'</textarea>'
-     +'<div class="row"><button class="btn" data-copysave="1">Copier</button><button class="btn" data-closeio="1">Fermer</button></div>':'')
-   +(saveIO==='import'?'<textarea id="saveTxt" placeholder="colle ici une sauvegarde exportée" style="width:100%;height:90px;margin-top:6px;font-family:var(--px);font-size:10px;background:var(--sumi);color:var(--bone);border:1px solid var(--line2)"></textarea>'
-     +'<div class="row"><button class="btn pri" data-doimport="1">Charger cette sauvegarde</button><button class="btn" data-closeio="1">Annuler</button></div>':'')
-   +'</div>';
-  }
+  /* la gestion de la partie a son propre onglet : elle etait introuvable ici */
+  h+='<div class="meta" style="margin:10px 0">Sauvegarde, sons, conseils et triche ont leur place dans l\'onglet <b>設 PARAMÈTRES</b>.</div>';
   h+=foldHead('veille','ra','刀','RÂTELIER',Object.keys(rk).length+' / 5 éléments');
   if(foldOpen('veille','ra')){
   h+='<div class="card"><div class="meta">La Communion des cinq ne vaut que si tu portes de quoi tourner. '

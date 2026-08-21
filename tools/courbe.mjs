@@ -55,7 +55,7 @@ function contexte(seed){
   vm.runInContext(`S.seed=${seed};cr.race='humain';cr.classe='guerrier';cr.el=0;cr.an=0;cr.pts=30;
     STATS.forEach(([k])=>cr.st[k]=5);cr.pos=defaultStart();applyBirth();starterKit();here().seen=true;
     /* un dos sans fond : on mesure ce qui tombe, pas ce qu'on peut porter */
-    S.sx.force.v=200;`,ctx);
+    S.stats.force=200;`,ctx);
   return ctx;
 }
 const ctx=contexte(SEED);

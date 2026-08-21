@@ -36,6 +36,14 @@ function handle(e){
     if(P[openPlot]&&P[openPlot].slots)P[openPlot].slots[openSlot]=null;openSlot=null;paint();return;}
   if(b=t.closest('[data-fold]')){const q=b.dataset.fold.split(':');
     S.fold=S.fold||{};S.fold[q[0]]=S.fold[q[0]]===q[1]?null:q[1];paint();return;}
+  if(b=t.closest('[data-triche]')){appliquerTriche(b.dataset.triche);return;}
+  if(b=t.closest('[data-effacer]')){
+    /* double detente : un premier appui arme, un second efface. On desarme
+       tout seul au bout de six secondes — le temps de se raviser. */
+    if(!effaceArme){effaceArme=true;paint();
+      setTimeout(()=>{effaceArme=false;if(tab==='param')paint();},6000);return;}
+    effaceArme=false;newGame();return;}
+  if(b=t.closest('[data-annuler]')){effaceArme=false;paint();return;}
   if(b=t.closest('[data-allier]')){allier(b.dataset.allier);paint();return;}
   if(b=t.closest('[data-carry]')){toggleCarry(b.dataset.carry);paint();return;}
   if(b=t.closest('[data-auto]')){buyAuto(b.dataset.auto);paint();return;}

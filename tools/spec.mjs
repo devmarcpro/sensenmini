@@ -605,7 +605,7 @@ const CHRON=c=>G(c,'CHRON_MAX');
 
 test('panneaux — chaque onglet se rend, replié ou déplié',()=>{
   const c=nouveau();
-  const onglets=['monde','cell','recolte','atelier','equip','magie','table','ville','pnj','comps','batir','royaume','guilde','sac','autos','skills'];
+  const onglets=['monde','cell','recolte','atelier','equip','magie','table','ville','pnj','comps','batir','royaume','guilde','sac','autos','skills','param'];
   /* sur une partie neuve et sur une partie avancée */
   for(const avance of [false,true]){
     if(avance)R(c,`S.or=99999;claimCell();
@@ -620,11 +620,11 @@ test('panneaux — chaque onglet se rend, replié ou déplié',()=>{
     const ko=G(c,`(()=>{const ko=[];
       const P={monde:pMonde,cell:pCell,recolte:pRecolte,atelier:pAtelier,equip:pEquip,magie:pMagie,
         table:pTable,ville:pVille,pnj:pPnj,comps:pComps,batir:pBatir,royaume:pRoyaume,
-        guilde:pGuilde,sac:pSac,autos:pAuto,skills:pSkills};
+        guilde:pGuilde,sac:pSac,autos:pAuto,skills:pSkills,param:pParam};
       for(const k in P){try{const s=P[k]();if(typeof s!=='string'||!s.length)ko.push(k+': vide');}
         catch(e){ko.push(k+': '+e.message);}}
       return ko;})()`);
-    eq(ko.length,0,'les seize onglets se rendent'+(avance?' sur une partie avancée':' sur une partie neuve'),ko.join(' | '));
+    eq(ko.length,0,'les dix-sept onglets se rendent'+(avance?' sur une partie avancée':' sur une partie neuve'),ko.join(' | '));
   }
   /* les sections repliables : une seule ouverte, et le choix se retient */
   R(c,'S.fold={};__a=pAtelier();');
@@ -681,6 +681,45 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   /* un poison hors combat ne tue pas */
   R(c,'S.occ="repos";S.hp=3;S.st=[];addStatus(S,"poison",20,50);for(let i=0;i<40;i++)tickStatus(S,.5,true);');
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
+});
+
+test('paramètres — chaque triche fait ce qu\'elle dit',()=>{
+  const c=nouveau();
+  ok(G(c,'pParam()').length>500,'l\'onglet se rend');
+  eq(G(c,'S.triche||0'),0,'on commence sans avoir triché');
+  /* aucune ne doit lever, et chacune doit changer quelque chose */
+  /* le personnage part a plat : sinon « soigner » et « rassasier » ne
+     changeraient rien, faute de quoi que ce soit a remplir */
+  R(c,'S.hp=3;S.end=5;S.mana=0;S.faim=8;SK.forEach(k=>{S.sk[k].pot=40;});'
+    +'STATS.forEach(([k])=>{S.sx[k].pot=40;});');
+  const ko=G(c,`(()=>{
+    const ko=[];
+    const photo=()=>JSON.stringify({or:S.or,hp:Math.round(S.hp),end:Math.round(S.end),
+      mana:Math.round(S.mana),faim:Math.round(S.faim),
+      sk:SK.reduce((a,x)=>a+S.sk[x].lv,0),skp:SK.reduce((a,x)=>a+S.sk[x].pot,0),
+      st:STATS.reduce((a,x)=>a+(S.stats[x[0]]||0),0),stp:STATS.reduce((a,x)=>a+S.sx[x[0]].pot,0),
+      rec:Object.keys(S.recipes||{}).length,mod:S.modules.length,carry:(S.carry||[]).length,
+      mat:Object.keys(S.mat).length,eq:Object.keys(S.eq).length,items:S.items.length,
+      vus:Object.values(S.world).filter(z=>z.seen).length,sem:S.week,
+      auto:Object.keys(S.auto||{}).length});
+    Object.keys(TRICHES).forEach(k=>{
+      /* on remet le corps a plat avant chacune : sinon « soigner » ne trouve
+         plus rien a soigner apres que « tout remplir » soit passe */
+      S.hp=3;S.end=5;S.mana=0;S.faim=8;
+      const avant=photo();
+      try{appliquerTriche(k);}catch(e){ko.push(k+' lève : '+e.message);return;}
+      const apres=photo();
+      if(avant===apres)ko.push(k+' ne change rien');
+    });
+    return ko;})()`);
+  eq(ko.length,0,'les '+G(c,'Object.keys(TRICHES).length')+' tricheries agissent sans casser'+(ko.length?' — '+ko.join(' | '):''),ko.join(' | '));
+  gte(G(c,'S.triche'),G(c,'Object.keys(TRICHES).length'),'et chacune se compte');
+  /* le jeu tourne encore après tout ça */
+  const boum=G(c,'(()=>{try{for(let i=0;i<300;i++)step(.1);paint();return null;}catch(e){return String(e);}})()');
+  eq(boum,null,'la partie tourne encore après toutes les tricheries — '+(boum||'aucune erreur'));
+  /* une clé inconnue ne fait rien de fâcheux */
+  R(c,'globalThis.__t0=S.triche;appliquerTriche("nexistepas");');
+  eq(G(c,'S.triche'),G(c,'__t0'),'une triche inconnue ne compte pas');
 });
 
 test('matières — aucune n\'est inaccessible',()=>{
@@ -773,7 +812,7 @@ test('bestiaire — le jeu retient ce qu\'on a croisé',()=>{
   eq(G(c,'S.bes.loup.t'),0,'sans la compter comme abattue');
   R(c,'E.hp=0;kill(E);');
   eq(G(c,'S.bes.loup.t'),1,'l\'abattre se compte');
-  R(c,'S.comps=[];S.sk.dressage.lv=80;S.sx.cha.v=80;'
+  R(c,'S.comps=[];S.sk.dressage.lv=80;S.stats.cha=80;'
     +'for(let i=0;i<40&&!S.comps.length;i++){E=mkEnemy("loup",1,false,false);EE=[E];E.hp=1;tameBeast();}');
   gte(G(c,'S.bes.loup.a'),1,'l\'apprivoiser aussi');
   /* le panneau montre la silhouette de ce qu'on connaît */
@@ -926,7 +965,7 @@ test('butin — la richesse suit le danger',()=>{
      (loot ∝ corruption locale), jamais l'inverse ». Elle était écrite mais
      pas faite : la corruption pilotait la rareté et la fréquence, pas la
      qualité de la pièce. */
-  R(c,'S.sx.force.v=200;globalThis.__q=(corr,depth)=>{'
+  R(c,'S.stats.force=200;globalThis.__q=(corr,depth)=>{'
     +'here().corr=corr;here().depth=depth;const l=[];'
     +'for(let i=0;i<300;i++){S.items=[];dropLoot(here(),false);if(S.items[0])l.push(S.items[0].q);}'
     +'S.items=[];return l.reduce((a,b)=>a+b,0)/Math.max(1,l.length);};');
@@ -966,7 +1005,7 @@ test('libellés — une forme ne répète pas sa matière',()=>{
 test('apprivoisement — ce qui se dompte, ce qui se dérobe, et les ordres',()=>{
   const c=nouveau();
   /* une créature qui ne s'apprivoise pas reste sauvage, quoi qu'on tente */
-  R(c,'S.occ="combat";S.comps=[];S.sk.dressage.lv=60;S.sx.cha.v=60;'
+  R(c,'S.occ="combat";S.comps=[];S.sk.dressage.lv=60;S.stats.cha=60;'
     +'globalThis.__nt=CK.find(k=>!CREATURE[k].tame);'
     +'E=mkEnemy(__nt,1,false,false);EE=[E];E.hp=1;__toast.length=0;tameBeast();');
   eq(G(c,'S.comps.length'),0,'une créature non apprivoisable se refuse — '+G(c,'__nt'));
@@ -992,8 +1031,8 @@ test('apprivoisement — ce qui se dompte, ce qui se dérobe, et les ordres',()=
     +'S.comps[0].mood=20;globalThis.__b=compDmg(S.comps[0],E);');
   ok(G(c,'__b')<G(c,'__h'),'une bête au moral bas frappe moins fort');
   /* l'escorte a un plafond, et il vient du Charisme et du Leadership (E.17) */
-  R(c,'S.sx.cha.v=5;S.sk.leadership.lv=0;globalThis.__m0=escortMax();'
-    +'S.sx.cha.v=40;S.sk.leadership.lv=40;globalThis.__m1=escortMax();');
+  R(c,'S.stats.cha=5;S.sk.leadership.lv=0;globalThis.__m0=escortMax();'
+    +'S.stats.cha=40;S.sk.leadership.lv=40;globalThis.__m1=escortMax();');
   gt(G(c,'__m1'),G(c,'__m0'),'charisme et commandement ouvrent des places');
   /* et l'on ne collectionne pas les bêtes sans fin */
   R(c,'S.comps=[];for(let i=0;i<12;i++)S.comps.push({id:"z"+i,type:"bete",cre:"loup",nom:"z",el:0,lv:1,hp:1,max:1,order:"suivre",esc:false,dead:0,mode:"permanent"});'
@@ -1041,7 +1080,7 @@ test('lecture — un livre s\'use, réussit ou rate, et enseigne son domaine',()
   /* la lecture progresse toujours, même sur un échec */
   gt(G(c,'S.sk.lecture.xp+S.sk.lecture.lv'),0,'déchiffrer fait progresser en lecture');
   /* avec assez de tentatives, on finit par apprendre — et dans le bon domaine */
-  R(c,'S.sk.lecture.lv=40;S.sx.per.v=40;S.modules=[];'
+  R(c,'S.sk.lecture.lv=40;S.stats.per=40;S.modules=[];'
     +'S.books=[];for(let i=0;i<60;i++)S.books.push({id:"b"+i,dom:__dom,diff:3});'
     +'while(S.books.length)readBook(0);');
   gt(G(c,'S.modules.length'),0,'un lecteur exercé finit par apprendre');

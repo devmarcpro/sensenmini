@@ -112,6 +112,35 @@ const BOTS={
       if(S.occ==='repos'&&!S.resume&&S.hp>=maxHp()*.9)S.occ='combat';
     })()`);
   },
+  /* ===== LE BOT QUI NE FAIT RIEN =====
+     Il allume les consignes et ne decide plus de rien. Tout ce qui suit vient
+     du moteur de regles du jeu (19b-consignes.js), pas du simulateur. C'est
+     la seule facon honnete de savoir si la programmation des actions tient
+     debout : si le personnage survit et progresse ici, elle fonctionne ;
+     s'il meurt de faim ou tourne en rond, elle ne fonctionne pas.
+     On lui donne un plan un peu plus complet que celui de depart, pour
+     eprouver l'ordre des consignes et pas seulement leur existence. */
+  consignes(ctx){
+    G(ctx,`(()=>{
+      if(!S.plan||!S.plan.on){
+        S.plan={on:true,r:[
+          {c:'faimbasse',v:50,a:'manger',on:true},
+          {c:'pvbas',v:35,a:'rompre',on:true},
+          {c:'pvbas',v:55,a:'reposer',on:true},
+          {c:'nuit',v:0,a:'dormir',on:true},
+          {c:'sacplein',v:85,a:'fondre',on:true},
+          {c:'caseepuisee',v:0,a:'ailleurs',on:true},
+          {c:'gibierrare',v:0,a:'ailleurs',on:true},
+          {c:'enville',v:0,a:'ailleurs',on:true},
+          {c:'endbasse',v:20,a:'reposer',on:true},
+          {c:'toujours',v:0,a:'combattre',on:true},
+          {c:'toujours',v:0,a:'explorer',on:true},
+        ]};
+      }
+      /* la seule chose qu'il fait a la main : porter ce qu'il ramasse */
+      __equipBest();
+    })()`);
+  },
   /* récolte ce que l'outil permet de plus dur ici, en boucle */
   mineur(ctx){
     G(ctx,`(()=>{
@@ -405,8 +434,9 @@ function run(botName,classe,race,hours,seed){
   return {bot:botName,classe,race,seed,hours,ms:Date.now()-t0,snaps,errors,events:JSON.parse(ev),trace:JSON.parse(trace),extra:JSON.parse(extra),poids};
 }
 
-const plan=BOT==='tous'?[['guerrier','guerrier','humain'],['mineur','artisan','nain'],['mixte','chasseur','elfe'],['batisseur','artisan','humain']]
-  :[[BOT,BOT==='mineur'||BOT==='batisseur'?'artisan':BOT==='mixte'?'chasseur':'guerrier','humain']];
+const plan=BOT==='tous'?[['guerrier','guerrier','humain'],['mineur','artisan','nain'],['mixte','chasseur','elfe'],
+    ['batisseur','artisan','humain'],['consignes','vagabond','humain']]
+  :[[BOT,BOT==='mineur'||BOT==='batisseur'?'artisan':BOT==='mixte'?'chasseur':BOT==='consignes'?'vagabond':'guerrier','humain']];
 const results=plan.map(([b,c,r])=>run(b,c,r,HOURS,SEED));
 if(JSON_OUT){console.log(JSON.stringify(results,null,1));process.exit(0);}
 for(const r of results){

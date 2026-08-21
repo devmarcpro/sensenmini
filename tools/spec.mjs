@@ -854,6 +854,19 @@ test('consignes — l\'ordre décide, et rien ne s\'interrompt en route',()=>{
     'le plan de base ne cite que des conditions et des actions connues');
   ok(G(c,'planDefaut().slice(-1)[0].c')==='toujours',
     'et se termine par une consigne sans condition — sinon le plan peut ne rien choisir');
+  /* La DERNIERE action doit rester possible a peu pres partout. « Se battre »
+     n'en est pas une : elle est impossible dans un village, et un personnage
+     entre en ville se figeait alors sans que rien ne le dise. */
+  R(c,'globalThis.__v=null;for(let x=-9;x<9&&!__v;x++)for(let y=-9;y<9&&!__v;y++){'
+    +'const g=genCell(S.pos[0]+x,S.pos[1]+y);if(g.poi==="village")__v=[g.x,g.y];}'
+    +'if(__v){S.pos=[__v[0],__v[1]];here().seen=true;}S.occ="repos";S.hp=maxHp();S.faim=90;');
+  eq(G(c,'!!here().town'),true,'on se place dans un village');
+  R(c,'S.plan={on:true,r:planDefaut()};');
+  ok(!!G(c,'planChoix()'),'le plan de base trouve toujours quoi faire, meme en ville',
+    'aucune consigne applicable');
+  /* et l'on ne se bat pas dans les rues */
+  eq(G(c,'ACTES.combattre.peut()'),false,'on ne se bat pas dans un village');
+  eq(G(c,'CONDS.enville.test()'),true,"et le plan sait qu'on y est");
   /* le seuil se règle et reste dans ses bornes */
   R(c,'planRegler(0,"c","pvbas");planRegler(0,"v",9999);');
   ok(G(c,'S.plan.r[0].v')<=G(c,'CONDS.pvbas.max'),'un seuil ne dépasse pas son maximum');

@@ -55,6 +55,10 @@ const CONDS={
     test:()=>!!(E&&(E.rare||E.boss))},
   ordonne:{n:'la bourse dépasse',u:' or',def:1000,min:50,max:100000,
     d:'de quoi aller dépenser',test:v=>S.or>=v},
+  enville:{n:'on est dans un village',d:'on ne se bat pas dans les rues',
+    test:()=>!!here().town},
+  aucampement:{n:'on est chez soi',d:'sur une cellule revendiquée',
+    test:()=>!!here().claim},
 };
 const CONDK=Object.keys(CONDS);
 
@@ -140,11 +144,20 @@ function consigneVoisine(){
     const sc=gib*2+Math.min(6,mat);
     if(sc>bs){bs=sc;best=n;}
   }
-  const iciSc=(4-vide(ici))*2+Math.min(6,cellMats(ici).filter(m=>canHarvest(m)&&stockOf(ici,m)>0).length);
+  /* Un village n'est pas un terrain de chasse : on n'y combat pas, et sa
+     case parait pourtant excellente puisque personne ne l'a videe. Un
+     personnage qui y entrait n'en ressortait jamais. */
+  const iciSc=ici.town?-1:
+    (4-vide(ici))*2+Math.min(6,cellMats(ici).filter(m=>canHarvest(m)&&stockOf(ici,m)>0).length);
   return best&&bs>iciSc?best:null;
 }
 
 /* ---------- le plan ---------- */
+/* La DERNIÈRE consigne doit être un vrai dernier recours, c'est-à-dire une
+   action qui reste possible à peu près partout. « Se battre » n'en est pas
+   une : elle est impossible dans un village, et un personnage entré en ville
+   se figeait alors sans que rien ne le dise — plus aucune consigne ne
+   s'appliquait. « Explorer » ferme donc le plan. */
 function planDefaut(){
   return [
     {c:'faimbasse',v:45,a:'manger',on:true},
@@ -152,7 +165,11 @@ function planDefaut(){
     {c:'nuit',v:0,a:'dormir',on:true},
     {c:'sacplein',v:90,a:'fondre',on:true},
     {c:'gibierrare',v:0,a:'ailleurs',on:true},
+    /* on ne se bat pas dans les rues : sans cette ligne, entrer dans un
+       village suffisait a figer le plan. Eteins-la si tu veux y flaner. */
+    {c:'enville',v:0,a:'ailleurs',on:true},
     {c:'toujours',v:0,a:'combattre',on:true},
+    {c:'toujours',v:0,a:'explorer',on:true},
   ];
 }
 function plan(){
@@ -193,7 +210,15 @@ function planTick(dt){
   /* ce qui ne s'interrompt pas */
   if(S.occ==='atelier'||S.occ==='voyage'||S.occ==='dormir'||S.resume)return;
   const r=planChoix();
-  if(!r)return;
+  if(!r){
+    /* Le silence est le pire des retours : le personnage s'arrête et rien
+       n'explique pourquoi. On le dit une fois, et l'on se tait ensuite
+       jusqu'à ce que quelque chose reparte. */
+    if(planDerniere!=='—'){planDerniere='—';
+      log('<span class="bd">Aucune consigne ne s\'applique — le personnage attend. '
+        +'Ajoute une ligne « toujours » à la fin de ton plan (自 VEILLE).</span>');}
+    return;
+  }
   const sig=r.c+':'+r.v+':'+r.a;
   try{ACTES[r.a].fais();}catch(e){return;}
   /* on n'inonde pas le journal : seuls les changements se disent */

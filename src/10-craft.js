@@ -6,6 +6,14 @@
 const quality=n=>Math.max(.1,(n/(n+25))*2*(0.85+Math.random()*0.30));
 const hasStation=k=>!k||stationsHere().has(k);
 const refKey=(f,m)=>f+':'+m;
+/* Le nom d une forme travaillee. Certaines portent deja leur matiere —
+   FORM.tanne s appelle « Cuir tanné » — et l on lisait « Cuir tanné de Cuir ».
+   Meme garde que armorName. */
+function formeNom(f,mk){
+  if(f==="brut")return matName(mk);
+  const fn=FORM[f]?FORM[f].n:f,mn=matName(mk);
+  return fn.toLowerCase().includes(mn.toLowerCase())?fn:fn+" de "+mn;
+}
 function addRef(f,m,n){const k=refKey(f,m);S.ref[k]=(S.ref[k]||0)+n;}
 function useRef(f,m,n){const k=refKey(f,m);if((S.ref[k]||0)<n)return false;S.ref[k]-=n;if(!S.ref[k])delete S.ref[k];return true;}
 const recipeKnown=(ct,mk)=>BASEMAT.includes(mk)||!!S.recipes[ct+':'+mk];
@@ -31,7 +39,7 @@ function makeComp(ct,f,mk){
   const cost=C.w>.5?2:1;
   if(f==='brut'){ if((S.mat[mk]||0)<cost*2)return toast('Il faut '+cost*2+' × '+matName(mk));
     S.mat[mk]-=cost*2;if(!S.mat[mk])delete S.mat[mk]; }
-  else if(!useRef(f,mk,cost))return toast('Il faut '+cost+' × '+FORM[f].n+' de '+matName(mk));
+  else if(!useRef(f,mk,cost))return toast('Il faut '+cost+' × '+formeNom(f,mk));
   const skk=STATION[C.st].sk;
   const q=quality(lv(skk))*(1+(S.recipes[ct+':'+mk]||0)*0.03);
   const tier=Math.round(q*4)/4;
@@ -211,7 +219,7 @@ function canBuildStation(k){
 function craftTime(mk,skk){return MAT[mk].d/(4*sf(lv(skk)));}
 function startCraft(job){
   S.craft=job;S.occ='atelier';craftT=0;sceneMode='';
-  log('À l\'ouvrage : '+(job.t==='form'?FORM[job.f].n:COMP[job.ct].n)+' de '+matName(job.mk));
+  log('À l\'ouvrage : '+(job.t==='form'?formeNom(job.f,job.mk):COMP[job.ct].n+' de '+matName(job.mk)));
 }
 function craftCan(){
   const j=S.craft;if(!j)return false;

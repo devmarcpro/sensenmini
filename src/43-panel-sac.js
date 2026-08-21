@@ -18,7 +18,7 @@ function pSac(){
     h+=grp('部','COMPOSANTS');
     h+='<div class="matlist">'+cks.map(k=>{const c=S.comp[k];
       return '<div class="mat"><b>'+COMP[c.ct].g+'</b>'+COMP[c.ct].n+' × '+c.n
-       +'<small>'+(c.f==='brut'?'brut':FORM[c.f].n)+' de '+matName(c.mk)+' · q'+c.q.toFixed(2)+' '+QNAME(c.q)+'</small></div>';}).join('')+'</div>';
+       +'<small>'+formeNom(c.f,c.mk)+' · q'+c.q.toFixed(2)+' '+QNAME(c.q)+'</small></div>';}).join('')+'</div>';
   }
   /* par catégorie, du plus dur au plus tendre ; la pastille porte la couleur réelle du matériau */
   const cats=[...new Set(ks.map(k=>MAT[k].c))];

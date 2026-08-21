@@ -53,12 +53,14 @@ function pAtelier(){
     const enCours=S.craft&&S.craft.t==='comp'&&S.craft.ct===ct&&S.occ==='atelier';
     cp+='<div class="card" data-comp="'+ct+'"><h3><span>'+C.g+' '+C.n+'</span><i>'+STATION[C.st].n+' · poids '+C.w
       +(C.cons?' · '+CONS[C.cons].n:'')+'</i></h3>'
-      +'<select data-pick="1">'+su.map(([f,m,n])=>'<option value="'+f+'|'+m+'"'
+      /* la liste et le bouton sur une seule ligne : douze composants a trois
+         blocs chacun faisaient trois mille pixels de defilement sur telephone.
+         Le compte des matieres disparait — la liste le dit deja. */
+      +'<div class="row ligne"><select data-pick="1">'+su.map(([f,m,n])=>'<option value="'+f+'|'+m+'"'
         +(enCours&&S.craft.f===f&&S.craft.mk===m?' selected':'')+'>'
-        +(f==='brut'?'':FORM[f].n+' de ')+matName(m)+' — '+n+' · dureté '+MAT[m].d+'</option>').join('')+'</select>'
-      +'<div class="row"><button class="btn'+(enCours?' pri':'')+'" data-mkc="'+ct+'">'
-      +(enCours?'à l\'ouvrage':'Façonner')+'</button>'
-      +'<span class="meta">'+su.length+' matière'+(su.length>1?'s':'')+'</span></div></div>';});
+        +formeNom(f,m)+' — '+n+' · dureté '+MAT[m].d+'</option>').join('')+'</select>'
+      +'<button class="btn'+(enCours?' pri':'')+'" data-mkc="'+ct+'">'
+      +(enCours?'à l\'ouvrage':'Façonner')+'</button></div></div>';});
   h+=cp||'<p class="hint">Aucun composant façonnable pour l\'instant.</p>';
   if(inconnues)h+='<div class="meta">'+inconnues+' combinaison'+(inconnues>1?'s':'')+' de plus à ta portée, mais la recette manque — elles s\'apprennent au fil de la récolte, dans les caches de donjon et chez les artisans.</div>';
   /* assemblage */

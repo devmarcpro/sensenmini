@@ -25,5 +25,5 @@ function pRecolte(){
 }
 
 function compLabel(k){const c=S.comp[k];
-  return COMP[c.ct].n+' · '+(c.f==='brut'?'brut':FORM[c.f].n)+' de '+matName(c.mk)+' · q'+c.q.toFixed(2)+' ×'+c.n;}
+  return COMP[c.ct].n+' · '+formeNom(c.f,c.mk)+' · q'+c.q.toFixed(2)+' ×'+c.n;}
 function compsOfType(ct){return Object.keys(S.comp).filter(k=>S.comp[k].ct===ct).sort((a,b)=>S.comp[b].q-S.comp[a].q);}

@@ -37,7 +37,7 @@ function buyMul(t){
 }
 const offMat=(t,mk,n,extra)=>({t:'mat',mk,n,label:matName(mk)+' × '+n,sub:CAT[MAT[mk].c].n+' · dureté '+MAT[mk].d,
   p:Math.max(1,Math.round(MAT[mk].v*n*1.5*townPrice(t,mk)*buyMul(t)*(extra||1)))});
-const offRef=(t,f,mk,n)=>({t:'ref',f,mk,n,label:FORM[f].n+' de '+matName(mk)+' × '+n,sub:'forme travaillée',
+const offRef=(t,f,mk,n)=>({t:'ref',f,mk,n,label:formeNom(f,mk)+' × '+n,sub:'forme travaillée',
   p:Math.max(2,Math.round(MAT[mk].v*FORM[f].cost*n*.8*buyMul(t)))});
 function offComp(t,ct,f,mk,lvl){
   const q=+quality(lvl).toFixed(2),n=ri(1,2);

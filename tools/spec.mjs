@@ -607,6 +607,24 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('libellés — une forme ne répète pas sa matière',()=>{
+  const c=nouveau();
+  /* FORM.tanne s'appelle « Cuir tanné » : on lisait « Cuir tanné de Cuir ». */
+  eq(G(c,'formeNom("tanne","cuir")'),'Cuir tanné','le cuir tanné ne se dit pas deux fois');
+  eq(G(c,'formeNom("lingot","fer")'),'Lingot de Fer','un lingot de fer se dit normalement');
+  eq(G(c,'formeNom("brut","os")'),G(c,'matName("os")'),'une matière brute garde son nom nu');
+  /* aucune combinaison du jeu ne doit produire une répétition */
+  const bavards=G(c,'(()=>{const out=[];FK.forEach(f=>Object.keys(MAT).forEach(m=>{'
+    +'const n=formeNom(f,m),mn=matName(m);'
+    +'const parts=n.split(" de ");'
+    +'if(parts.length>1&&parts[0].toLowerCase().includes(mn.toLowerCase()))out.push(n);}));'
+    +'return out.slice(0,5);})()');
+  eq(bavards.length,0,'aucune forme ne répète sa matière',bavards.join(' · '));
+  /* et une clé inconnue ne casse rien */
+  ok(G(c,'formeNom("nexistepas","fer")').length>0,'une forme inconnue reste lisible');
+  ok(G(c,'formeNom("lingot","nexistepas")').length>0,'une matière inconnue aussi');
+});
+
 test('apprivoisement — ce qui se dompte, ce qui se dérobe, et les ordres',()=>{
   const c=nouveau();
   /* une créature qui ne s'apprivoise pas reste sauvage, quoi qu'on tente */

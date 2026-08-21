@@ -38,7 +38,7 @@ function pEquip(){
    +(cap?'':' Un <b>coffre</b> (建 BÂTIR → bâtiment → coffre) garde le reste au chaud.')+'</div>';
   h+=S.items.map((it,i)=>'<div class="card"><h3><span>'+it.nom+'</span><i>'+(it.rar?RARITY[it.rar].n+' · ':'')+(it.kind==='armure'?'armure':it.kind)+'</i></h3>'
     +'<div class="meta">'+(it.kind==='statue'?'trophée de chasse — valeur '+it.val+' or':itemLine(it))+'</div>'
-    +(it.parts.length?'<div class="meta">'+it.parts.map(p=>COMP[p.ct].n+' '+(p.f==='brut'?'':FORM[p.f].n+' ')+matName(p.mk)).join(' + ')+'</div>':'')
+    +(it.parts.length?'<div class="meta">'+it.parts.map(p=>COMP[p.ct].n+' — '+formeNom(p.f,p.mk)).join(' + ')+'</div>':'')
     +(it.aff&&it.aff.length?'<div class="meta" style="color:var(--jade)">'+it.aff.map(a=>AFF.find(x=>x.id===a.id).t(a.p)).join(' · ')+'</div>':'')
     +vecBar(itemVec(it))
     +(it.slots?gemBlock(it,'bag:'+i,true):'')

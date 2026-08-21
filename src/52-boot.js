@@ -15,7 +15,7 @@
 function chargementComplet(){
   try{
     return !!(EL&&MAT&&CAT&&BIOME&&FORM&&COMP&&FUNC&&SLOTS&&MODULE&&DOMAIN&&SKILLS&&SK&&STATS&&RACE&&CLASSE
-      &&genCell&&NEW&&gainXp&&gainStat&&mkItem&&partFor&&cutGem&&GEMSPEC&&mkNpc&&linkFamilies&&JOBS
+      &&genCell&&NEW&&gainXp&&gainStat&&mkItem&&partFor&&formeNom&&cutGem&&GEMSPEC&&mkNpc&&linkFamilies&&JOBS
       &&GOV&&GUILDS&&QTPL&&PLANTE&&cook&&escortList&&ORDERS&&PLOT&&MEUBLE&&plots&&genDungeon&&DJTHEME
       &&METEO&&SEASON&&offline&&AUTOS&&STATUS&&addStatus&&KSIZE&&kingdomsNear&&hameauAt&&starterKit&&SHOPDEF
       &&CREATURE&&PATTERN&&VOX&&VOXMAT&&voxelHtml&&matHtml&&compHtml&&heroHtml&&vide&&STANCE&&attack&&compileSpell&&harvestTick&&tickClock&&step&&paint&&grp&&foldHead
@@ -32,7 +32,7 @@ function chargementComplet(){
    rafraîchissait fichier par fichier, sans aucune atomicité.
    La feuille déclare donc sa révision, et l'on refuse de démarrer sur un
    désaccord. Les deux valeurs se bougent ensemble. */
-const CSS_REV='4';
+const CSS_REV='5';
 function styleAJour(){
   try{
     const v=getComputedStyle(document.documentElement).getPropertyValue('--css-rev').trim();

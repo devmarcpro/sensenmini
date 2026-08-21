@@ -95,7 +95,11 @@ const MUT=[
   /* la symetrie */
   ['symetrie : le souffle des creatures','symetrie',[['src/28-loop.js',"    if(e.w<0&&!crePeutFrapper(e))continue;",'']]],
   ['symetrie : la depense','symetrie',[['src/28-loop.js','{creDepense(e);resolveHit(S.guard?1:0,e);}','resolveHit(S.guard?1:0,e);']]],
-  ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,pickZone()):tgt.arm)",'tgt.arm']]],
+  ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,zk):tgt.arm)",'tgt.arm']]],
+  /* l anatomie */
+  ['anatomie : la zone multiplie','anatomie',[['src/24-combat.js','    d*=Z.mult;','']]],
+  ['anatomie : la visee penche le tirage','anatomie',[['src/24-combat.js',"  const w=k=>ZONE[k].w*(k==='tete'?1+v*6:1);","  const w=k=>ZONE[k].w;"]]],
+  ['anatomie : la visee sort de l arme','anatomie',[['src/24-combat.js','const viseeDe=(F,PA)=>Math.max(0,Math.min(1,(21-(F.crit||20)+(PA?PA.crit||0:0))/20));','const viseeDe=()=>.2;']]],
   ['symetrie : l equipement au niveau','symetrie',[['src/24c-symetrie.js','const q=Math.max(.5,Math.min(1.8,.5+lv/25));','const q=1;']]],
   ['lecture : l echec est gradue','jet decide',[['src/25-modules.js','const grave=marge<=-10||brut===1;','const grave=false;']]],
   ['lecture : la reussite large','jet decide',[['src/25-modules.js','+(large?2:0);','+0;']]],

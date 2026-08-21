@@ -1098,6 +1098,44 @@ test('collection — tout ce que le monde contient, et ce qui manque',()=>{
   ok(G(c,'pCollection().indexOf("100")')>=0,'et il annonce alors cent pour cent');
 });
 
+test('anatomie — le coup vaut ce qu il touche, et la visee remplace le de',()=>{
+  /* E.3.1 : « Le critique change de nature. Ce n'est plus un 20 naturel, c'est
+     le zone_mult du gabarit atteint... Un critique cesse d'etre une loterie
+     pour devenir une INTENTION DE VISEE. » La creature nous frappait deja par
+     zone ; nous tirions une zone pour lire l'armure de la cible et jetions son
+     multiplicateur, en rendant le critique a un de. Le meme coup changeait de
+     nature selon le sens ou il partait. */
+  const c=nouveau();
+  R(c,'S.occ="combat";E=null;EE=[];spawn();');
+
+  /* --- la table des zones dit ce que le GDD dit --- */
+  eq(G(c,'ZONE.tete.mult>=2'),true,'la tête est la seule zone qui vaut un critique');
+  eq(G(c,'ZK.filter(k=>ZONE[k].mult>=2).length'),1,'et elle est seule à le valoir');
+
+  /* --- la visee sort de l'arme, et elle penche le tirage --- */
+  ok(G(c,'viseeDe(FUNC.dague,{crit:0})')>G(c,'viseeDe(FUNC.epee,{crit:0})'),
+    'une dague vise mieux qu une épée — c est ce que son ancien seuil de critique voulait dire');
+  ok(G(c,'viseeDe(FUNC.epee,{crit:6})')>G(c,'viseeDe(FUNC.epee,{crit:0})'),
+    'et le passif de visée s ajoute à l arme');
+  R(c,'globalThis.__tetes=(v,n)=>{let t=0;for(let i=0;i<n;i++)if(pickZone(v)==="tete")t++;return t/n;};');
+  const nu=G(c,'__tetes(0,4000)'),vise=G(c,'__tetes(.5,4000)');
+  ok(vise>nu*1.6,'viser fait porter bien plus de coups à la tête — '
+    +(nu*100).toFixed(1)+' % puis '+(vise*100).toFixed(1)+' %');
+  ok(nu>0.03&&nu<0.15,'et sans viser, la tête reste rare');
+
+  /* --- et cela se lit DANS LES DEGATS, pas seulement dans le tirage --- */
+  R(c,`S.stats.force=60;S.end=100;
+    globalThis.__zoneMoy=(z,n)=>{pickZone=()=>z;let s=0;
+      for(let i=0;i<n;i++){EE.forEach(e=>{e.hp=1e9;e.max=1e9;e.st=[];e.arm=0;e.eqReel=null;});
+        const h=EE[0].hp;S.end=100;hitN=0;attack(false);s+=h-EE[0].hp;}
+      return s/n;};`);
+  const tete=G(c,'__zoneMoy("tete",500)'),pieds=G(c,'__zoneMoy("pieds",500)');
+  ok(tete>pieds*2.5,'un coup à la tête vaut bien plus qu un coup aux pieds — '
+    +tete.toFixed(1)+' contre '+pieds.toFixed(1));
+  const torse=G(c,'__zoneMoy("torse",500)');
+  ok(torse>pieds&&torse<tete,'et le torse est entre les deux');
+});
+
 test('symetrie — les creatures se battent avec nos regles',()=>{
   /* « Supprimer le plus possible l'asymetrie : les PNJ doivent etre construits
      comme le joueur » (E.3.5). Le joueur depensait de l'endurance a chaque
@@ -1127,7 +1165,12 @@ test('symetrie — les creatures se battent avec nos regles',()=>{
   const frais=G(c,'__pv()');
   R(c,'EE.forEach(e=>{e.end=0;e.endLock=999;e.w=-1;e.tt=0;});S.hp=maxHp()*99;');
   const asec=G(c,'__pv()');
-  ok(asec<frais,'à sec, elle ne fait presque plus de dégâts — '
+  /* UNE INEGALITE STRICTE SANS MARGE EST UN PILE OU FACE des que la mesure
+     porte du bruit. Debranchee, la regle du souffle rendait deux nombres
+     VOISINS — et le test passait une fois sur deux, selon lequel des deux
+     tirages etait tombe le plus haut. Il ne detectait donc rien : « presque
+     plus de degats » veut dire une marge, et il faut l'ecrire. */
+  ok(asec<frais*.4,'à sec, elle ne fait presque plus de dégâts — '
     +frais.toFixed(0)+' puis '+asec.toFixed(0));
 
   /* La depense doit se voir DANS LE COMBAT, pas seulement en appelant
@@ -1924,6 +1967,7 @@ test('ciel — chaque etat de meteo fait quelque chose',()=>{
     p.push(partFor('fixations',['fer']));
     S.items.push(mkItem('arme','arc',p,1.2));equipItem(0);
     S.occ='combat';spawn();
+    pickZone=()=>'torse';
     globalThis.__tir=(n)=>{let s=0;
       for(let i=0;i<n;i++){EE.forEach(e=>{e.hp=1e9;e.max=1e9;e.st=[];});
         const h=EE[0].hp;S.end=100;attack(false);s+=h-EE[0].hp;}
@@ -3199,6 +3243,7 @@ test('affixes — chacun fait ce que sa fiche annonce',()=>{
      reclame, et l'on exige que les degats moyens bougent. Un affixe cite
      dans un `switch` qui ne multiplie rien passerait le test precedent. */
   R(c,`S.eq={};S.items=[];S.postures=[];S.modules=[];S.stats.force=80;
+    pickZone=()=>'torse';
     globalThis.__armeAff=(aff)=>{
       const p=FUNC.epee.comp.map(ct=>partFor(ct,['fer','chene','cuir']));
       p.push(partFor('fixations',['fer']));
@@ -3212,7 +3257,7 @@ test('affixes — chacun fait ce que sa fiche annonce',()=>{
       for(let i=0;i<(n||300);i++){
         EE.forEach(e=>{e.hp=1e9;e.max=1e9;e.st=[];});
         if(avant)avant();
-        S.end=100;hitN=0;const h=EE[0].hp;attack(false);s+=h-EE[0].hp;
+        S.end=100;hitN=globalThis.__hit||0;const h=EE[0].hp;attack(false);s+=h-EE[0].hp;
       }
       return s/(n||300);};
     S.occ='combat';spawn();`);
@@ -3223,17 +3268,17 @@ test('affixes — chacun fait ce que sa fiche annonce',()=>{
     fond:['here().depth=4;','here().depth=0;'],
     entier:['S.hp=maxHp();','S.hp=maxHp();'],
     blesse:['globalThis.__av=()=>EE.forEach(e=>addStatus(e,"saignement",99,1));','globalThis.__av=null;'],
-    premier:['hitN=0;','hitN=0;'],
-    montee:['hitN=0;','hitN=0;'],
+    premier:['globalThis.__hit=0;','globalThis.__hit=0;'],
+    montee:['globalThis.__hit=8;','globalThis.__hit=0;'],
 
     cycle:['S.seg=[0,1,2];','S.seg=[];'],
   };
   const inertes=Object.keys(situations).filter(id=>{
     const [avec,sans]=situations[id];
     R(c,'__armeAff([]);'+avec);
-    const nu=G(c,'__degMoy(250,globalThis.__av)');
+    const nu=G(c,'__degMoy(700,globalThis.__av)');
     R(c,'__armeAff([{id:"'+id+'",p:AFF.find(a=>a.id==="'+id+'").r()}]);'+avec);
-    const arme=G(c,'__degMoy(250,globalThis.__av)');
+    const arme=G(c,'__degMoy(700,globalThis.__av)');
     return !(arme>nu*1.03);
   });
   ok(inertes.length===0,'chacun des affixes de situation change vraiment les dégâts',
@@ -3292,7 +3337,8 @@ test('affixes — chacun fait ce que sa fiche annonce',()=>{
   ok(Number.isFinite(G(c,'E.hp')),'et les dégâts restent un nombre');
   /* Les conditionnels doivent vraiment mordre. On mesure le total infligé sur
      un grand nombre de coups : le hasard des dés se moyenne, l'effet reste. */
-  R(c,'globalThis.__coups=(aff,avant)=>{'
+  R(c,'pickZone=()=>"torse";'
+    +'globalThis.__coups=(aff,avant)=>{'
     +'S.occ="combat";hitN=0;S.seg=[];S.bonus=0;'
     +'E=mkEnemy("loup",1,false,false);EE=[E];foc=0;E.hp=1e12;E.max=1e12;E.arm=0;'
     +'weapon().aff=aff;if(avant)avant();'

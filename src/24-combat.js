@@ -361,7 +361,10 @@ function attack(heavy){
   const puis=isDist(w)?((w.ela||8)/45):(w.durBase/20);
   let base=roll(F.d[0]+extra,F.d[1])*puis*w.q*sf(lv(w.fn));
   base+=gemSum(w,'degats')*sf(lv(w.fn));                 /* gemmes : des dégâts plats, jamais une règle */
-  const crit=d20()>=F.crit-PA.crit;if(crit)base*=1.8;
+  /* le critique ne se tire plus : il se vise. Le multiplicateur arrive plus
+     bas, une fois la zone connue — par cible, parce qu'un balayage ne touche
+     pas deux corps au meme endroit. */
+  const visee=viseeDe(F,PA);
   /* « projectiles devies » (E.28) : le vent ne gene que ce qui vole */
   if(isDist(w))base*=meteoDist();
   const GB=gripBonus(),tir=isDist(w);
@@ -396,7 +399,7 @@ function attack(heavy){
   const swp=tir?(PA.sweep||0):Math.max(port>=2?.4:0,PA.sweep||0);
   const cibles=[[E,1]];
   if(swp)engaged().forEach(x=>{if(x!==E)cibles.push([x,swp]);});
-  let premier=true,mortes=[];
+  let premier=true,mortes=[],critVu=false;
   cibles.forEach(([tgt,part])=>{
     if(!tgt||tgt.hp<=0)return;
     let d=base*part;
@@ -407,11 +410,16 @@ function attack(heavy){
     /* « l'armure d'un PNJ REDUIT les degats qu'il encaisse » (E.3.5) : on lit
        ce qu'il PORTE sur la ZONE touchee, et non un chiffre de fiche : un bandit qui ne couvre
        que trois zones sur cinq se prend parfois un coup la ou il est nu. */
-    const armEff=(typeof creArmure==='function'?creArmure(tgt,pickZone()):tgt.arm)*(1-pierce);
+    /* UNE seule zone par cible : celle qu'on lit pour l'armure est celle qui
+       encaisse. Deux tirages separes, c'etait deux coups differents. */
+    const zk=pickZone(visee),Z=ZONE[zk];
+    d*=Z.mult;
+    const crit=Z.mult>=2;                       /* E.3.1 : le seuil d'affichage */
+    const armEff=(typeof creArmure==='function'?creArmure(tgt,zk):tgt.arm)*(1-pierce);
     const dmg=Math.max(1,d*(1-armEff/(armEff+10)));
     const applied=Math.min(dmg,tgt.hp);      /* XP plafonnée aux PV restants (5.3) */
     tgt.hp-=dmg;dpsA+=dmg;
-    let tag=premier?(resolver?'連':crit?'!':em>1.2?'剋':''):'薙';
+    let tag=premier?(resolver?'連':crit?'!'+Z.g:em>1.2?'剋':''):(crit?'薙'+Z.g:'薙');
     float((tag?tag+' ':'')+Math.round(dmg),EL[e].c,premier&&(resolver||crit));
     gainXp('el_'+EL[e].k,applied);gainXp(w.fn,applied);gainXp('t_'+dtype,applied);
     /* la Force vient du bras qui frappe, la Dextérité de la main qui vise (6.4) */
@@ -441,11 +449,12 @@ function attack(heavy){
     if(premier&&PA.multi&&Math.random()<PA.multi&&tgt.hp>0){
       tgt.hp-=dmg*.6;dpsA+=dmg*.6;float('連撃',EL[e].c);}
     if(resolver||heavy)tgt.stg=Math.max(tgt.stg||0,.6);
+    if(crit)critVu=true;
     if(tgt.hp<=0)mortes.push(tgt);
     premier=false;
   });
   knock();
-  if(typeof sfx==='function'){sfx(resolver?'resolve':crit?'crit':'hit');if(resolver||heavy)shake(resolver);}
+  if(typeof sfx==='function'){sfx(resolver?'resolve':critVu?'crit':'hit');if(resolver||heavy)shake(resolver);}
   if(resolver){
     log('<span class="hi">Chaîne résolue ×'+(1+S.bonus).toFixed(2)+(cibles.length>1?' — '+cibles.length+' cibles':'')+'</span>');
     S.seg=[];S.bonus=0;questTick('chain',1);}
@@ -461,7 +470,9 @@ function attack(heavy){
     let od=roll(FUNC[GB.off.fn].d[0],FUNC[GB.off.fn].d[1])*(GB.off.durBase/20)*GB.off.q*sf(lv(GB.off.fn))*.45;
     od*=vmult(ov,E.vec,multOff);
     if(ores)od*=1+S.bonus;
-    const oarm=E.arm*(1-PA.pierce);
+    const ozk=pickZone(viseeDe(FUNC[GB.off.fn],PA));
+    od*=ZONE[ozk].mult;
+    const oarm=(typeof creArmure==='function'?creArmure(E,ozk):E.arm)*(1-PA.pierce);
     od=Math.max(1,od*(1-oarm/(oarm+10)));
     E.hp-=od;dpsA+=od;
     float((ores?'連 ':'副 ')+Math.round(od),EL[oe].c,ores);
@@ -473,12 +484,31 @@ function attack(heavy){
   if(E&&E.hp>0)fuite(E);
 }
 /* --- coup de la créature : la zone sort de la géométrie (6.2) --- */
-function pickZone(){
-  const tot=ZK.reduce((a,k)=>a+ZONE[k].w,0);
+/* E.3.1 : « Le critique change de nature. Ce n'est plus un 20 naturel, c'est
+   le zone_mult du gabarit atteint. Un critique cesse d'etre une loterie pour
+   devenir une INTENTION DE VISEE. »
+
+   La creature nous frappait deja par zone, multiplicateur compris — la tete
+   vaut 2,5. Nous, non : on tirait une zone pour lire l'armure de la cible, on
+   JETAIT le multiplicateur, et on rendait le critique a un d20. Le meme coup
+   changeait donc de nature selon le sens ou il partait, et la colonne mult
+   de la table des zones n'etait lue que dans un sens sur deux.
+
+   La visee remplace le jet. Le crit de l'arme et le passif ne multiplient
+   plus les degats a l'aveugle : ils PENCHENT LE TIRAGE VERS LA TETE. Une
+   dague trouve la gorge parce qu'elle est faite pour, pas parce qu'un de est
+   tombe du bon cote — et la donnee garde exactement le sens qu'elle avait.
+   Le seuil d'affichage reste celui du GDD : mult >= 2, la tete seule. */
+function pickZone(vise){
+  const v=Math.max(0,Math.min(1,vise||0));
+  const w=k=>ZONE[k].w*(k==='tete'?1+v*6:1);
+  const tot=ZK.reduce((a,k)=>a+w(k),0);
   let r=Math.random()*tot;
-  for(const k of ZK){r-=ZONE[k].w;if(r<=0)return k;}
+  for(const k of ZK){r-=w(k);if(r<=0)return k;}
   return 'torse';
 }
+/* ce que l'arme sait viser : l'ancien seuil de critique, lu comme une adresse */
+const viseeDe=(F,PA)=>Math.max(0,Math.min(1,(21-(F.crit||20)+(PA?PA.crit||0:0))/20));
 function resolveHit(q,atk){
   atk=atk||E;
   if(!atk)return;

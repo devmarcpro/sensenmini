@@ -57,6 +57,9 @@ function eauIci(c){
   /* une riviere traverse la case : c'est de l'eau libre, et la meilleure —
      un fleuve nourrit mieux qu'un ruisseau (E.2.2) */
   if(rivDe(c)>0)return true;
+  /* l'eau dormante d'une grande salle : la seule peche qui ne depende ni du
+     ciel ni de la saison, parce qu'on est dessous */
+  if(typeof cavEau==='function'&&cavEau(c))return true;
   /* un cours d'eau se devine aussi à ce que la case porte */
   return cellMats(c).includes('eaupure');
 }
@@ -65,7 +68,11 @@ function eauIci(c){
    côte tempérée en hiver reste pêchable, une toundra non. */
 const eauGelee=()=>tempC(here())<-4;
 function pecheBlocage(){
-  if(!eauIci())return 'il faut de l\'eau — une côte, un marécage, ou une case qui en porte';
+  if(!eauIci())return 'il faut de l\'eau — une côte, une rivière, un marécage, ou une salle noyée';
+  /* Sous terre, le ciel ne compte pas : ni gel ni tempete ne ferment une eau
+     dormante. C'est ce qui fait de la grande salle un abri, et pas seulement
+     un decor. */
+  if(typeof cavEau==='function'&&cavEau(here()))return null;
   if(eauGelee())return 'l\'eau est prise par le gel';
   const m=METEOFX[meteo(here())];
   if(m&&m.voile===0)return 'on ne pêche pas dans une tempête';

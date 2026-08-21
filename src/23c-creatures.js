@@ -17,7 +17,7 @@ const CREATURE={
   cerf:{n:'Cerf',g:'鹿',cat:'bete',bio:['plaine','foret','taiga','foretmana','steppe'],lv:3,vec:{0:1},dt:'contondant',delay:3.2,wind:1.2,hp:.7,dmg:.6,arm:.4,fuit:1,tame:1,pack:[1,2],pat:['simple','lourd'],mats:['cuir','os']},
   renard:{n:'Renard',g:'狐',cat:'bete',bio:['plaine','foret','foretmana','steppe'],lv:3,vec:{1:.6,0:.4},dt:'percant',delay:1.8,wind:.9,hp:.55,dmg:.6,arm:.3,fuit:1,tame:1,pack:[1,2],pat:['simple','double'],mats:['fourrure']},
   abeilles:{n:'Essaim d\'abeilles',g:'蜂',cat:'vermine',bio:['plaine','foret','foretmana','jungle','oasis'],lv:4,vec:{0:.5,1:.5},dt:'percant',delay:1.4,wind:.6,hp:.55,dmg:.3,arm:0,nuee:1,pat:['double','balayage'],mats:['ambre']},
-  chauvesouris:{n:'Nuée de chauves-souris',g:'蝠',cat:'vermine',bio:['karst','marecage'],lv:5,vec:{4:.5,0:.5},dt:'percant',delay:1.3,wind:.6,hp:.5,dmg:.32,arm:0,nuee:1,nuit:2.5,pat:['double','balayage'],mats:['guano','os']},
+  chauvesouris:{n:'Nuée de chauves-souris',g:'蝠',cat:'vermine',bio:['karst','marecage'],lv:5,vec:{4:.5,0:.5},dt:'percant',delay:1.3,wind:.6,hp:.5,dmg:.32,arm:0,nuee:1,nuit:2.5,pack:[1,3],pat:['double','balayage'],mats:['guano','os']},
   /* désert */
   scorpion:{n:'Scorpion',g:'蠍',cat:'bete',bio:['desert','cendres','badlands','salines'],lv:7,vec:{2:.6,1:.4},dt:'percant',delay:2.4,wind:1.0,hp:.8,dmg:.9,arm:1.3,venin:1,tame:1,pat:['simple','morsure'],mats:['ecaille','os']},
   vautour:{n:'Vautour',g:'鷲',cat:'bete',bio:['desert','montagne','cendres','badlands','salines'],lv:5,vec:{4:.4,3:.6},dt:'tranchant',delay:2.2,wind:.9,hp:.65,dmg:.75,arm:.3,tame:1,pack:[1,3],pat:['simple','double'],mats:['os']},
@@ -58,7 +58,7 @@ const CREATURE={
   /* toundra et marécage : deux prédateurs et deux guetteurs de plus */
   harfang:{n:'Harfang des neiges',g:'梟',cat:'bete',bio:['toundra','taiga','banquise'],lv:6,vec:{4:.6,3:.4},dt:'tranchant',delay:2.1,wind:.9,hp:.6,dmg:.8,arm:.3,nuit:2.5,tame:1,pat:['simple','double'],mats:['os','fourrure']},
   glouton:{n:'Glouton',g:'貂',cat:'bete',bio:['toundra','taiga'],lv:13,vec:{2:.5,4:.5},dt:'tranchant',delay:1.7,wind:.8,hp:.9,dmg:1.25,arm:.8,embuscade:1,tame:1,pat:['morsure','double','simple'],mats:['fourrure','os','cuir']},
-  sangsues:{n:'Grappe de sangsues',g:'蛭',cat:'vermine',bio:['marecage','marcorr','jungle'],lv:6,vec:{4:.7,0:.3},dt:'percant',delay:1.3,wind:.6,hp:.5,dmg:.35,arm:0,nuee:1,venin:1,pat:['double','morsure'],mats:[]},
+  sangsues:{n:'Grappe de sangsues',g:'蛭',cat:'vermine',bio:['marecage','marcorr','jungle'],lv:6,vec:{4:.7,0:.3},dt:'percant',delay:1.3,wind:.6,hp:.5,dmg:.35,arm:0,nuee:1,venin:1,pack:[1,3],pat:['double','morsure'],mats:[]},
   heron:{n:'Héron cendré',g:'鷺',cat:'bete',bio:['marecage','cote','oasis'],lv:5,vec:{4:.6,3:.4},dt:'percant',delay:2.3,wind:1.0,hp:.6,dmg:.75,arm:.3,fuit:1,tame:1,pack:[1,2],pat:['simple','double'],mats:['os']},
   salamandre:{n:'Salamandre de braise',g:'蜥',cat:'bete',bio:['cendres'],minp:2,lv:15,vec:{1:.8,2:.2},dt:'tranchant',delay:2.5,wind:1.1,hp:.9,dmg:1.3,arm:.9,brule:1,tame:1,pat:['morsure','crachat','simple'],mats:['ecaille','soufre','cendre']},
   /* le haut du bestiaire : rien ne dépassait le loup blanc et l'ours polaire */

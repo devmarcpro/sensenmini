@@ -153,6 +153,10 @@ function cellMats(c){
   const dmax=Math.min(c.depth||0,STRAT_MATS.length-1);
   for(let i=1;i<=dmax;i++)STRAT_MATS[i].forEach(m=>l.push(m));
   if(c.poi==='filon')['fer','argent','or'].forEach(m=>l.push(m));
+  /* LE KARST (E.2.4) : une galerie ou une grande salle ajoute ses
+     speleothemes a ce que la strate porte deja. On n'enleve rien — la roche
+     reste la, on a juste creuse dedans. */
+  if(typeof cavMats==='function')cavMats(c).forEach(m=>l.push(m));
   if(c.depth>0)l.push(STRATA[Math.min(5,c.depth)].rock);
   return [...new Set(l)];
 }

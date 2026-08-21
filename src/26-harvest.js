@@ -48,7 +48,12 @@ function pierce(dt){
     S.mat[rock]=(S.mat[rock]||0)+1;
     S.end=Math.max(0,S.end-2);knock();float('+1','#8A8A82');
     if(c.dug>=pierceNeed(c.depth)){c.dug=0;c.depth=next;S.occ='repos';S.resume=null;
-      cutIn('掘','Strate '+next+' — '+STRATA[next].n,'profondeur '+STRATA[next].prof+' blocs');}
+      /* on debouche parfois dans une poche : c'est la vraie recompense de la
+         descente, et elle merite d'etre annoncee */
+      const cav=typeof caverne==='function'?caverne(c):0;
+      if(cav)cutIn('洞',cav>=2?'Une grande salle s\'ouvre':'Tu débouches dans une galerie',
+        STRATA[next].n+' — '+(cav>=2?'de quoi trouver ce qui ne se trouve pas ailleurs':'concrétions à récolter'));
+      else cutIn('掘','Strate '+next+' — '+STRATA[next].n,'profondeur '+STRATA[next].prof+' blocs');}
     if(S.end<=0){S.resume='percer';S.occ='repos';log('Souffle coupé. Le percement reprendra.');}
   }
 }

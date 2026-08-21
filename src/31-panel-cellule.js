@@ -43,6 +43,15 @@ function pCell(){
      +'<div class="row"><button class="btn pri" data-lieu="1" '+(pret?'':'disabled')+'>'
      +(pret?D.geste:'déjà visité cette semaine')+'</button></div></div>';
   }
+  const cav=caverne(c);
+  if(cav){
+    h+=grp('洞',cav>=2?'GRANDE SALLE':'GALERIE',STRATA[c.depth].n);
+    h+='<div class="card"><div class="meta">'
+     +(cav>=2?'Une salle spacieuse ouverte dans la roche. On y trouve ce que les galeries ne donnent pas'
+        +(cavEau(c)?', et son eau dormante se pêche — ni le gel ni la tempête n\'y entrent.':'.')
+      :'Une galerie sinueuse. Les concrétions s\'y récoltent : stalactite, calcite, guano, salpêtre.')
+     +'</div></div>';
+  }
   const riv=rivDe(c);
   if(riv){
     h+=grp('川','COURS D\'EAU',rivNom(riv));

@@ -370,6 +370,28 @@ bilan('postures de combat',G('STANCE.map(s=>s.k||s.n)'),
   new Set(G('STANCE.map(s=>s.k||s.n)')),
   'les trois postures se choisissent au meme endroit');
 
+/* UN BIOME OU L'ON NE CROISE JAMAIS DE GROUPE se joue toujours pareil : un
+   ennemi, un duel, et la moitie des affixes — « en meute », « en duel »,
+   le balayage — n'y sert a rien. Le karst n'avait que des especes solitaires
+   a faible corruption, et c'est le test d'interface qui l'a trouve, par
+   hasard, en tirant ce biome-la. */
+{
+  const sansGroupe=RUN(`(()=>{
+    const ko=[];
+    Object.keys(BIOME).forEach(b=>{
+      let groupe=false;
+      for(let i=0;i<400&&!groupe;i++){
+        const k=creaturePool({x:0,y:0,b,corr:0,depth:0,poi:null},false,i%2===0,4);
+        if(CREATURE[k]&&CREATURE[k].pack)groupe=true;
+      }
+      if(!groupe)ko.push(b);
+    });
+    return ko;})()`);
+  bilan('biomes ou un groupe peut venir',Object.keys(G('BIOME')),
+    new Set(Object.keys(G('BIOME')).filter(b=>!sansGroupe.includes(b))),
+    'un biome sans espece en groupe se joue toujours en duel, et la moitie des affixes n y sert a rien');
+}
+
 /* DEUX ENTREES DE MEME NOM SE CONFONDENT. Trois gabarits de quete
    partageaient un identifiant avec un plus ancien : dans la collection elles
    ne comptaient que pour une, et rien ne le disait. On verifie donc l'unicite

@@ -788,6 +788,95 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('cavernes — la profondeur a enfin quelque chose a montrer',()=>{
+  /* Cinq strates, et la seule difference entre elles etait le nom de la roche
+     et sa durete. On perce, on recolte, on perce plus bas : rien a TROUVER en
+     profondeur, seulement a extraire. */
+  const c=nouveau();
+
+  /* --- la premiere strate reste pleine : « pas de trou beant depuis le ciel » --- */
+  const surface=G(c,`(()=>{let n=0;
+    for(let x=-40;x<40;x++)for(let y=-40;y<40;y++)for(let d=0;d<2;d++)if(caverne(x,y,d))n++;
+    return n;})()`);
+  eq(surface,0,'aucune poche dans les deux premières strates');
+
+  /* --- il y en a en profondeur, et pas partout --- */
+  const bas=G(c,`(()=>{let g=0,s=0,t=0;
+    for(let x=-40;x<40;x++)for(let y=-40;y<40;y++)for(let d=2;d<=5;d++){
+      t++;const n=caverne(x,y,d);if(n===1)g++;if(n>=2)s++;}
+    return {g,s,t};})()`);
+  gt(bas.g,0,'des galeries sous la surface — '+bas.g+' sur '+bas.t);
+  gt(bas.s,0,'et de rares grandes salles — '+bas.s);
+  ok(bas.s<bas.g,'les salles restent plus rares que les galeries');
+  ok((bas.g+bas.s)/bas.t<.20,'et la roche pleine reste la règle — '
+    +Math.round((bas.g+bas.s)/bas.t*100)+' % de vide');
+
+  /* --- L'INTERSECTION DE DEUX CHAMPS, ET NON UN SEUL SEUIL. C'est la seule
+     idee de E.2.4, et elle se mesure : un tunnel doit se prolonger. Un bruit
+     unique a seuil donne des taches isolees ; deux champs croises donnent des
+     galeries qui se suivent. --- */
+  const suite=G(c,`(()=>{
+    let seules=0,vues=0;
+    for(let x=-40;x<40;x++)for(let y=-40;y<40;y++)for(let d=2;d<=5;d++){
+      if(caverne(x,y,d)!==1)continue;
+      vues++;
+      let voisines=0;
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]])
+        if(caverne(x+dx,y+dy,d))voisines++;
+      if(!voisines)seules++;
+    }
+    return {seules,vues};})()`);
+  gt(suite.vues,50,'assez de galeries pour juger — '+suite.vues);
+  ok(suite.seules/suite.vues<.35,'une galerie se prolonge, elle n\'est pas une tache isolée — '
+    +suite.seules+' isolées sur '+suite.vues);
+
+  /* --- une poche donne les speleothemes, que la strate ne portait pas --- */
+  const trouve=G(c,`(()=>{
+    for(let x=-40;x<40;x++)for(let y=-40;y<40;y++)for(let d=2;d<=5;d++){
+      if(caverne(x,y,d)!==1)continue;
+      const cc=Object.assign({},genCell(x,y),{depth:d});
+      /* la liste SANS caverne, reconstruite a la main : biome, strates,
+         filon. Comparer a la seule table des strates laissait passer les
+         concretions que le biome porte deja — et le test survivait alors au
+         debranchement du raccord. */
+      const base=genCell(x,y);
+      const sans=BIOME[base.b].mats.concat(STRAT_MATS.slice(1,d+1).flat())
+        .concat([STRATA[Math.min(5,d)].rock]);
+      const avec=cellMats(cc);
+      const neuf=cavMats(cc).filter(m=>!sans.includes(m)&&avec.includes(m));
+      if(neuf.length)return {x,y,d,neuf};
+    }
+    return null;})()`);
+  ok(!!trouve,'une galerie ajoute des concrétions aux matières de la strate'
+    +(trouve?' — '+trouve.neuf.slice(0,4).join(', '):''));
+
+  /* --- une grande salle donne ce qu'une galerie ne donne pas --- */
+  const plus=G(c,`(()=>{
+    const g=[],s=[];
+    for(let x=-40;x<40;x++)for(let y=-40;y<40;y++)for(let d=2;d<=5;d++){
+      const n=caverne(x,y,d);if(!n)continue;
+      const l=cavMats({x,y,depth:d});
+      (n>=2?s:g).push(l.length);
+    }
+    return {g:g.length?Math.max(...g):0,s:s.length?Math.max(...s):0};})()`);
+  gt(plus.s,plus.g,'une grande salle donne davantage — '+plus.s+' contre '+plus.g);
+
+  /* --- et son eau dormante se peche, sans que le ciel compte --- */
+  const noyee=G(c,`(()=>{
+    for(let x=-40;x<40;x++)for(let y=-40;y<40;y++)for(let d=2;d<=5;d++){
+      const cc=Object.assign({},genCell(x,y),{depth:d});
+      if(cavEau(cc))return [x,y,d];
+    }
+    return null;})()`);
+  ok(!!noyee,'certaines salles sont noyées');
+  if(noyee){
+    R(c,'S.pos=['+noyee[0]+','+noyee[1]+'];here().seen=true;here().depth='+noyee[2]+';'
+      +'globalThis.__m0=meteo;meteo=()=>"blizzard";globalThis.__t0=tempC;tempC=()=>-30;');
+    eq(G(c,'pecheBlocage()'),null,'et l\'on y pêche même sous un blizzard — on est dessous');
+    R(c,'meteo=__m0;tempC=__t0;');
+  }
+});
+
 test('rivieres — l eau cesse d etre une bordure',()=>{
   /* Trois biomes sur vingt touchent l'eau. Partout ailleurs, aucune goutte :
      pas de peche, pas de barque, pas d'arrosage contre la canicule. Le GDD

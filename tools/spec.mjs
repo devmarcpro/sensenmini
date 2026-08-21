@@ -383,6 +383,37 @@ test('sauvegarde — le monde se regénère, l\'aller-retour est fidèle',()=>{
   eq(G(c,'S.mat.fer'),3,'les matériaux valides restent');
   eq(G(c,'S.modules.length'),0,'un module inconnu est jeté');
   eq(G(c,'S.carry.length'),0,'une station inconnue est jetée');
+  /* ===== UNE PARTIE COMMENCÉE AVANT LES SYSTÈMES RÉCENTS =====
+     Un joueur a sa sauvegarde ouverte pendant qu'on développe. Chaque champ
+     ajouté depuis — l'épuisement d'une case, le bestiaire, les hameaux — doit
+     donc manquer sans casser quoi que ce soit, et le jeu doit tourner comme
+     si de rien n'était. C'est le test qui protège les parties en cours. */
+  R(c,`S=NEW();S.seed=42;cr.race='humain';cr.classe='guerrier';cr.el=0;cr.an=0;
+    cr.pts=30;STATS.forEach(([k])=>cr.st[k]=5);cr.pos=defaultStart();applyBirth();starterKit();
+    S.or=4242;here().seen=true;
+    /* on retire tout ce qui n'existait pas encore */
+    delete S.bes;
+    Object.values(S.world).forEach(z=>{delete z.vide;delete z.hameau;});
+    globalThis.__vieux=exportSave();
+    S=NEW();S.seed=1;importSave(__vieux);`);
+  eq(G(c,'S.or'),4242,'une partie d\'avant ces systèmes se recharge');
+  ok(!G(c,'!!S.bes')||G(c,'typeof S.bes==="object"'),'le bestiaire manquant ne gêne pas');
+  const survit=G(c,`(()=>{const ko=[];
+    try{noteBestiaire('loup','v');}catch(e){ko.push('bestiaire: '+e.message);}
+    try{bestiaireVus();}catch(e){ko.push('compte: '+e.message);}
+    try{vide(here());}catch(e){ko.push('épuisement: '+e.message);}
+    try{regenStocks();}catch(e){ko.push('gisements: '+e.message);}
+    try{weekly();}catch(e){ko.push('semaine: '+e.message);}
+    try{townAt(S.pos[0],S.pos[1]);}catch(e){ko.push('village: '+e.message);}
+    try{for(let i=0;i<200;i++)step(.1);}catch(e){ko.push('boucle: '+e.message);}
+    try{pComps();pSac();pEquip();pSkills();pCell();}catch(e){ko.push('panneau: '+e.message);}
+    return ko;})()`);
+  eq(survit.length,0,'et tous les systèmes récents la supportent',survit.join(' | '));
+  eq(G(c,'S.bes.loup.v'),1,'le bestiaire se met en route sur une partie ancienne');
+  eq(G(c,'vide(here())'),1,'une case sans compteur d\'épuisement est réputée intacte');
+  /* et elle se ré-exporte proprement, avec les nouveaux champs */
+  R(c,'globalThis.__neuf=exportSave();S=NEW();importSave(__neuf);');
+  eq(G(c,'S.or'),4242,'le second aller-retour ne perd rien non plus');
 });
 
 test('veille — cadence, repas et plafond',()=>{

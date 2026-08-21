@@ -658,6 +658,42 @@ test('panneaux — chaque onglet se rend, replié ou déplié',()=>{
   ok(G(c,'__s.indexOf("or")')>=0,'une famille de matières repliée annonce encore sa valeur');
   ok(G(c,'__k.indexOf("plus haute")')>=0||G(c,'__k.indexOf("aucune entamée")')>=0,
     'une famille de compétences repliée annonce encore son niveau');
+  /* AUCUN PANNEAU NE DOIT DEVENIR UN MUR. Le repli existe pour ca, et il ne
+     sert a rien si une seule section ouverte fait cent mille octets. Le
+     bestiaire en faisait CENT TRENTE-QUATRE MILLE une fois la categorie
+     « betes » ouverte : trente-trois silhouettes voxel construites pour en
+     regarder une. On mesure donc le pire cas — tout rencontre, tout abattu,
+     un sac plein — et l'on refuse qu'une section ouverte depasse un seuil
+     qu'un telephone puisse faire defiler. */
+  R(c,`S.bes={};CK.forEach(k=>{S.bes[k]={v:9,t:4,a:1};});
+    S.comps=[];for(let i=0;i<6;i++)S.comps.push({id:'c'+i,nom:'compagnon '+i,el:i%5,lv:9,
+      hp:50,max:50,xp:0,esc:i<2,order:'attaquer',dead:0,mode:'permanent',eq:null,pot:90,
+      seq:[{o:'tenir',n:2},{o:'attaquer',n:3}]});
+    S.seq={on:true,i:0,r:seqDefaut()};`);
+  const gros=G(c,`(()=>{
+    const P={monde:pMonde,cell:pCell,recolte:pRecolte,atelier:pAtelier,equip:pEquip,magie:pMagie,
+      table:pTable,ville:pVille,pnj:pPnj,comps:pComps,batir:pBatir,royaume:pRoyaume,
+      guilde:pGuilde,sac:pSac,combat:pCombat,autos:pAuto,skills:pSkills,param:pParam};
+    const ko=[];
+    for(const k in P){
+      /* on ouvre tour a tour chacune des sections que le panneau propose */
+      S.fold={};
+      let base='';try{base=P[k]();}catch(e){ko.push(k+' : '+e.message);continue;}
+      const cles=[...new Set([...base.matchAll(/data-fold="([a-z0-9]+):([^"]+)"/g)].map(m=>m[1]+'|'+m[2]))];
+      let pire=base.length,quoi='replié';
+      cles.forEach(ck=>{
+        const [grp,sec]=ck.split('|');
+        S.fold={};S.fold[grp]=sec;
+        let s='';try{s=P[k]();}catch(e){ko.push(k+' ('+ck+') : '+e.message);return;}
+        if(s.length>pire){pire=s.length;quoi=ck;}
+      });
+      S.fold={};
+      if(pire>70000)ko.push(k+' : '+Math.round(pire/1000)+' ko ('+quoi+')');
+    }
+    return ko;})()`);
+  eq(gros.length,0,'aucun panneau ne dépasse 70 ko, section la plus lourde ouverte',
+    'murs : '+gros.join(' | '));
+
   /* et les fiches d'objet se plient une par une, sans perdre les gestes fréquents */
   ok(G(c,'__e.indexOf("data-fold=\\"obj:")')>=0,'chaque objet du sac a sa tête repliable');
   ok(G(c,'__e.indexOf("data-equip=")')>=0,'équiper reste accessible sans déplier');

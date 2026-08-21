@@ -58,19 +58,36 @@ function bestiaireSection(){
     h+=foldHead('bes',cat,'獣',BESCAT[cat],l.length+' / '+tot+' · '+abattues+' abattue'+(abattues>1?'s':''),null);
     if(!foldOpen('bes',cat,null))return;
     l.sort((a,b)=>CREATURE[a].lv-CREATURE[b].lv);
+    /* UNE FICHE OUVERTE A LA FOIS. Soixante-trois especes, et chaque fiche
+       porte une silhouette voxel entiere : la categorie « betes » depliee
+       faisait CENT TRENTE-QUATRE MILLE octets de HTML — trente-trois
+       silhouettes construites pour en regarder une. Sur telephone, c'est un
+       mur qu'on ne fait pas defiler.
+       La ligne repliee garde ce qu'on vient verifier neuf fois sur dix : le
+       nom, le niveau, si on l'a abattue, si elle se dompte. La silhouette et
+       le detail ne se construisent que pour la fiche ouverte. */
     h+=l.map(k=>{
       const C=CREATURE[k],b2=S.bes[k];
-      const coul=EL[C.vec?domi(norm(V(C.vec))):3].c;
-      return '<div class="card"><div class="besline">'
-       +'<div class="besvox"><div class="cam">'+voxelHtml(k,.58,coul,1)+'</div></div>'
-       +'<div class="besinfo"><h3><span>'+C.g+' '+C.n+'</span><i>niveau '+C.lv+'</i></h3>'
-       +'<div class="meta">croisée '+b2.v+' fois · '+(b2.t?b2.t+' abattue'+(b2.t>1?'s':''):'jamais abattue')
-       +(b2.a?' · '+b2.a+' apprivoisée'+(b2.a>1?'s':''):(C.tame?' · s\'apprivoise':' · ne s\'apprivoise pas'))+'</div>'
-       +'<div class="meta">'+(C.bio.length?C.bio.map(x=>BIOME[x]?BIOME[x].n:x).join(', '):'donjons et camps')
-       +(C.corr?' · corruption ≥ '+C.corr:'')+(C.minp?' · lieux puissants seulement':'')+'</div>'
-       +'<div class="meta">gestes : '+(C.pat||['simple']).map(p=>PATTERN[p]?PATTERN[p].g+' '+PATTERN[p].n:p).join(' · ')+'</div>'
-       +(C.mats&&C.mats.length?'<div class="meta">laisse : '+C.mats.map(matName).join(', ')+'</div>':'')
-       +'</div></div></div>';
+      const ouv=foldOpen('bes2',k,null);
+      let s='<div class="card"><button class="objh'+(ouv?' on':'')+'" data-fold="bes2:'+k+'">'
+        +'<span>'+C.g+' '+C.n+'</span>'
+        +'<i>niv '+C.lv+' · '+(b2.t?b2.t+' abattue'+(b2.t>1?'s':''):'jamais abattue')
+          +(C.tame?(b2.a?' · '+b2.a+' domptée'+(b2.a>1?'s':''):' · se dompte'):'')+'</i>'
+        +'<em>'+(ouv?'▾':'▸')+'</em></button>';
+      if(ouv){
+        const coul=EL[C.vec?domi(norm(V(C.vec))):3].c;
+        s+='<div class="besline">'
+         +'<div class="besvox"><div class="cam">'+voxelHtml(k,.58,coul,1)+'</div></div>'
+         +'<div class="besinfo">'
+         +'<div class="meta">croisée '+b2.v+' fois · '+(b2.t?b2.t+' abattue'+(b2.t>1?'s':''):'jamais abattue')
+         +(b2.a?' · '+b2.a+' apprivoisée'+(b2.a>1?'s':''):(C.tame?' · s\'apprivoise':' · ne s\'apprivoise pas'))+'</div>'
+         +'<div class="meta">'+(C.bio.length?C.bio.map(x=>BIOME[x]?BIOME[x].n:x).join(', '):'donjons et camps')
+         +(C.corr?' · corruption ≥ '+C.corr:'')+(C.minp?' · lieux puissants seulement':'')+'</div>'
+         +'<div class="meta">gestes : '+(C.pat||['simple']).map(p=>PATTERN[p]?PATTERN[p].g+' '+PATTERN[p].n:p).join(' · ')+'</div>'
+         +(C.mats&&C.mats.length?'<div class="meta">laisse : '+C.mats.map(matName).join(', ')+'</div>':'')
+         +'</div></div>';
+      }
+      return s+'</div>';
     }).join('');
   });
   return h;

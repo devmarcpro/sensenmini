@@ -78,10 +78,19 @@ function feltTemp(){
   return T;
 }
 const COMFORT=[5,30];
+/* Le Cendreux est « insensible à la chaleur mineure » — c'était écrit sur sa
+   fiche de race et nulle part ailleurs. Une dizaine de degrés au-dessus du
+   confort ne l'atteint pas ; au-delà, il souffre comme les autres, moins ce
+   qu'il encaisse d'avance. Le froid, lui, le prend en plein. */
+const SEUIL_CENDREUX=10;
 function tempStress(){
   const T=feltTemp();
   if(T<COMFORT[0])return {froid:1,e:COMFORT[0]-T};
-  if(T>COMFORT[1])return {froid:0,e:T-COMFORT[1]};
+  if(T>COMFORT[1]){
+    let e=T-COMFORT[1];
+    if(S.race==='cendreux'){e-=SEUIL_CENDREUX;if(e<=0)return null;}
+    return {froid:0,e};
+  }
   return null;
 }
 /* lumière : une lanterne dans un bâtiment tient la nuit à distance */

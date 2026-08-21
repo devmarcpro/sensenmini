@@ -683,6 +683,53 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('races — chaque bonus annoncé se retrouve dans le jeu',()=>{
+  /* Une fiche de race est une promesse en prose. Elles se vérifient une par
+     une, sinon l'une d'elles reste décorative — c'était le cas du Cendreux,
+     « insensible à la chaleur mineure » nulle part dans le code. */
+  const h=nouveau(42,'guerrier','humain');
+  const e=nouveau(42,'guerrier','elfe');
+  const n=nouveau(42,'guerrier','nain');
+  const s=nouveau(42,'guerrier','sylvide');
+  const cd=nouveau(42,'guerrier','cendreux');
+  const ec=nouveau(42,'guerrier','echomorphe');
+  /* on mesure l'XP BRUTE, a un niveau assez haut pour qu'aucun passage de
+     niveau ne vienne arrondir l'ecart qu'on cherche */
+  const xp=(ctx,sk)=>{R(ctx,'S.sk.'+sk+'.lv=50;S.sk.'+sk+'.xp=0;S.sk.'+sk+'.pot=100;S.repose=0;gainXp("'+sk+'",100);');
+    return G(ctx,'S.sk.'+sk+'.xp');};
+  /* humain : +10 % d'XP · échomorphe : −10 % */
+  gt(xp(h,'epee'),xp(ec,'epee'),'l\'Humain apprend plus vite que l\'Échomorphe');
+  /* Nain et Cendreux : le bonus de metier se mesure CONTRE EUX-MEMES.
+     Comparer au Humain ne dirait rien, puisqu'il porte un +10 % global qui
+     s'applique a tout — la premiere version de ce test s'y est trompee. */
+  gt(xp(n,'forge'),xp(n,'epee')*1.1,"le Nain forge mieux qu'il ne se bat");
+  gt(xp(n,'minage'),xp(n,'epee')*1.1,'et mine mieux aussi');
+  gt(xp(cd,'forge'),xp(cd,'epee')*1.1,"le Cendreux forge mieux qu'il ne se bat");
+  ok(Math.abs(xp(cd,'minage')-xp(cd,'epee'))<1,"mais il ne mine pas mieux : ce n'est pas son bonus");
+  /* elfe : régénération de mana */
+  R(e,'S.mana=0;S.occ="repos";S.faim=90;for(let i=0;i<400;i++)step(.1);');
+  R(h,'S.mana=0;S.occ="repos";S.faim=90;for(let i=0;i<400;i++)step(.1);');
+  gt(G(e,'S.mana'),G(h,'S.mana')*1.05,'l\'Elfe récupère son mana plus vite — '
+    +Math.round(G(e,'S.mana'))+' contre '+Math.round(G(h,'S.mana')));
+  /* sylvide : la faim tombe deux fois moins vite */
+  R(s,'S.faim=100;S.occ="repos";for(let i=0;i<6000;i++)step(.1);');
+  R(h,'S.faim=100;S.occ="repos";for(let i=0;i<6000;i++)step(.1);');
+  gt(G(s,'S.faim'),G(h,'S.faim'),'le Sylvide a faim moins vite — '
+    +Math.round(G(s,'S.faim'))+' contre '+Math.round(G(h,'S.faim')));
+  /* cendreux : insensible à la chaleur mineure, mais pas au froid */
+  const chaud=ctx=>G(ctx,'(()=>{const t0=feltTemp;feltTemp=()=>COMFORT[1]+8;'
+    +'const r=tempStress();feltTemp=t0;return r?r.e:0;})()');
+  const froid=ctx=>G(ctx,'(()=>{const t0=feltTemp;feltTemp=()=>COMFORT[0]-8;'
+    +'const r=tempStress();feltTemp=t0;return r?r.e:0;})()');
+  gt(chaud(h),0,'huit degrés de trop pèsent sur un Humain');
+  eq(chaud(cd),0,'et pas du tout sur un Cendreux');
+  const fort=ctx=>G(ctx,'(()=>{const t0=feltTemp;feltTemp=()=>COMFORT[1]+30;'
+    +'const r=tempStress();feltTemp=t0;return r?r.e:0;})()');
+  gt(fort(cd),0,'une vraie fournaise l\'atteint quand même — '+fort(cd));
+  ok(fort(cd)<fort(h),'mais moins que les autres — '+fort(cd)+' contre '+fort(h));
+  eq(froid(cd),froid(h),'le froid, lui, le prend en plein');
+});
+
 test('zonage — le rôle d\'une cellule tient sa promesse',()=>{
   const c=nouveau();
   /* La fiche du rôle « habitation » promettait que seules ses pièces logent

@@ -125,7 +125,10 @@ function cropYield(c,p){
      systeme d'eau, l'arrosage est ce qui borde le champ : un puits, une
      cote, un marecage. Ailleurs, la moisson brule sur pied. */
   if(fx(c).fane){
-    const eau=surEau(c)||c.poi==='filon'||cellMats(c).includes('eaupure');
+    /* « les cultures fletrissent SANS arrosage » : une riviere qui traverse
+       le champ EST l'arrosage, et c'est la premiere raison de batir au bord
+       de l'eau plutot qu'ailleurs */
+    const eau=surEau(c)||rivDe(c)>0||c.poi==='filon'||cellMats(c).includes('eaupure');
     y*=eau?.85:.25;
   }
   if(m==='canicule')y*=.3;

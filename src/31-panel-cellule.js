@@ -43,6 +43,12 @@ function pCell(){
      +'<div class="row"><button class="btn pri" data-lieu="1" '+(pret?'':'disabled')+'>'
      +(pret?D.geste:'déjà visité cette semaine')+'</button></div></div>';
   }
+  const riv=rivDe(c);
+  if(riv){
+    h+=grp('川','COURS D\'EAU',rivNom(riv));
+    h+='<div class="card"><div class="meta">Un '+rivNom(riv)+' traverse la case. '
+     +'On y pêche'+(riv>=2?', une barque y passe':'')+', et un champ posé ici ne fane jamais.</div></div>';
+  }
   const mt=METEO[meteo(c)],T=tempC(c),Tf=feltTemp(),ts3=tempStress();
   h+=grp('天','CIEL',season().n.toLowerCase()+' · '+phase()+' · '+Math.floor(HOUR())+' h');
   h+='<div class="card"><h3><span>'+mt.g+' '+mt.n+'</span><i>'+(mt.extreme?'extrême':'')+'</i></h3>'

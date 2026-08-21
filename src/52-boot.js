@@ -18,7 +18,7 @@ function chargementComplet(){
       &&genCell&&NEW&&gainXp&&gainStat&&mkItem&&partFor&&formeNom&&ALLIAGE&&allier&&cutGem&&GEMSPEC&&mkNpc&&linkFamilies&&JOBS
       &&GOV&&GUILDS&&QTPL&&PLANTE&&cook&&escortList&&ORDERS&&PLOT&&MEUBLE&&plots&&genDungeon&&DJTHEME
       &&METEO&&SEASON&&offline&&AUTOS&&CONDS&&ACTES&&planTick&&STATUS&&addStatus&&KSIZE&&kingdomsNear&&hameauAt&&starterKit&&SHOPDEF
-      &&CREATURE&&noteBestiaire&&PATTERN&&VOX&&VOXMAT&&voxelHtml&&matHtml&&compHtml&&ICONE&&iconeHtml&&AFFU&&PARURE&&mkParure&&util&&VEHICULE&&vehVitesse&&primeAjout&&volerOffre&&recelerTout&&CONSO&&consoFaire&&PECHE&&pecheTick&&GARDIEN&&ARTEFACT&&gardienTick&&GESTES&&seqTick&&pCombat&&LIEU&&lieuVisiter&&creEndInit&&creEquipe&&COLLECTION&&collecte&&pCollection&&heroHtml&&vide&&STANCE&&attack&&compileSpell&&harvestTick&&tickClock&&step&&paint&&grp&&foldHead
+      &&CREATURE&&noteBestiaire&&PATTERN&&VOX&&VOXMAT&&voxelHtml&&matHtml&&compHtml&&ICONE&&iconeHtml&&AFFU&&PARURE&&mkParure&&util&&VEHICULE&&vehVitesse&&primeAjout&&volerOffre&&recelerTout&&CONSO&&consoFaire&&PECHE&&pecheTick&&GARDIEN&&ARTEFACT&&gardienTick&&GESTES&&seqTick&&pCombat&&LIEU&&lieuVisiter&&riviere&&creEndInit&&creEquipe&&COLLECTION&&collecte&&pCollection&&heroHtml&&vide&&STANCE&&attack&&compileSpell&&harvestTick&&tickClock&&step&&paint&&grp&&foldHead
       &&pMonde&&pCell&&pAtelier&&pEquip&&pMagie&&pTable&&pVille&&pPnj&&pComps&&pBatir&&pRoyaume
       &&pGuilde&&pSac&&pAuto&&pSkills&&pParam&&TRICHES&&pRecolte&&TIPS&&SFX&&save&&exportSave
       &&buildGate&&applyBirth&&defaultStart&&repLocale&&lawsHere&&handle&&tabsEdges);

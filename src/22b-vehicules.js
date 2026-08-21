@@ -41,7 +41,9 @@ const VEHK=Object.keys(VEHICULE);
 /* Les biomes où l'on navigue. Une barque sur une plaine n'est pas lente :
    elle est inutilisable, et le dire vaut mieux que la ralentir. */
 const BIOME_EAU={cote:1,marecage:1,marcorr:1};
-const surEau=c=>!!BIOME_EAU[(c||here()).b];
+/* On navigue sur la mer, dans un marais — et sur une riviere assez large.
+   Un ruisseau ne porte pas une barque ; une riviere, oui (E.2.2). */
+const surEau=c=>{const z=c||here();return !!BIOME_EAU[z.b]||rivDe(z)>=2;};
 
 /* ===== LE VENT (E.24 / E.28) =====
    Il ne s'invente pas : il dérive du même bruit que la météo, donc il est

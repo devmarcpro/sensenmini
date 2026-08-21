@@ -83,6 +83,12 @@ function genCell(x,y){
     c.town=q<.45?base:base+'-'+TOWNQ[Math.floor(hash(x,y,s,13)*TOWNQ.length)];
   }
   if(c.poi==='donjon'||c.poi==='camp')c.corr=Math.min(100,c.corr+12);
+  /* L'HYDROGRAPHIE ne se calcule PAS ici. genCell est appele pour chaque case
+     de la carte et par chaque balayage d'outil — des dizaines de milliers de
+     fois — alors que la riviere n'interesse que la case ou l'on se tient et
+     celles qu'on dessine. La calculer au passage faisait passer la suite
+     d'outils de treize a soixante-trois secondes pour une information que
+     personne ne lisait. On la demande la ou on la lit : rivDe(c). */
   return c;
 }
 function cellVec(c){

@@ -54,7 +54,10 @@ const PECHE_FOOD={poisson:1,anguille:1,algue:1,sangsue:1};
 function eauIci(c){
   c=c||here();
   if(surEau(c))return true;
-  /* un cours d'eau se devine à ce que la case porte */
+  /* une riviere traverse la case : c'est de l'eau libre, et la meilleure —
+     un fleuve nourrit mieux qu'un ruisseau (E.2.2) */
+  if(rivDe(c)>0)return true;
+  /* un cours d'eau se devine aussi à ce que la case porte */
   return cellMats(c).includes('eaupure');
 }
 /* « Les lacs gelés : la pêche s'arrête » (E.28). Le gel, ici, c'est la
@@ -72,7 +75,9 @@ function pecheBlocage(){
    Une barque double la prise — on pêche mieux au large que du bord. */
 function pecheDelai(){
   const bateau=vehUtile()&&vehDef().eau?.55:1;
-  return Math.max(1.2,(7-lv('peche')*.06)*bateau);
+  /* un fleuve rend plus qu'un ruisseau : la largeur compte */
+  const cours=1-Math.min(.35,rivDe(here())*.12);
+  return Math.max(1.2,(7-lv('peche')*.06)*bateau*cours);
 }
 function pecheTirage(){
   const t=PECHE[here().b]||{poisson:5};

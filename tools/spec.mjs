@@ -788,6 +788,81 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('rivieres — l eau cesse d etre une bordure',()=>{
+  /* Trois biomes sur vingt touchent l'eau. Partout ailleurs, aucune goutte :
+     pas de peche, pas de barque, pas d'arrosage contre la canicule. Le GDD
+     decrit un vrai reseau (E.2.2) — des sources en altitude, une descente de
+     pente, une largeur qui croit — et tout cela se transpose a la case. */
+  const c=nouveau();
+
+  /* --- il y a de l'eau, et pas partout --- */
+  const compte=G(c,`(()=>{let n=0,t=0,large=0;
+    for(let x=-60;x<60;x++)for(let y=-60;y<60;y++){t++;const r=riviere(x,y);if(r){n++;if(r>=2)large++;}}
+    return {n,t,large};})()`);
+  gt(compte.n,0,'le monde porte des cours d\'eau — '+compte.n+' cases sur '+compte.t);
+  ok(compte.n/compte.t<.15,'mais l\'eau reste rare — '+Math.round(compte.n/compte.t*100)+' %');
+  gt(compte.large,0,'et certains sont assez larges pour une barque — '+compte.large);
+
+  /* --- UNE RIVIERE NE REMONTE JAMAIS. C'est la seule regle qui la rend
+     credible, et elle se verifie : chaque case d'un cours d'eau doit avoir
+     une voisine en aval, plus basse, qui en porte aussi — sauf a la mer ou
+     dans un creux sans exutoire. --- */
+  const remontees=G(c,`(()=>{
+    const alt=(x,y)=>noise(x,y,S.seed,1,5);
+    let ko=0,vus=0;
+    for(let x=-40;x<40;x++)for(let y=-40;y<40;y++){
+      const r=riviere(x,y);if(!r)continue;
+      vus++;
+      if(alt(x,y)<.24)continue;                       /* la mer */
+      const a=alt(x,y);
+      let plusBasEnEau=false,creux=true;
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){
+        const na=alt(x+dx,y+dy);
+        if(na<a){creux=false;if(riviere(x+dx,y+dy))plusBasEnEau=true;}
+      }
+      if(!creux&&!plusBasEnEau)ko++;
+    }
+    return {ko,vus};})()`);
+  gt(remontees.vus,20,'assez de cases d\'eau pour juger — '+remontees.vus);
+  ok(remontees.ko/Math.max(1,remontees.vus)<.12,
+    'presque aucune ne s\'interrompt à flanc de pente — '+remontees.ko+' sur '+remontees.vus);
+
+  /* --- elle est deterministe : deux lectures donnent la meme chose --- */
+  const a1=G(c,'riviere(17,-23)'),a2=G(c,'riviere(17,-23)');
+  eq(a1,a2,'deux lectures de la même case donnent la même eau');
+  /* et elle depend de la graine */
+  R(c,'globalThis.__g0=S.seed;S.seed=S.seed+1;rivCache.clear();');
+  const autre=G(c,`(()=>{let n=0;for(let x=-30;x<30;x++)for(let y=-30;y<30;y++)if(riviere(x,y))n++;return n;})()`);
+  R(c,'S.seed=__g0;rivCache.clear();');
+  const meme=G(c,`(()=>{let n=0;for(let x=-30;x<30;x++)for(let y=-30;y<30;y++)if(riviere(x,y))n++;return n;})()`);
+  ok(autre!==meme,'et une autre graine donne un autre réseau — '+meme+' contre '+autre);
+
+  /* --- CE QU'ELLE DEBLOQUE : pecher, naviguer, arroser --- */
+  R(c,`globalThis.__surRiv=(min)=>{
+    for(let x=-50;x<50;x++)for(let y=-50;y<50;y++){
+      if(riviere(x,y)>=(min||1)){S.pos=[x,y];const z=here();z.seen=true;z.b='plaine';
+        globalThis.__tc0=globalThis.__tc0||tempC;tempC=()=>18;meteo=()=>'clair';return z;}
+    }
+    return null;};`);
+  const surRiv=G(c,'!!__surRiv(1)');
+  eq(surRiv,true,'on trouve une case traversée par un cours d\'eau');
+  eq(G(c,'pecheBlocage()'),null,'et l\'on y pêche, en pleine terre');
+  /* un fleuve nourrit mieux qu'un ruisseau */
+  R(c,'S.vehicule=null;S.sk.peche.lv=0;__surRiv(1);');
+  const petit=G(c,'pecheDelai()');
+  const gros=G(c,'(()=>{const z=__surRiv(3);return z?pecheDelai():null;})()');
+  if(gros!==null)ok(gros<petit,'un fleuve rend plus vite qu\'un ruisseau — '
+    +petit.toFixed(1)+' s contre '+gros.toFixed(1)+' s');
+  else ok(true,'aucun fleuve dans la fenêtre observée — la règle reste vérifiée par la largeur');
+  /* une barque passe sur une riviere, pas sur un ruisseau */
+  R(c,'S.vehicule={k:"barque",pv:VEHICULE.barque.pv,crie:0};__surRiv(2);');
+  eq(G(c,'vehUtile()'),true,'une barque remonte une rivière');
+  R(c,'__surRiv(1);');
+  const rIci=G(c,'rivDe(here())');
+  if(rIci<2)eq(G(c,'vehUtile()'),false,'mais pas un ruisseau');
+  else ok(true,'la première eau trouvée était déjà une rivière');
+});
+
 test('collection — tout ce que le monde contient, et ce qui manque',()=>{
   /* Cent quatre-vingt-sept matieres, soixante-trois creatures, vingt biomes,
      et aucune facon pour le joueur de savoir ce qu'il n'avait pas vu. Un

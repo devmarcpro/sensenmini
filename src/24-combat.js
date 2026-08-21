@@ -132,6 +132,7 @@ function mkEnemy(ck,power,rare,boss,suffixe){
     st:[],cdStun:0,stg:0,pats:C.pat||['simple'],pat:'simple'};
   /* chacune a son propre télégraphe : une embuscade est déjà à mi-course */
   e.tt=e.embuscade?e.delay*.7:0;e.w=-1;
+  noteBestiaire(ck,'v');
   return e;
 }
 /* le geste choisi pour ce cycle, et ce qu'il change */
@@ -450,6 +451,7 @@ function kill(who){
   const K=who||E;
   if(!K||K.dead)return;
   K.dead=1;
+  if(K.cre)noteBestiaire(K.cre,'t');
   const c=here();
   /* les bêtes ne portent pas de bourse : quelques pièces au mieux — les humains, si (7.6) */
   const g=Math.round((1+c.corr*.08+c.depth*1.5)*(K.rare?4:1)*(K.boss?6:1)*(1+(K.or||0)));

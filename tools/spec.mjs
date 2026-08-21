@@ -652,6 +652,33 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('bestiaire — le jeu retient ce qu\'on a croisé',()=>{
+  const c=nouveau();
+  eq(G(c,'bestiaireVus()'),0,'on commence sans rien connaître');
+  ok(G(c,'pComps()').indexOf('0 / '+G(c,'CK.length'))>=0,'et le panneau le dit');
+  /* croiser suffit à inscrire ; abattre et apprivoiser se comptent à part */
+  R(c,'S.occ="combat";E=mkEnemy("loup",1,false,false);EE=[E];foc=0;');
+  eq(G(c,'bestiaireVus()'),1,'croiser une créature l\'inscrit');
+  eq(G(c,'S.bes.loup.v'),1,'et compte la rencontre');
+  eq(G(c,'S.bes.loup.t'),0,'sans la compter comme abattue');
+  R(c,'E.hp=0;kill(E);');
+  eq(G(c,'S.bes.loup.t'),1,'l\'abattre se compte');
+  R(c,'S.comps=[];S.sk.dressage.lv=80;S.sx.cha.v=80;'
+    +'for(let i=0;i<40&&!S.comps.length;i++){E=mkEnemy("loup",1,false,false);EE=[E];E.hp=1;tameBeast();}');
+  gte(G(c,'S.bes.loup.a'),1,'l\'apprivoiser aussi');
+  /* le panneau montre la silhouette de ce qu'on connaît */
+  R(c,'S.fold={};S.fold.bes="bete";globalThis.__p=pComps();');
+  ok(G(c,'__p').indexOf('besvox')>=0,'la fiche porte une silhouette');
+  ok(G(c,'__p').indexOf('class="bx"')>=0,'et la silhouette a de vrais pavés');
+  ok(G(c,'__p').indexOf('Loup')>=0,'le loup y figure');
+  ok(G(c,'__p').indexOf('Mammouth')<0,'ce qu\'on n\'a pas croisé n\'y figure pas');
+  /* une espèce inconnue dans la sauvegarde ne casse rien */
+  R(c,'S.bes.nexistepas={v:3,t:1,a:0};globalThis.__b=null;'
+    +'try{globalThis.__p2=pComps();}catch(e){__b=String(e);}');
+  eq(G(c,'__b'),null,'une espèce disparue de la table ne casse pas le panneau');
+  eq(G(c,'bestiaireVus()'),1,'et n\'est pas comptée');
+});
+
 test('meubles — chacun apporte ce que sa fiche promet',()=>{
   const c=nouveau();
   R(c,'S.or=99999;S.mat.pierre=999;S.mat.chene=999;S.mat.limon=999;S.mat.lin=999;'

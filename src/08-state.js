@@ -19,6 +19,7 @@ const NEW=()=>({
   food:{},potions:[],buffs:[],plats:0,comps:[],auto:{},rate:{},cnt:{},
   books:[],modules:[],spells:[[],[]],postures:[],surchauffe:false,
   sk:NEWSK(),sx:NEWSX(),mat:{},ref:{},comp:{},items:[],coffres:{},eq:{},recipes:{},nid:1,craft:null,carry:['etabli'],
+  bes:{},
   day:0,week:0,log:[],t:Date.now()
 });
 let S=NEW();

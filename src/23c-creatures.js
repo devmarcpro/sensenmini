@@ -68,6 +68,21 @@ const CREATURE={
 };
 const CK=Object.keys(CREATURE);
 /* ==================================================================
+   CE QU'ON A CROISÉ
+   Les silhouettes ne se voyaient qu'en combat, le temps d'un échange.
+   Le jeu retient donc ce qu'on a rencontré, abattu et apprivoisé : de
+   quoi feuilleter le bestiaire au calme, savoir ce qui se dompte, et
+   mesurer ce qu'on n'a pas encore vu. Trois compteurs par espèce, pas
+   un octet de plus.
+   ================================================================== */
+function noteBestiaire(ck,quoi){
+  if(!ck||!CREATURE[ck])return;
+  S.bes=S.bes||{};
+  const b=S.bes[ck]||(S.bes[ck]={v:0,t:0,a:0});
+  b[quoi]=(b[quoi]||0)+1;
+}
+const bestiaireVus=()=>Object.keys(S.bes||{}).filter(k=>CREATURE[k]).length;
+/* ==================================================================
    VOCABULAIRE D'ATTAQUE (5.1, « patterns télégraphiés et variés »)
    Une créature ne fait plus toujours le même geste : à chaque cycle
    elle choisit dans son répertoire, et le télégraphe l'annonce par

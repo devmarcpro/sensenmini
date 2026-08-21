@@ -42,6 +42,7 @@ function tameBeast(){
   const el=domi(E.vec),l=Math.max(1,lvCible);
   S.comps.push({id:'c'+(S.nid++),type:'bete',nom:(E.cre&&CREATURE[E.cre]?CREATURE[E.cre].n:pick(BEASTN))+' '+EL[el].n.toLowerCase(),cre:E.cre||null,
     el,lv:l,hp:36+l*8,max:36+l*8,xp:0,mood:70,order:'attaquer',esc:false,dead:0,mode:'permanent',eq:null,pot:90});
+  if(E.cre)noteBestiaire(E.cre,'a');
   removeEnemy(E);questTick('tame',1);
   cutIn('馴','Apprivoisée','niveau '+l+' · '+EL[el].n);
 }

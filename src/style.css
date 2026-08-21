@@ -4,7 +4,7 @@
      sert une version avec le code d'une autre — le jeu s'affiche alors en
      morceaux sans que rien ne le signale. On recharge plutôt une fois.
      Les deux valeurs se bougent ensemble ; `npm test` le vérifie. */
-  --css-rev:6;
+  --css-rev:7;
   --ink:#0B0D0C;--sumi:#131817;--panel:#181E1C;--line:#26302C;--line2:#3C4F47;
   --paper:#F4F1E8;--bone:#E6E2D6;--dim:#7E9187;
   --zhu:#C8332B;
@@ -191,6 +191,18 @@ body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
 /* Le duel : le joueur a gauche, la creature a droite, tournes l'un vers
    l'autre. Deux points d'ancrage sans dimension, chacun sa camera. */
 .duel{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-evenly;z-index:2}
+/* Une fiche de bestiaire : la silhouette a gauche, ce qu'on sait a droite.
+   La vignette a une hauteur fixe et sa propre camera — les paves y sont poses
+   par voxelHtml comme partout ailleurs. */
+.besline{display:flex;gap:12px;align-items:flex-start}
+.besvox{position:relative;width:72px;height:72px;flex:none;perspective:400px;
+  display:flex;align-items:center;justify-content:center}
+.besvox .cam{position:absolute;left:50%;top:52%;width:0;height:0;transform-style:preserve-3d;
+  transform:rotateX(-20deg) rotateY(-32deg)}
+.besvox .bx{position:absolute;transform-style:preserve-3d}
+.besvox i{position:absolute;inset:0;border:1px solid rgba(0,0,0,.3);transform-origin:left top}
+.besinfo{flex:1;min-width:0}
+@media(max-width:520px){.besvox{width:60px;height:60px}}
 /* L'escorte se tient derriere le joueur, plus petite et plus pale :
    presente sans voler la lecture du duel. */
 .escorte{position:absolute;left:6%;bottom:24px;display:flex;gap:26px;align-items:flex-end;z-index:1;opacity:.82}

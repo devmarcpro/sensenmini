@@ -30,6 +30,47 @@ function pComps(){
          ?'<div class="row">'+S.items.map((x,xi)=>x.kind==='arme'
            ?'<button class="btn" data-arm="'+i+':'+xi+'">Donner '+x.nom+'</button>':'').join('')+'</div>':''))
      +'</div>';}).join('');
+  h+=bestiaireSection();
+  return h;
+}
+
+/* ==================================================================
+   LE BESTIAIRE
+   Les silhouettes ne se voyaient qu'en combat, le temps d'un échange.
+   On les feuillette ici au calme : ce qu'on a croisé, ce qu'on a abattu,
+   ce qui se dompte — et le compte de ce qu'on n'a pas encore vu, qui est
+   la seule chose que le bestiaire ne montre pas.
+   Les familles se replient : quarante-quatre fiches d'un bloc, ce serait
+   le mur qu'on vient justement de démonter ailleurs.
+   ================================================================== */
+const BESCAT={bete:'BÊTES',vermine:'VERMINE',humain:'HUMAINS',corrompu:'CORROMPUS'};
+function bestiaireSection(){
+  const vus=CK.filter(k=>S.bes&&S.bes[k]);
+  let h=grp('獣','BESTIAIRE',vus.length+' / '+CK.length+' espèces rencontrées');
+  if(!vus.length)return h+'<p class="hint">Rien de croisé pour l\'instant. Chaque créature rencontrée s\'inscrit ici — sa silhouette, où elle vit, ce qu\'elle laisse, et si elle se dompte.</p>';
+  Object.keys(BESCAT).forEach(cat=>{
+    const l=vus.filter(k=>CREATURE[k].cat===cat);
+    if(!l.length)return;
+    const tot=CK.filter(k=>CREATURE[k].cat===cat).length;
+    const abattues=l.filter(k=>S.bes[k].t>0).length;
+    h+=foldHead('bes',cat,'獣',BESCAT[cat],l.length+' / '+tot+' · '+abattues+' abattue'+(abattues>1?'s':''),null);
+    if(!foldOpen('bes',cat,null))return;
+    l.sort((a,b)=>CREATURE[a].lv-CREATURE[b].lv);
+    h+=l.map(k=>{
+      const C=CREATURE[k],b2=S.bes[k];
+      const coul=EL[C.vec?domi(norm(V(C.vec))):3].c;
+      return '<div class="card"><div class="besline">'
+       +'<div class="besvox"><div class="cam">'+voxelHtml(k,.58,coul,1)+'</div></div>'
+       +'<div class="besinfo"><h3><span>'+C.g+' '+C.n+'</span><i>niveau '+C.lv+'</i></h3>'
+       +'<div class="meta">croisée '+b2.v+' fois · '+(b2.t?b2.t+' abattue'+(b2.t>1?'s':''):'jamais abattue')
+       +(b2.a?' · '+b2.a+' apprivoisée'+(b2.a>1?'s':''):(C.tame?' · s\'apprivoise':' · ne s\'apprivoise pas'))+'</div>'
+       +'<div class="meta">'+(C.bio.length?C.bio.map(x=>BIOME[x]?BIOME[x].n:x).join(', '):'donjons et camps')
+       +(C.corr?' · corruption ≥ '+C.corr:'')+(C.minp?' · lieux puissants seulement':'')+'</div>'
+       +'<div class="meta">gestes : '+(C.pat||['simple']).map(p=>PATTERN[p]?PATTERN[p].g+' '+PATTERN[p].n:p).join(' · ')+'</div>'
+       +(C.mats&&C.mats.length?'<div class="meta">laisse : '+C.mats.map(matName).join(', ')+'</div>':'')
+       +'</div></div></div>';
+    }).join('');
+  });
   return h;
 }
 

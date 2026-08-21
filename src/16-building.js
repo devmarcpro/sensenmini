@@ -27,6 +27,22 @@ const MEUBLE={
   foyer:{n:'Foyer',g:'炉',cost:[['roche',10],['form:lingot',2]],d:'annule le froid sur la cellule'},
   etal:{n:'Étal',g:'店',cost:[['bois',6],['form:lingot',2]],d:'boutique passive — les PNJ achètent seuls'},
   hall:{n:'Hall de guilde',g:'旗',cost:[['form:lingot',8],['roche',12]],d:'prendre les quêtes de guilde sans se déplacer'},
+  /* Le catalogue F.6 en declare seize ; dix etaient poses. Voici les six qui
+     manquaient, et aucun n'est un doublon : chacun branche une regle qui
+     existe deja quelque part et que rien n'atteignait depuis un batiment. */
+  litpaille:{n:'Lit de paille',g:'藁',cost:[['vegetal',5]],
+    d:'loge un résident, pour presque rien — mais on y dort mal : humeur −3'},
+  chaise:{n:'Chaise',g:'椅',cost:[['bois',2]],d:'+1 de confort'},
+  torchere:{n:'Torchère',g:'炬',cost:[['bois',4],['roche',2]],
+    d:'éclaire la cellule — la lumière sans métal, pour qui n\'a pas encore de forge'},
+  gardemanger:{n:'Garde-manger',g:'貯',cost:[['bois',7],['roche',4]],
+    d:'les résidents se nourrissent seuls : −1 or d\'entretien par semaine et par garde-manger'},
+  bibliotheque:{n:'Bibliothèque',g:'書',cost:[['bois',9],['form:tissu',3]],
+    d:'+3 aux jets de lecture sur cette cellule — un grimoire difficile s\'y ouvre'},
+  ratelier:{n:'Râtelier d\'armes',g:'架',cost:[['bois',6],['form:lingot',3]],
+    d:'jusqu\'à cinq armes posées ici comptent pour la Communion des cinq, où que tu sois'},
+  autelmaison:{n:'Autel domestique',g:'廟',cost:[['roche',14],['form:lingot',4],['gemme',1]],
+    d:'tomber au combat ne coûte plus que la moitié de la bourse'},
 };
 const MK2=Object.keys(MEUBLE);
 const SPECIAL=['etal','hall'];
@@ -164,7 +180,22 @@ function countPlot(k){let n=0;
 function countSlot(k){let n=0;eachBuilding(b=>b.slots.forEach(sl=>{if(sl&&sl.k===k)n++;}));return n;}
 /* les lits qui logent vraiment : ceux des cellules d'habitation si l'on en
    a désigné, tous les autres sinon */
-function beds(){let n=0;eachLogis(b=>b.slots.forEach(sl=>{if(sl&&sl.k==='lit')n++;}));return n;}
+/* Un lit de paille loge un resident, exactement comme un lit — c'est le
+   confort qui differe, pas l'hebergement (F.6). */
+function beds(){let n=0;eachLogis(b=>b.slots.forEach(sl=>{if(sl&&(sl.k==='lit'||sl.k==='litpaille'))n++;}));return n;}
+/* combien d'exemplaires d'un meuble sur la cellule courante */
+function meubleIci(k){
+  const c=here();let n=0;
+  if(c.plots)c.plots.forEach(p=>{if(p&&p.t==='batiment')p.slots.forEach(sl=>{if(sl&&sl.k===k)n++;});});
+  return n;
+}
+/* le meme compte, sur toutes les cellules revendiquees */
+function meubleTerritoire(k){
+  let n=0;
+  (S.claims||[]).forEach(ck=>{const c=S.world[ck];
+    if(c&&c.plots)c.plots.forEach(p=>{if(p&&p.t==='batiment')p.slots.forEach(sl=>{if(sl&&sl.k===k)n++;});});});
+  return n;
+}
 /* ===== LES COFFRES (F.6) =====
    Le sac a un fond ; le coffre est l'endroit où poser le reste. Il est
    ATTACHÉ À SA CELLULE : ce qu'on y range n'est repris que sur place. */
@@ -212,7 +243,10 @@ function rangerTout(){
    ils coûtaient des matériaux pour ne valoir ni plus ni moins qu'une table.
    Le foyer et la lanterne, qui rendent déjà un service sur la cellule,
    apportent en plus un peu de confort à ceux qui y vivent. */
-const MEUBLECONF={tapis:2,trophee:3,foyer:2,lanterne:1};
+const MEUBLECONF={tapis:2,trophee:3,foyer:2,lanterne:1,chaise:1,bibliotheque:2,
+  gardemanger:2,torchere:1,ratelier:1,autelmaison:3,
+  /* on dort mal sur la paille : c'est un lit, et c'est tout ce qu'on peut en dire */
+  litpaille:-3};
 function buildingComfort(b){
   const types=new Set(b.slots.filter(sl=>sl&&sl.t==='meuble').map(sl=>sl.k));
   let bonus=0;types.forEach(k=>{bonus+=MEUBLECONF[k]||0;});

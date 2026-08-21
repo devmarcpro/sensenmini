@@ -57,7 +57,11 @@ const nAssign=()=>S.npcs.filter(n=>n.rec&&n.assign).length;
 const nStruct=()=>PK.reduce((a,k)=>a+countPlot(k),0)+MK2.reduce((a,k)=>a+countSlot(k),0);
 const nSpecial=()=>countSlot('etal')+countSlot('hall')+countPlot('tourelle')
   +Object.keys(STATION).reduce((a,k)=>a+countSlot(k),0);
-const upkeep=()=>Math.round((nAssign()*10+nSpecial()*25)*(S.gov?GOV[S.gov].tax:1));
+/* « Garde-manger : stock de nourriture des residents » (F.6/E.15). Un
+   resident qui mange chez lui coute moins cher a entretenir : chaque
+   garde-manger retire un or par semaine, sans jamais descendre sous zero. */
+const upkeep=()=>Math.max(0,Math.round((nAssign()*10+nSpecial()*25)*(S.gov?GOV[S.gov].tax:1))
+  -(typeof meubleTerritoire==='function'?meubleTerritoire('gardemanger'):0));
 const defense=()=>((S.detteW||0)>=4?0:S.npcs.filter(n=>n.rec&&n.assign==='garde').reduce((a,n)=>a+n.lv*6,0))
   +((S.detteW||0)>=2?0:countPlot('tourelle')*24)+countPlot('mur')*15
   +Math.min(20,countPlot('route')*3);

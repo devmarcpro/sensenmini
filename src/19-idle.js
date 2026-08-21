@@ -36,11 +36,35 @@ function buyAuto(k){
 }
 /* --- râtelier : changer d'arme en pleine chaîne est une mécanique voulue --- */
 const rackList=()=>S.items.filter(it=>it.kind==='arme');
+/* Le RATELIER (F.6). La Communion des cinq demandait de trimballer cinq
+   armes dans le sac en permanence — cinq places prises sur vingt, rien que
+   pour tenir une rotation. Un ratelier chez soi accueille jusqu'a cinq
+   armes ; elles comptent pour la rotation ou que tu sois, parce que ce
+   qu'entretient la Communion, c'est le CYCLE, pas le poids porte. */
+const ratelierList=()=>((S.ratelier||[]).slice(0,5*(typeof meubleTerritoire==='function'?meubleTerritoire('ratelier'):0)));
 function rackElements(){
   const set={};
   const w=weapon();if(w)set[domi(itemVec(w))]=1;
   rackList().forEach(it=>set[domi(itemVec(it))]=1);
+  ratelierList().forEach(it=>set[domi(itemVec(it))]=1);
   return set;
+}
+/* poser une arme au ratelier : elle quitte le sac et garde sa place au cycle */
+function poserRatelier(i){
+  const it=S.items[i];
+  if(!it||it.kind!=='arme')return toast('Seule une arme se pose au râtelier');
+  const cap=5*(typeof meubleTerritoire==='function'?meubleTerritoire('ratelier'):0);
+  if(!cap)return toast('Il faut un râtelier dans un bâtiment de ton territoire (建 BÂTIR)');
+  S.ratelier=S.ratelier||[];
+  if(S.ratelier.length>=cap)return toast('Râtelier plein — '+cap+' armes au plus');
+  S.ratelier.push(it);S.items.splice(i,1);
+  log('<span class="in">'+it.nom+' prend sa place au râtelier.</span>');
+}
+function reprendreRatelier(i){
+  const it=(S.ratelier||[])[i];if(!it)return;
+  if(sacPlein())return toast('Sac plein');
+  S.ratelier.splice(i,1);S.items.push(it);
+  log(it.nom+' quitte le râtelier.');
 }
 function drawFrom(el){
   const i=S.items.findIndex(it=>it.kind==='arme'&&domi(itemVec(it))===el);

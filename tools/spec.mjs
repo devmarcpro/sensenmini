@@ -737,6 +737,82 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('meubles — sept de plus, et chacun change une regle',()=>{
+  /* Le catalogue F.6 en declare seize ; dix etaient poses. Un meuble qui ne
+     fait qu'ajouter du confort est un doublon du tapis : chacun de ceux-ci
+     branche une regle qui existait deja et que rien n'atteignait depuis un
+     batiment. */
+  const c=nouveau();
+  /* on se donne une cellule revendiquee avec un batiment, et de quoi poser */
+  R(c,`globalThis.__pose=(k,n)=>{
+    const cc=here();
+    S.claims=[key(cc.x,cc.y)];cc.claim=1;S.world[key(cc.x,cc.y)]=cc;
+    cc.plots=[{t:'batiment',slots:[]}];
+    for(let i=0;i<(n||1);i++)cc.plots[0].slots.push({t:'meuble',k});
+    return cc;
+  };
+  globalThis.__vide=()=>{const cc=here();cc.plots=[{t:'batiment',slots:[]}];S.claims=[key(cc.x,cc.y)];cc.claim=1;};`);
+
+  /* --- BIBLIOTHEQUE : on lit mieux chez soi --- */
+  R(c,'__vide();');
+  const litSans=G(c,'readBonus()');
+  R(c,'__pose("bibliotheque");');
+  gt(G(c,'readBonus()'),litSans+2,'une bibliothèque aide vraiment à lire — '+litSans.toFixed(1)
+    +' puis '+G(c,'readBonus()').toFixed(1));
+  R(c,'__pose("bibliotheque",4);');
+  ok(G(c,'readBonus()')<=litSans+6.001,'et quatre bibliothèques ne rendent pas omniscient');
+
+  /* --- AUTEL DOMESTIQUE : tomber coûte moitié moins --- */
+  R(c,'__vide();S.or=1000;down();');
+  const perteNue=G(c,'1000-S.or');
+  R(c,'__pose("autelmaison");S.or=1000;down();');
+  const perteAutel=G(c,'1000-S.or');
+  ok(perteAutel<perteNue,'un autel domestique adoucit la chute — '+perteNue+' or puis '+perteAutel);
+  gt(perteAutel,0,'mais mourir coûte toujours quelque chose');
+
+  /* --- GARDE-MANGER : l'entretien baisse --- */
+  R(c,'__vide();S.gov="monarchie";S.npcs=[];'
+    +'for(let i=0;i<4;i++)S.npcs.push({id:"n"+i,rec:1,assign:"ferme",nom:"x",rel:50,mood:50});');
+  const upNu=G(c,'upkeep()');
+  gt(upNu,0,'quatre résidents assignés coûtent un entretien');
+  R(c,'__pose("gardemanger",3);');
+  eq(G(c,'upkeep()'),upNu-3,'chaque garde-manger retire un or par semaine');
+  R(c,'__pose("gardemanger",400);');
+  gte(G(c,'upkeep()'),0,'et l\'entretien ne devient jamais négatif');
+
+  /* --- RÂTELIER : la rotation tient sans peser dans le sac --- */
+  R(c,'__vide();S.items=[];S.eq={};S.ratelier=[];');
+  eq(G(c,'Object.keys(rackElements()).length'),0,'sans arme, aucun élément dans la rotation');
+  /* sans râtelier, on ne peut rien y poser */
+  R(c,`globalThis.__arme=(mats)=>{const fn='epee';
+    const p=FUNC[fn].comp.map(ct=>partFor(ct,mats));p.push(partFor('fixations',mats));
+    return mkItem('arme',fn,p,1.2);};
+    S.items=[__arme(['fer','chene','cuir'])];poserRatelier(0);`);
+  eq(G(c,'S.ratelier.length'),0,'sans râtelier chez soi, on n\'y pose rien');
+  R(c,'__pose("ratelier");poserRatelier(0);');
+  eq(G(c,'S.ratelier.length'),1,'avec un râtelier, l\'arme y prend sa place');
+  eq(G(c,'S.items.length'),0,'et quitte le sac');
+  gt(G(c,'Object.keys(rackElements()).length'),0,'elle compte pour la Communion des cinq');
+  /* et cela vaut où qu'on soit : le râtelier est resté au village */
+  R(c,'S.pos=[S.pos[0]+9,S.pos[1]+9];here().seen=true;');
+  gt(G(c,'Object.keys(rackElements()).length'),0,'même à neuf cellules de chez soi');
+  R(c,'reprendreRatelier(0);');
+  eq(G(c,'S.items.length'),1,'et l\'on peut toujours la reprendre');
+
+  /* --- LIT DE PAILLE : il loge, mais on y dort mal --- */
+  R(c,'S.pos=[S.pos[0]-9,S.pos[1]-9];__vide();');
+  const litsNus=G(c,'beds()');
+  R(c,'__pose("litpaille",2);');
+  eq(G(c,'beds()'),litsNus+2,'un lit de paille loge un résident comme un lit');
+  ok(G(c,'MEUBLECONF.litpaille')<0,'mais il retire du confort au lieu d\'en donner');
+
+  /* --- TORCHÈRE : de la lumière sans métal --- */
+  R(c,'__vide();');
+  eq(G(c,'eclaireIci()'),false,'une cellule nue est sombre');
+  R(c,'__pose("torchere");');
+  eq(G(c,'eclaireIci()'),true,'une torchère l\'éclaire');
+});
+
 test('parures — six emplacements qui ne recevaient rien',()=>{
   /* La fiche d'equipement declare quatorze emplacements. Huit se
      remplissaient. Les six autres — deux anneaux, une amulette, le dos, deux

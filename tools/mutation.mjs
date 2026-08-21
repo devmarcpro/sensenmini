@@ -51,6 +51,17 @@ const MUT=[
     "+(typeof hasStatus==='function'&&hasStatus(S,'beni')?1:0)",'']]],
   ['statut : infection','cinq qui manquaient',[['src/25-modules.js',
     "-(k==='endu'&&typeof malusInfection==='function'?malusInfection():0)",'']]],
+  /* les meubles */
+  ['meuble : bibliotheque','meubles',[['src/25-modules.js',
+    "+(typeof meubleIci==='function'?Math.min(6,meubleIci('bibliotheque')*3):0);",';']]],
+  ['meuble : autel domestique','meubles',[['src/24-combat.js',"(autels?.05:.1)",'.1']]],
+  ['meuble : garde-manger','meubles',[['src/13-kingdom.js',
+    "-(typeof meubleTerritoire==='function'?meubleTerritoire('gardemanger'):0));",');']]],
+  ['meuble : ratelier','meubles',[['src/19-idle.js',
+    "  ratelierList().forEach(it=>set[domi(itemVec(it))]=1);",'']]],
+  ['meuble : lit de paille','meubles',[['src/16-building.js',
+    "||sl.k==='litpaille'",'']]],
+  ['meuble : torchere','meubles',[['src/18-weather.js',"||sl.k==='torchere'",'']]],
   /* l'alchimie */
   ['alchimie : poison de lame','alchimie',[['src/24-combat.js',
     "if(S.lame>0)addStatus(tgt,'poison',6,Math.max(1,maxHp()*.010));",'']]],

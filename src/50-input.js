@@ -92,6 +92,8 @@ function handle(e){
   if(b=t.closest('[data-cook]')){cook(selFood.slice());selFood=[];paint();return;}
   if(b=t.closest('[data-distill]')){distill(selFood.slice());selFood=[];paint();return;}
   if(b=t.closest('[data-drink]')){drink(+b.dataset.drink);paint();return;}
+  if(b=t.closest('[data-poserat]')){poserRatelier(+b.dataset.poserat);paint();return;}
+  if(b=t.closest('[data-repriserat]')){reprendreRatelier(+b.dataset.repriserat);paint();return;}
   if(b=t.closest('[data-claim]')){claimCell();paint();return;}
   if(b=t.closest('[data-deposit]')){deposit(b.dataset.deposit==='all'?S.or:+b.dataset.deposit);paint();return;}
   if(b=t.closest('[data-withdraw]')){const n=Math.floor(S.tresor);S.or+=n;S.tresor=0;

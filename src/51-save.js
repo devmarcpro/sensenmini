@@ -81,6 +81,8 @@ function sanitize(){
   Object.keys(S.ref||{}).forEach(k=>{const p=k.split(':');if(!FORM[p[0]]||!MAT[p[1]]||!(S.ref[k]>0))delete S.ref[k];});
   Object.keys(S.comp||{}).forEach(k=>{const c=S.comp[k];if(!c||!COMP[c.ct]||!MAT[c.mk]||!(c.n>0))delete S.comp[k];});
   S.items=(S.items||[]).filter(it=>it&&it.kind);
+  /* le ratelier tient des armes, et rien d autre */
+  S.ratelier=(S.ratelier||[]).filter(it=>it&&it.kind==='arme');
   S.coffres=S.coffres||{};
   for(const k in S.coffres){
     S.coffres[k]=(S.coffres[k]||[]).filter(it=>it&&it.kind);

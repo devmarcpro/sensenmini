@@ -457,14 +457,19 @@ function resolveHit(q,atk){
 const consMult=(c,t)=>CONS[c].fort.includes(t)?.8:CONS[c].faible.includes(t)?1.25:1;
 /* mort (A.10) : −10 % de l'or porté, aucune compétence perdue, réveil au dernier lit — sinon sur place */
 function down(){
-  const perte=Math.floor(S.or*.1);S.or-=perte;
+  /* « Autel domestique : resurrection a domicile » (F.6). Ici la mort ne
+     coute pas une resurrection mais un dixieme de la bourse ; un autel chez
+     soi en reprend la moitie. C'est le seul batiment qui rende quelque chose
+     quand on echoue, et cela vaut d'etre construit avant de descendre. */
+  const autels=typeof meubleTerritoire==='function'?meubleTerritoire('autelmaison'):0;
+  const perte=Math.floor(S.or*(autels?.05:.1));S.or-=perte;
   S.hp=maxHp();S.end=100;S.seg=[];S.bonus=0;E=null;EE=[];foc=0;S.st=[];
   S.occ='repos';S.resume=null;sceneMode='';
   const lit=S.claims.map(k=>S.world[k]).find(c=>c&&c.plots&&c.plots.some(p=>p&&p.t==='batiment'&&p.slots.some(sl=>sl&&sl.k==='lit')));
   let ou='';
   if(lit&&(lit.x!==S.pos[0]||lit.y!==S.pos[1])){S.pos=[lit.x,lit.y];S.target=null;ou=' · réveil dans ton lit, '+(lit.town||BIOME[lit.b].n);}
   S.deaths=(S.deaths||0)+1;if(typeof sfx==='function')sfx('down');
-  cutIn('死','Tu tombes','−'+perte+' or · aucune compétence perdue'+ou);
+  cutIn('死','Tu tombes','−'+perte+' or'+(autels?' (autel domestique : moitié moins)':'')+' · aucune compétence perdue'+ou);
 }
 function kill(who){
   const K=who||E;

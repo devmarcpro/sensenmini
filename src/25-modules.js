@@ -142,7 +142,12 @@ function dropBook(diffBonus){
   cutIn(DOMAIN[dm].g,(g?'Grimoire':'Manuel')+' de '+DOMAIN[dm].n,'difficulté '+S.books[S.books.length-1].diff);
 }
 const readDD=b=>10+b.diff/2;
-const readBonus=()=>lv('lecture')/2+st('per')/4;
+/* « +5 % de reussite de lecture a proximite » (F.6). Ici les jets sont en
+   d20 : trois points, c'est quinze pour cent — de quoi ouvrir un grimoire
+   qu'on n'ouvrait pas, et cela ne se transporte pas. On revient chez soi
+   pour lire les livres difficiles, ce qui donne enfin une raison de rentrer. */
+const readBonus=()=>lv('lecture')/2+st('per')/4
+  +(typeof meubleIci==='function'?Math.min(6,meubleIci('bibliotheque')*3):0);
 function readBook(i){
   const b=S.books[i];if(!b)return;
   S.books.splice(i,1);

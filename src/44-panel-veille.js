@@ -93,7 +93,23 @@ function pAuto(){
     +EL[domi(itemVec(it))].g+' '+EL[domi(itemVec(it))].n+'</i></h3>'
     +'<div class="meta">'+FUNC[it.fn].d[0]+'d'+FUNC[it.fn].d[1]+' '+DT[FUNC[it.fn].t]
     +' · qualité '+it.q.toFixed(2)+' · dureté '+it.dur.toFixed(1)+'</div>'
-    +'<div class="row"><button class="btn" data-draw="'+i+'">Dégainer · 5 endurance</button></div></div>').join('');
+    +'<div class="row"><button class="btn" data-draw="'+i+'">Dégainer · 5 endurance</button></div>'
+    +(meubleTerritoire('ratelier')?'<div class="row"><button class="btn" data-poserat="'+i+'">Poser au râtelier</button></div>':'')
+    +'</div>').join('');
+  /* Les armes posees chez soi. Elles comptent pour la rotation sans peser
+     dans le sac : c'est le CYCLE que la Communion entretient, pas le poids
+     porte — et cinq places de sac rendues changent une partie. */
+  const capRat=5*meubleTerritoire('ratelier');
+  if(capRat){
+    const l=S.ratelier||[];
+    h+='<div class="card"><h3><span>架 Armes au râtelier</span><i>'+l.length+' / '+capRat+'</i></h3>'
+     +'<div class="meta">Elles comptent pour la Communion où que tu sois, et ne prennent aucune place dans le sac.</div>'
+     +(l.length?'<div class="matlist">'+l.map((it,i)=>'<button class="mat" data-repriserat="'+i+'">'
+        +iconeHtml(it,1.9,'mini')+'<b style="color:'+EL[domi(itemVec(it))].c+'">'+EL[domi(itemVec(it))].g+'</b>'+it.nom
+        +'<small>qualité '+it.q.toFixed(2)+'</small><small style="color:var(--jade)">reprendre</small></button>').join('')+'</div>'
+       :'<p class="hint">Râtelier vide.</p>')
+     +'</div>';
+  } else h+='<div class="meta">Un <b>râtelier d\'armes</b> (建 BÂTIR → bâtiment → râtelier) tient cinq armes chez toi : elles comptent pour la Communion sans peser dans le sac.</div>';
   }
   h+=foldHead('veille','ca','率','CADENCE','ce que la veille rendra');
   if(foldOpen('veille','ca')){

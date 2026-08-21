@@ -103,7 +103,7 @@ function tempStress(){
 }
 /* lumière : une lanterne dans un bâtiment tient la nuit à distance */
 const eclaireIci=()=>{const c=here();
-  return !!(c.plots&&c.plots.some(p=>p&&p.t==='batiment'&&p.slots.some(sl=>sl&&(sl.k==='lanterne'||sl.k==='foyer'))));};
+  return !!(c.plots&&c.plots.some(p=>p&&p.t==='batiment'&&p.slots.some(sl=>sl&&(sl.k==='lanterne'||sl.k==='foyer'||sl.k==='torchere'))));};
 /* sommeil (E.21) */
 const litIci=()=>{const c=here();
   return !!(c.claim&&c.plots&&c.plots.some(p=>p&&p.t==='batiment'&&p.slots.some(sl=>sl&&sl.k==='lit')));};

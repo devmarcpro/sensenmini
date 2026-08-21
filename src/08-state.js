@@ -18,7 +18,7 @@ const NEW=()=>({
   npcs:[],rep:{g:0,race:{},king:{}},kd:{},towns:[],tax:.10,assaut:null,claims:[],struct:{},tresor:0,dette:0,gov:null,kingdoms:[],guilds:{},quest:null,vivres:0,
   food:{},potions:[],buffs:[],plats:0,comps:[],auto:{},rate:{},cnt:{},
   books:[],modules:[],spells:[[],[]],postures:[],surchauffe:false,
-  sk:NEWSK(),sx:NEWSX(),mat:{},ref:{},comp:{},items:[],coffres:{},eq:{},recipes:{},nid:1,craft:null,carry:['etabli'],
+  sk:NEWSK(),sx:NEWSX(),mat:{},ref:{},comp:{},items:[],ratelier:[],coffres:{},eq:{},recipes:{},nid:1,craft:null,carry:['etabli'],
   bes:{},triche:0,plan:null,
   day:0,week:0,log:[],t:Date.now()
 });

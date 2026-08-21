@@ -36,15 +36,32 @@ function pEquip(){
   h+=grp('袋','OBJETS',S.items.length+' / '+sacMax()+' en sac');
   h+='<div class="meta" style="margin-bottom:6px">Le dos porte 20 + Force×2 objets. Au-delà, le butin banal reste où il tombe — ou passe au creuset si tu as le Fondeur (自 VEILLE).'
    +(cap?'':' Un <b>coffre</b> (建 BÂTIR → bâtiment → coffre) garde le reste au chaud.')+'</div>';
-  h+=S.items.map((it,i)=>'<div class="card"><h3><span>'+it.nom+'</span><i>'+(it.rar?RARITY[it.rar].n+' · ':'')+(it.kind==='armure'?'armure':it.kind)+'</i></h3>'
-    +'<div class="meta">'+(it.kind==='statue'?'trophée de chasse — valeur '+it.val+' or':itemLine(it))+'</div>'
-    +(it.parts.length?'<div class="meta">'+it.parts.map(p=>COMP[p.ct].n+' — '+formeNom(p.f,p.mk)).join(' + ')+'</div>':'')
-    +(it.aff&&it.aff.length?'<div class="meta" style="color:var(--jade)">'+it.aff.map(a=>AFF.find(x=>x.id===a.id).t(a.p)).join(' · ')+'</div>':'')
-    +vecBar(itemVec(it))
-    +(it.slots?gemBlock(it,'bag:'+i,true):'')
-    +'<div class="row"><button class="btn pri" data-equip="'+i+'">Équiper</button>'
-    +(cap?'<button class="btn" data-ranger="'+i+'">Ranger</button>':'')
-    +'<button class="btn" data-scrap="'+i+'">Fondre · '+Math.round(itemValue(it)/3)+' or</button></div></div>').join('')
+  /* Un sac de quarante objets faisait onze ecrans et demi sur petit
+     telephone : chaque piece etalait sa composition, ses affixes, son
+     vecteur et ses sertissures. On plie. Le nom, la rarete, la qualite et
+     les deux gestes frequents — equiper, fondre — restent toujours
+     visibles ; le detail ne s'ouvre que pour la piece qu'on regarde.
+     Le repli est un accordeon : une seule fiche ouverte a la fois. */
+  h+=S.items.map((it,i)=>{
+    const ouv=foldOpen('obj',it.id,null);
+    let s='<div class="card"><button class="objh'+(ouv?' on':'')+'" data-fold="obj:'+it.id+'">'
+      +'<span>'+it.nom+'</span>'
+      +'<i>'+(it.rar?RARITY[it.rar].n+' · ':'')+'q'+it.q.toFixed(2)
+      +(it.aff&&it.aff.length?' · '+it.aff.length+' affixe'+(it.aff.length>1?'s':''):'')
+      +(it.slots?' · '+it.slots+'◇':'')+'</i>'
+      +'<em>'+(ouv?'▾':'▸')+'</em></button>';
+    if(ouv){
+      s+='<div class="meta">'+(it.kind==='statue'?'trophée de chasse — valeur '+it.val+' or':itemLine(it))+'</div>'
+       +(it.parts.length?'<div class="meta">'+it.parts.map(p=>COMP[p.ct].n+' — '+formeNom(p.f,p.mk)).join(' + ')+'</div>':'')
+       +(it.aff&&it.aff.length?'<div class="meta" style="color:var(--jade)">'+it.aff.map(a=>AFF.find(x=>x.id===a.id).t(a.p)).join(' · ')+'</div>':'')
+       +vecBar(itemVec(it))
+       +(it.slots?gemBlock(it,'bag:'+i,true):'');
+    }
+    s+='<div class="row"><button class="btn pri" data-equip="'+i+'">Équiper</button>'
+      +(cap?'<button class="btn" data-ranger="'+i+'">Ranger</button>':'')
+      +'<button class="btn" data-scrap="'+i+'">Fondre · '+Math.round(itemValue(it)/3)+' or</button></div>';
+    return s+'</div>';
+  }).join('')
     ||'<p class="hint">Le sac d\'objets est vide.</p>';
   return h;
 }

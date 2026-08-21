@@ -19,10 +19,25 @@ function pSkills(){
   h+='<div class="card"><div class="meta">Force : les coups portés · Dextérité : le tir et les parades parfaites · Endurance : les coups reçus · Volonté : le mana dépensé · Perception : l\'exploration et la lecture · Charisme : la parole.</div>'
    +'<div class="meta">Monter consomme le potentiel ; un plat le rend (chaque famille nourrit une stat), et le sommeil en rend 4 à toutes.</div></div>';
   h+=grp('練','COMPÉTENCES','potentiel moyen '+Math.round(avgPot()));
-  h+='<div class="skl">'+SK.map(k=>{const s=S.sk[k];
-    return '<div class="sk"><div class="h"><b>'+SKILLS[k].n+'</b><i>niv '+s.lv+' · p'+Math.round(s.pot)+'</i></div>'
-     +'<div class="xp"><b style="width:'+Math.min(100,s.xp/xpNext(s.lv)*100)+'%"></b></div>'
-     +'<div class="pot"><b style="width:'+(s.pot/200*100)+'%"></b></div></div>';}).join('')+'</div>';
+  /* Soixante compétences à plat faisaient six écrans sur petit téléphone, et
+     l'on n'y retrouvait rien. On plie par famille : celle où l'on est le plus
+     avancé s'ouvre d'office, et chaque en-tête repliée porte le niveau le
+     plus haut de sa famille — souvent tout ce qu'on venait vérifier. */
+  const familles=[...new Set(SK.map(k=>SKILLS[k].grp))];
+  const sommet=g=>SK.filter(k=>SKILLS[k].grp===g).reduce((a,k)=>Math.max(a,S.sk[k].lv),0);
+  const vedette=familles.slice().sort((x,y)=>sommet(y)-sommet(x))[0];
+  familles.forEach(g=>{
+    const l=SK.filter(k=>SKILLS[k].grp===g);
+    const haut=sommet(g),actives=l.filter(k=>S.sk[k].lv>0).length;
+    h+=foldHead('comp',g,'練',g.toUpperCase(),
+      (actives?actives+' entamée'+(actives>1?'s':'')+' · plus haute '+haut:'aucune entamée'),
+      g===vedette?g:null);
+    if(!foldOpen('comp',g,g===vedette?g:null))return;
+    h+='<div class="skl">'+l.map(k=>{const s=S.sk[k];
+      return '<div class="sk"><div class="h"><b>'+SKILLS[k].n+'</b><i>niv '+s.lv+' · p'+Math.round(s.pot)+'</i></div>'
+       +'<div class="xp"><b style="width:'+Math.min(100,s.xp/xpNext(s.lv)*100)+'%"></b></div>'
+       +'<div class="pot"><b style="width:'+(s.pot/200*100)+'%"></b></div></div>';}).join('')+'</div>';
+  });
   h+='<div class="card"><div class="meta">Efficacité : +2 % par niveau, sans plafond. Quantité récoltée : +1 tous les 10 niveaux.</div></div>';
   return h;
 }

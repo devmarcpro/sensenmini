@@ -4,7 +4,7 @@
      sert une version avec le code d'une autre — le jeu s'affiche alors en
      morceaux sans que rien ne le signale. On recharge plutôt une fois.
      Les deux valeurs se bougent ensemble ; `npm test` le vérifie. */
-  --css-rev:5;
+  --css-rev:6;
   --ink:#0B0D0C;--sumi:#131817;--panel:#181E1C;--line:#26302C;--line2:#3C4F47;
   --paper:#F4F1E8;--bone:#E6E2D6;--dim:#7E9187;
   --zhu:#C8332B;
@@ -59,6 +59,13 @@ button.grp:not(.on)>b{color:var(--line2)}
 .card{background:var(--panel);border:1px solid var(--line);box-shadow:3px 3px 0 #000;padding:9px 10px;margin-bottom:8px}
 .card.off{opacity:.55}
 .card h3{margin:0;font-family:var(--px);font-size:13px;font-weight:400;color:var(--paper);display:flex;justify-content:space-between;gap:8px}
+/* En-tete d une fiche d objet : le titre EST le bouton de repli. */
+.objh{width:100%;background:none;border:0;padding:0;text-align:left;display:flex;
+  align-items:baseline;gap:8px;font-family:var(--px);font-size:13px;color:var(--paper)}
+.objh>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.objh>i{font-style:normal;font-size:10px;color:var(--dim);flex:none}
+.objh>em{font-style:normal;font-size:11px;color:var(--line2);flex:none}
+.objh.on>em{color:var(--zhu)}
 .card h3 i{font-style:normal;font-size:10px;color:var(--dim)}
 .meta{font-family:var(--px);font-size:10px;color:var(--dim);margin-top:3px;line-height:1.65}
 .row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}

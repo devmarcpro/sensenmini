@@ -573,6 +573,21 @@ test('panneaux — chaque onglet se rend, replié ou déplié',()=>{
   ok(G(c,'__b.length')<G(c,'__a.length')*3,'déplier une section ne fait pas exploser le panneau');
   R(c,'S.fold.atelier=null;__c=pAtelier();');
   ok(G(c,'__c.length')<G(c,'__a.length'),'tout replié, le panneau est plus court');
+  /* Replier ne doit pas rendre un panneau muet : une tête repliée porte
+     toujours de quoi décider si on l'ouvre — un compte, un niveau, une valeur.
+     Sinon on remplace un mur de texte par une liste d'énigmes. */
+  R(c,'S.fold={};globalThis.__s=pSac();globalThis.__k=pSkills();globalThis.__e=pEquip();');
+  for(const [nom,src] of [['le sac se replie','__s'],['les compétences se replient','__k']]){
+    const n=G(c,src+'.split("data-fold=").length-1');
+    gt(n,1,nom+' par familles — '+n+' sections');
+  }
+  ok(G(c,'__s.indexOf("or")')>=0,'une famille de matières repliée annonce encore sa valeur');
+  ok(G(c,'__k.indexOf("plus haute")')>=0||G(c,'__k.indexOf("aucune entamée")')>=0,
+    'une famille de compétences repliée annonce encore son niveau');
+  /* et les fiches d'objet se plient une par une, sans perdre les gestes fréquents */
+  ok(G(c,'__e.indexOf("data-fold=\\"obj:")')>=0,'chaque objet du sac a sa tête repliable');
+  ok(G(c,'__e.indexOf("data-equip=")')>=0,'équiper reste accessible sans déplier');
+  ok(G(c,'__e.indexOf("data-scrap=")')>=0,'fondre aussi');
 });
 
 test('chargement — un module manquant est détecté au démarrage',()=>{

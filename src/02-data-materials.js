@@ -263,8 +263,14 @@ const BIOME={
   montcris:{n:"Montagne cristalline",c:'#7E8FB0',fert:0.1,mats:['granitnoir','mithril','cristalmana','saphir','adamant','diamant','quartz','amethyste','opale','titane','platine','tungstene','cobalt','geode','kimberlite','peridotite','fluorine','meteorite','serpentinite','amiante']},
   cote:{n:"Côte",c:'#7FA9A0',fert:0.5,mats:['gres','sel','lin','ecaille','saphir','eaupure','sable','coquillage','palmier','teck','boisflotte','roseau','argile','turquoise','bambou','olivier','cypres','acajou','balsa','liege','boisfer','eucalyptus','phosphorite','travertin']},
 };
+/* Cinq points d'interet pour un monde infini, c'est cinq. Huit de plus, et
+   chacun a un geste a lui — voir 07b-lieux.js. */
 const POI={village:{n:'Village',g:'村'},donjon:{n:'Donjon',g:'塔'},camp:{n:'Camp',g:'幕'},
-  sanctuaire:{n:'Sanctuaire',g:'社'},filon:{n:'Filon majeur',g:'鉱'}};
+  sanctuaire:{n:'Sanctuaire',g:'社'},filon:{n:'Filon majeur',g:'鉱'},
+  ruine:{n:'Ruine ancienne',g:'廃'},tombe:{n:'Tombe scellée',g:'墓'},
+  bibliotheque:{n:'Bibliothèque en ruine',g:'書'},source:{n:'Source chaude',g:'湯'},
+  monolithe:{n:'Monolithe',g:'碑'},cercle:{n:'Cercle de pierres',g:'環'},
+  ermitage:{n:'Ermitage',g:'庵'},carcasse:{n:'Grande carcasse',g:'骸'}};
 const TOWN=['Grispierre','Val-Muet','Fontcendre','Haute-Ronce','Sombreverse','Pierrelune','Trois-Racines',
   'Sel-du-Nord','Bassefeuille','Cormorance','Roche-Fendue','Ambrelune','Bois-Dormant','Clairvive','Ferrebrume',
   'Mortefontaine','Aubépine','Gué-des-Loups','Saint-Orme','Vieille-Forge','Brumaille','Les Tanneries','Ronce-Basse',

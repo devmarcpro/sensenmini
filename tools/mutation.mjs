@@ -91,6 +91,10 @@ const MUT=[
   ['vehicule : vent','vehicules',[['src/22b-vehicules.js','m*=(1+malus-aide)/Math.max(.2,mv2);','']]],
   ['vehicule : usure','vehicules',[['src/22b-vehicules.js',
     'm*= 1+(1-v.pv/D.pv)*.45;','']]],
+  /* les lieux */
+  ['lieux : ils se referment','lieux',[['src/07b-lieux.js','  if(D.hebdo)c.lieuW=S.week;','']]],
+  ['lieux : le cercle demande son prix','lieux',[['src/07b-lieux.js',"      if((S.mat.cristalmana||0)<1)return toast('Il faut un cristal de mana à poser au centre');",'']]],
+  ['lieux : la tombe se paie','lieux',[['src/07b-lieux.js','      c.corr=Math.min(100,c.corr+8);','']]],
   /* le territoire */
   ['raid : on le defend soi-meme','raid',[['src/13-kingdom.js',"    if(S.claims.includes(key(S.pos[0],S.pos[1]))&&S.occ!=='donjon'&&!S.raid){",'    if(false){']]],
   ['raid : le repousser paie','raid',[['src/24-combat.js',"  if(K.raid&&S.raid){",'  if(false){']]],

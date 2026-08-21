@@ -786,6 +786,97 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('lieux — huit points d interet, et chacun un geste a lui',()=>{
+  /* Cinq points d'interet pour un monde infini : village, donjon, camp,
+     sanctuaire, filon. Une case sur quatre en portait un, les trois autres
+     etaient interchangeables, et les cinq se repetaient tous les dix pas.
+     Huit de plus, et chacun doit FAIRE quelque chose qu'on ne fait pas
+     ailleurs — sinon c'est un decor avec un bouton. */
+  const c=nouveau();
+  R(c,`globalThis.__lieu=(k)=>{const cc=here();cc.poi=k;cc.lieuW=-9;cc.corr=20;
+    S.occ='repos';E=null;EE=[];return cc;};`);
+
+  /* --- chacun a son geste, sa description, et se rouvre --- */
+  const bancals=G(c,`LIEUK.filter(k=>{const D=LIEU[k];
+    return !D.n||!D.g||!D.geste||!D.d||typeof D.fais!=='function'||!POI[k];})`);
+  eq(bancals.length,0,'les huit lieux sont complets — nom, geste, explication, entrée au catalogue',
+    'incomplets : '+bancals.join(', '));
+
+  /* --- CHACUN doit deplacer quelque chose de mesurable --- */
+  R(c,`globalThis.__empreinteL=()=>{
+    const v=[];
+    v.push(S.or,S.hp,S.mana,S.end,Math.round(S.repose||0),
+      Object.values(S.mat).reduce((a,b)=>a+b,0),
+      Object.values(S.food).reduce((a,b)=>a+b,0),
+      (S.gems||[]).length,(S.books||[]).length,(S.buffs||[]).length,
+      (S.st||[]).length,Object.keys(S.alliages||{}).length,
+      SK.reduce((a,k)=>a+S.sk[k].pot+S.sk[k].xp+S.sk[k].lv,0),
+      here().corr,S.occ);
+    return v.join('|');
+  };`);
+  const inertes=G(c,`(()=>{
+    const ko=[];
+    LIEUK.forEach(k=>{
+      /* un personnage a qui il manque tout ce que chaque lieu peut rendre */
+      S.or=0;S.hp=1;S.mana=0;S.end=1;S.mat={cristalmana:3};S.food={};
+      S.gems=[];S.books=[];S.buffs=[];S.st=[];S.alliages={};
+      SK.forEach(x=>{S.sk[x].pot=40;});S.sk.epee.lv=5;
+      __lieu(k);
+      const avant=__empreinteL();
+      /* dix essais : certains lieux tirent au sort ce qu'ils donnent */
+      let bouge=false;
+      for(let i=0;i<10&&!bouge;i++){
+        here().lieuW=-9;
+        try{lieuVisiter();}catch(e){ko.push(k+' : '+e.message);return;}
+        if(__empreinteL()!==avant)bouge=true;
+      }
+      if(!bouge)ko.push(k);
+    });
+    return ko;})()`);
+  eq(inertes.length,0,'chacun des '+G(c,'LIEUK.length')+' lieux déplace quelque chose',
+    'sans effet : '+inertes.join(', '));
+
+  /* --- ceux qui se referment se referment vraiment --- */
+  R(c,'__lieu("ruine");S.mat={};lieuVisiter();');
+  const apres=G(c,'Object.values(S.mat).reduce((a,b)=>a+b,0)');
+  gt(apres,0,'une ruine fouillée rend de la matière ouvrée — '+apres);
+  eq(G(c,'lieuPret(here())'),false,'et se referme jusqu\'à la semaine suivante');
+  R(c,'lieuVisiter();');
+  eq(G(c,'Object.values(S.mat).reduce((a,b)=>a+b,0)'),apres,'la revisiter aussitôt ne donne rien');
+  R(c,'S.week+=1;');
+  eq(G(c,'lieuPret(here())'),true,'la semaine d\'après, elle se rouvre');
+
+  /* --- ceux qui ne se referment pas restent ouverts --- */
+  R(c,'__lieu("source");S.hp=1;lieuVisiter();');
+  eq(G(c,'S.hp'),G(c,'maxHp()'),'une source chaude rend tous les PV');
+  eq(G(c,'lieuPret(here())'),true,'et ne se referme pas — on peut y revenir');
+
+  /* --- le cercle demande son prix, et apaise vraiment --- */
+  R(c,`__lieu('cercle');S.mat={};
+    for(let dx=-2;dx<=2;dx++)for(let dy=-2;dy<=2;dy++){const z=cell(here().x+dx,here().y+dy);z.corr=60;}
+    globalThis.__c0=cell(here().x+1,here().y+1).corr;
+    lieuVisiter();`);
+  eq(G(c,'cell(here().x+1,here().y+1).corr'),G(c,'__c0'),
+    'sans cristal de mana, le cercle ne fait rien');
+  R(c,'S.mat={cristalmana:1};here().lieuW=-9;lieuVisiter();');
+  ok(G(c,'cell(here().x+1,here().y+1).corr')<G(c,'__c0'),
+    'avec, il apaise les cellules autour — '+G(c,'__c0')+' puis '+G(c,'cell(here().x+1,here().y+1).corr'));
+  eq(G(c,'S.mat.cristalmana'),undefined,'et le cristal est consommé');
+
+  /* --- une tombe se paie : elle monte la corruption --- */
+  R(c,'__lieu("tombe");here().corr=20;globalThis.__k0=here().corr;lieuVisiter();');
+  gt(G(c,'here().corr'),G(c,'__k0'),'desceller une tombe monte la corruption du lieu');
+
+  /* --- l'ermite rend du potentiel la ou il manque --- */
+  R(c,'__lieu("ermitage");SK.forEach(k=>{S.sk[k].pot=40;});S.sk.epee.lv=5;'
+    +'globalThis.__p0=SK.reduce((a,k)=>a+S.sk[k].pot,0);lieuVisiter();');
+  gt(G(c,'SK.reduce((a,k)=>a+S.sk[k].pot,0)'),G(c,'__p0'),'l\'ermite rend du potentiel');
+
+  /* --- et un lieu inconnu ne casse rien --- */
+  R(c,'here().poi="inconnu_xyz";lieuVisiter();');
+  ok(true,'un point d\'intérêt inconnu ne fait pas tomber le jeu');
+});
+
 test('raid — on peut enfin defendre son territoire soi-meme',()=>{
   /* « Joueur present sur place : l'attaque se joue en temps reel ; joueur
      absent : elle est simulee » (14.5). Elle etait TOUJOURS simulee. On

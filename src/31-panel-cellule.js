@@ -34,6 +34,15 @@ function pCell(){
      +'<div class="row"><button class="btn pri" data-shrine="1" '+((c.shrine||0)>S.week-1?'disabled':'')+'>'
      +((c.shrine||0)>S.week-1?'déjà fouillé cette semaine':'Fouiller l\'autel')+'</button></div></div>';
   }
+  /* Les huit lieux : un bloc, une explication, un geste. On dit toujours
+     quand il se rouvre plutot que de griser un bouton en silence. */
+  if(LIEU[c.poi]){
+    const D=LIEU[c.poi],pret=lieuPret(c);
+    h+=grp(D.g,D.n.toUpperCase());
+    h+='<div class="card"><div class="meta">'+D.d+'</div>'
+     +'<div class="row"><button class="btn pri" data-lieu="1" '+(pret?'':'disabled')+'>'
+     +(pret?D.geste:'déjà visité cette semaine')+'</button></div></div>';
+  }
   const mt=METEO[meteo(c)],T=tempC(c),Tf=feltTemp(),ts3=tempStress();
   h+=grp('天','CIEL',season().n.toLowerCase()+' · '+phase()+' · '+Math.floor(HOUR())+' h');
   h+='<div class="card"><h3><span>'+mt.g+' '+mt.n+'</span><i>'+(mt.extreme?'extrême':'')+'</i></h3>'

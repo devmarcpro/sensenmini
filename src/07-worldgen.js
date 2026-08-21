@@ -58,6 +58,25 @@ function genCell(x,y){
   const r=hash(x,y,s,9);
   if(r<.04)c.poi='village';else if(r<.10)c.poi='donjon';else if(r<.18)c.poi='camp';
   else if(r<.21)c.poi='sanctuaire';else if(r<.27)c.poi='filon';
+  /* Les huit nouveaux prennent la place du VIDE — les seuils d'origine ne
+     bougent pas d'un pouce, donc un monde deja explore garde exactement les
+     memes villages aux memes endroits. Ce qui etait une case nue devient
+     parfois quelque chose, et jamais l'inverse.
+     Chacun se pose la ou son biome a du sens : une source chaude en
+     montagne, une carcasse dans la toundra, un monolithe la ou le mana
+     affleure. Un lieu qui pourrait etre partout n'appartient a nulle part. */
+  else{
+    const r2=hash(x,y,s,17);
+    const chaud=c.temp>.55,froid=c.temp<.32,haut=c.alt>.6,mana=c.mana>.55,sec=c.hum<.4;
+    if(r2<.030&&(c.b==='ruines'||c.res>.6))c.poi='ruine';
+    else if(r2<.055&&(froid||c.b==='marecage'||c.b==='marcorr'||c.b==='cendres'))c.poi='tombe';
+    else if(r2<.072&&(c.b==='ruines'||mana))c.poi='bibliotheque';
+    else if(r2<.098&&(haut||c.b==='karst'||c.b==='oasis'))c.poi='source';
+    else if(r2<.120&&mana)c.poi='monolithe';
+    else if(r2<.138&&mana&&!sec)c.poi='cercle';
+    else if(r2<.162&&(c.b==='foret'||c.b==='taiga'||c.b==='montagne'||c.b==='jungle'))c.poi='ermitage';
+    else if(r2<.190&&(froid||c.b==='desert'||c.b==='badlands'||c.b==='banquise'||chaud))c.poi='carcasse';
+  }
   if(c.poi==='village'){
     const base=TOWN[Math.floor(hash(x,y,s,11)*TOWN.length)];
     const q=hash(x,y,s,12);

@@ -93,6 +93,7 @@ function handle(e){
   if(b=t.closest('[data-cook]')){cook(selFood.slice());selFood=[];paint();return;}
   if(b=t.closest('[data-distill]')){distill(selFood.slice());selFood=[];paint();return;}
   if(b=t.closest('[data-drink]')){drink(+b.dataset.drink);paint();return;}
+  if(b=t.closest('[data-lieu]')){lieuVisiter();return;}
   if(b=t.closest('[data-seqon]')){const Q=seq();Q.on=!Q.on;if(Q.on&&!Q.r.length)Q.r=seqDefaut();seqReset();paint();return;}
   if(b=t.closest('[data-seqadd]')){seqAjout();paint();return;}
   if(b=t.closest('[data-seqreset]')){seq().r=seqDefaut();seqReset();paint();return;}

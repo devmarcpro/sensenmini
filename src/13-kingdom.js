@@ -7,7 +7,7 @@
    ================================================================== */
 const ROLES={
   base:{n:'Base',d:'toutes activités autorisées, constructions persistantes'},
-  habitation:{n:'Habitation',d:'seules les pièces d\'ici comptent pour loger les résidents'},
+  habitation:{n:'Habitation',d:'dès qu\'une cellule porte ce rôle, elle seule loge les résidents — les lits d\'ailleurs ne comptent plus'},
   champs:{n:'Champs',d:'agriculture et élevage — constructions légères seulement'},
   ressources:{n:'Ressources naturelles',d:'garde la régénération hebdomadaire — aucune construction'},
 };

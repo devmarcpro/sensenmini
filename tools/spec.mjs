@@ -683,6 +683,37 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('zonage — le rôle d\'une cellule tient sa promesse',()=>{
+  const c=nouveau();
+  /* La fiche du rôle « habitation » promettait que seules ses pièces logent
+     les résidents. Elle ne le faisait pas : les lits comptaient partout. */
+  R(c,'S.or=999999;S.mat.pierre=999;S.mat.chene=999;S.mat.lin=999;S.mat.limon=999;'
+    +'claimCell();buildPlot(0,"batiment");placeSlot(0,0,"meuble","lit");'
+    +'globalThis.__a=here();');
+  eq(G(c,'beds()'),1,'un lit posé loge quelqu\'un');
+  /* une seconde cellule, un second lit */
+  /* on cherche une voisine libre : la case a deux pas peut porter un donjon */
+  R(c,'for(let d=2;d<9;d++){S.pos=[__a.x+d,__a.y];if(!here().poi&&!here().claim)break;}here().seen=true;S.or=999999;'
+    +'S.mat.pierre=999;S.mat.chene=999;S.mat.lin=999;'
+    +'claimCell();buildPlot(0,"batiment");placeSlot(0,0,"meuble","lit");'
+    +'globalThis.__b=here();');
+  eq(G(c,'beds()'),2,'deux cellules, deux lits, sans zonage');
+  /* dès qu'on désigne une habitation, elle seule loge */
+  R(c,'__a.claim="habitation";');
+  eq(G(c,'beds()'),1,'zonée, elle seule loge — l\'autre lit ne compte plus');
+  R(c,'__b.claim="habitation";');
+  eq(G(c,'beds()'),2,'deux habitations logent deux fois');
+  /* et le confort suit le même chemin */
+  R(c,'__a.claim="habitation";__b.claim="base";'
+    +'placeSlot(0,1,"meuble","tapis");');   /* le tapis va sur __b, non zonée */
+  const cf=G(c,'comfort()');
+  R(c,'__b.claim="habitation";globalThis.__cf2=comfort();');
+  gte(G(c,'__cf2'),cf,'le confort d\'une cellule non zonée ne compte pas non plus');
+  /* sans aucun zonage, rien ne change pour qui l\'ignore */
+  R(c,'__a.claim="base";__b.claim="base";');
+  eq(G(c,'beds()'),2,'sans zonage, tout compte comme avant');
+});
+
 test('diplomatie — les quatre accords changent quelque chose',()=>{
   const c=nouveau();
   /* Trois des quatre ne faisaient rien : on négociait, on payait son jet, et

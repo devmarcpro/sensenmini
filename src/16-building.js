@@ -140,12 +140,31 @@ function eachBuilding(fn){
   S.claims.forEach(kk=>{const c=S.world[kk];if(!c||!c.plots)return;
     c.plots.forEach(p=>{if(p&&p.t==='batiment')fn(p,c);});});
 }
+/* ===== LE ZONAGE « HABITATION » =====
+   Sa fiche promettait que « seules les pièces d'ici comptent pour loger les
+   résidents ». Elle ne le faisait pas : les lits comptaient partout, et
+   choisir ce rôle ne changeait rien.
+
+   Il le fait maintenant — mais seulement si l'on s'en sert. Tant qu'aucune
+   cellule n'est zonée en habitation, tout compte comme avant : le zonage
+   est un choix qu'on pose, pas un piège qui punit ceux qui l'ignorent. Dès
+   qu'on en désigne une, c'est elle qui loge, et les lits d'ailleurs ne
+   comptent plus. */
+const zonageHabitation=()=>S.claims.some(kk=>S.world[kk]&&S.world[kk].claim==='habitation');
+function eachLogis(fn){
+  const strict=zonageHabitation();
+  S.claims.forEach(kk=>{const c=S.world[kk];if(!c||!c.plots)return;
+    if(strict&&c.claim!=='habitation')return;
+    c.plots.forEach(p=>{if(p&&p.t==='batiment')fn(p,c);});});
+}
 function countPlot(k){let n=0;
   S.claims.forEach(kk=>{const c=S.world[kk];if(!c||!c.plots)return;
     c.plots.forEach(p=>{if(p&&p.t===k)n++;});});
   return n;}
 function countSlot(k){let n=0;eachBuilding(b=>b.slots.forEach(sl=>{if(sl&&sl.k===k)n++;}));return n;}
-const beds=()=>countSlot('lit');
+/* les lits qui logent vraiment : ceux des cellules d'habitation si l'on en
+   a désigné, tous les autres sinon */
+function beds(){let n=0;eachLogis(b=>b.slots.forEach(sl=>{if(sl&&sl.k==='lit')n++;}));return n;}
 /* ===== LES COFFRES (F.6) =====
    Le sac a un fond ; le coffre est l'endroit où poser le reste. Il est
    ATTACHÉ À SA CELLULE : ce qu'on y range n'est repris que sur place. */
@@ -199,7 +218,7 @@ function buildingComfort(b){
   let bonus=0;types.forEach(k=>{bonus+=MEUBLECONF[k]||0;});
   return Math.min(10,types.size)+bonus+(b.slots.filter(sl=>sl).length>=9?5:0);
 }
-function comfort(){let best=0;eachBuilding(b=>{if(b.slots.some(sl=>sl&&sl.k==='lit'))best=Math.max(best,buildingComfort(b));});return best;}
+function comfort(){let best=0;eachLogis(b=>{if(b.slots.some(sl=>sl&&sl.k==='lit'))best=Math.max(best,buildingComfort(b));});return best;}
 /* stations : celles du bâti de la cellule courante, plus celles que tu portes */
 const capacity=()=>30+st('force')*5;
 const carried=()=>(S.carry||[]).reduce((a,k)=>a+STATION[k].p,0);

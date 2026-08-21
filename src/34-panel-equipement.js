@@ -3,7 +3,12 @@
 
 function pEquip(){
   let h='<p class="hint">Quatorze slots. L\'armure est permanente, l\'arme est situationnelle : le garde-fou n\'est pas une interdiction, c\'est la compétence de construction — porter des mailles quarante heures rend une plaque neuve objectivement moins protectrice.</p>';
-  h+=grp('装','GRILLE');
+  /* La silhouette du joueur a quitte la scene de combat — on sait ou l'on est,
+     et la place vaut mieux pour ce qu'on a en face. Elle trouve ici son vrai
+     usage : voir d'un coup d'oeil ce qu'on porte, piece par piece, avec la
+     couleur de chaque materiau. */
+  h+=grp('装','GRILLE',grip().n);
+  h+='<div class="card"><div class="pdoll"><div class="cam">'+heroHtml(5.4)+'</div></div></div>';
   h+='<div class="matlist">'+SLOTS.map(sl=>{
     const it=eqOf(sl.k);
     return '<button class="mat'+(it?'':'')+'" data-unslot="'+sl.k+'" '+(it?'':'disabled')+'>'

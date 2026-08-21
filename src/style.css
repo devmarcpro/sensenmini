@@ -4,7 +4,7 @@
      sert une version avec le code d'une autre — le jeu s'affiche alors en
      morceaux sans que rien ne le signale. On recharge plutôt une fois.
      Les deux valeurs se bougent ensemble ; `npm test` le vérifie. */
-  --css-rev:7;
+  --css-rev:10;
   --ink:#0B0D0C;--sumi:#131817;--panel:#181E1C;--line:#26302C;--line2:#3C4F47;
   --paper:#F4F1E8;--bone:#E6E2D6;--dim:#7E9187;
   --zhu:#C8332B;
@@ -86,7 +86,7 @@ button.grp:not(.on)>b{color:var(--line2)}
 .scene{position:relative;background:var(--paper);color:#171C1A;border:1px solid #000;box-shadow:4px 4px 0 #000;
   padding:9px 11px 11px;margin-top:10px;overflow:hidden}
 .scene-top{display:flex;justify-content:space-between;font-family:var(--px);font-size:10px;color:#5C6B63}
-.stage{position:relative;height:132px;perspective:520px;display:flex;align-items:center;justify-content:center}
+.stage{position:relative;height:146px;perspective:520px;display:flex;align-items:center;justify-content:center}
 .gridfloor{position:absolute;left:-30%;right:-30%;bottom:4px;height:110px;
   background:repeating-linear-gradient(90deg,rgba(0,0,0,.13) 0 1px,transparent 1px 30px),
              repeating-linear-gradient(0deg,rgba(0,0,0,.13) 0 1px,transparent 1px 30px);
@@ -175,9 +175,11 @@ select{width:100%;background:var(--sumi);color:var(--bone);border:1px solid var(
   padding:10px 12px;z-index:52;display:flex;gap:12px;align-items:flex-start;animation:slam .16s steps(2) both}
 .tip[hidden]{display:none}
 /* le conseil flotte au-dessus : la page se réserve la place pour défiler dessous */
-body.has-tip{padding-bottom:190px}
-@media(max-width:520px){body.has-tip{padding-bottom:230px}}
+/* La page garde de la place pour defiler sous le conseil. Trois regles se
+   succedaient ici, et la derniere ecrasait celle du telephone : la version
+   etroite, qui a besoin de PLUS de place, en recevait moins. */
 body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
+@media(max-width:520px){body.has-tip{padding-bottom:calc(245px + env(safe-area-inset-bottom))}}
 .tip b{font-family:var(--brush);font-size:34px;line-height:.8;color:var(--zhu);font-weight:400;flex:none}
 .tip .tt{flex:1;min-width:0}
 .tip .tt1{font-family:var(--px);font-size:12px;letter-spacing:.1em;color:var(--paper)}
@@ -188,12 +190,10 @@ body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
 
 /* La créature : un point d'ancrage sans dimension, une caméra fixe,
    et les pavés que 28b-voxel.js assemble dedans (GDD 12.1). */
-/* Le duel : le joueur a gauche, la creature a droite, tournes l'un vers
-   l'autre. Deux points d'ancrage sans dimension, chacun sa camera. */
-.duel{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-evenly;z-index:2}
-/* Une fiche de bestiaire : la silhouette a gauche, ce qu'on sait a droite.
-   La vignette a une hauteur fixe et sa propre camera — les paves y sont poses
-   par voxelHtml comme partout ailleurs. */
+/* ===== SILHOUETTES HORS COMBAT =====
+   Le meme systeme de paves sert ailleurs : une fiche de bestiaire, une carte
+   de compagnon, et le pantin d'equipement. Chacun a sa vignette, sa camera et
+   sa propre echelle ; les paves y sont poses par voxelHtml comme partout. */
 .besline{display:flex;gap:12px;align-items:flex-start}
 .besvox{position:relative;width:72px;height:72px;flex:none;perspective:400px;
   display:flex;align-items:center;justify-content:center}
@@ -201,40 +201,63 @@ body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
   transform:rotateX(-20deg) rotateY(-32deg)}
 .besvox .bx{position:absolute;transform-style:preserve-3d}
 .besvox i{position:absolute;inset:0;border:1px solid rgba(0,0,0,.3);transform-origin:left top}
+.besvox.mort{opacity:.3}
 .besinfo{flex:1;min-width:0}
 @media(max-width:520px){.besvox{width:60px;height:60px}}
-/* L'escorte se tient derriere le joueur, plus petite et plus pale :
-   presente sans voler la lecture du duel. */
-.escorte{position:absolute;left:6%;bottom:24px;display:flex;gap:26px;align-items:flex-end;z-index:1;opacity:.82}
-.escorte .ec{width:0;height:0;position:relative;transform-style:preserve-3d}
-.escorte .ec.ko{opacity:.35}
-.escorte .cam{position:absolute;left:0;top:0;transform-style:preserve-3d;
-  transform:rotateX(-20deg) rotateY(-32deg);animation:bob 3.1s ease-in-out infinite}
-.escorte .bx{position:absolute;transform-style:preserve-3d}
-.escorte i{position:absolute;inset:0;border:1px solid rgba(0,0,0,.28);transform-origin:left top}
-@media(max-width:520px){.escorte{left:2%;gap:16px}}
-.hero,.mob{width:0;height:0;position:relative;transform-style:preserve-3d;z-index:2}
-.hero .cam,.hero .bx{position:absolute;transform-style:preserve-3d}
-.hero .cam{left:0;top:0;transform:rotateX(-20deg) rotateY(-32deg);animation:bob 3.4s ease-in-out infinite}
-.hero i{position:absolute;inset:0;border:1px solid rgba(0,0,0,.32);transform-origin:left top}
-.hero::after{content:"";position:absolute;left:-34px;top:33px;width:68px;height:17px;
-  border-radius:50%;background:rgba(0,0,0,.15);filter:blur(4px)}
-/* la garde levee se voit : le joueur se ramasse derriere son bras */
-.hero.garde .cam{transform:rotateX(-20deg) rotateY(-32deg) translateY(3px) scale(.97);animation:none}
+/* Le pantin d'equipement : la silhouette du joueur, composee de ce qu'il porte
+   reellement. Elle a quitte la scene de combat pour ici, ou elle sert. */
+.pdoll{position:relative;height:104px;perspective:460px;display:flex;
+  align-items:center;justify-content:center}
+.pdoll .cam{position:absolute;left:50%;top:58%;width:0;height:0;transform-style:preserve-3d;
+  transform:rotateX(-20deg) rotateY(-32deg);animation:bob 3.4s ease-in-out infinite}
+.pdoll .bx{position:absolute;transform-style:preserve-3d}
+.pdoll i{position:absolute;inset:0;border:1px solid rgba(0,0,0,.3);transform-origin:left top}
+.pdoll::after{content:"";position:absolute;left:50%;bottom:8px;width:64px;height:16px;margin-left:-32px;
+  border-radius:50%;background:rgba(0,0,0,.28);filter:blur(4px)}
+
+/* ===== LA SCENE DE COMBAT =====
+   Toutes les creatures engagees, cote a cote, chacune cliquable pour la
+   viser. La cible est nette et se detache ; les autres reculent d'un pas,
+   pales, avec la marque du dos. Le joueur ne s'affiche pas : on sait ou
+   l'on est, et la place vaut mieux pour ce qu'on a en face. */
+/* Le point d ancrage d une silhouette est le CENTRE du corps, pas ses pieds :
+   les paves descendent d une trentaine de pixels sous lui. La marge du bas doit
+   donc laisser passer le modele ET ce qu on pose dessous. */
+.duel{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:space-evenly;
+  padding:0 4px 58px;z-index:2}
+.mob{position:relative;width:0;height:0;transform-style:preserve-3d;
+  background:none;border:0;padding:0;cursor:pointer;flex:none;opacity:.62;
+  transition:opacity .12s}
+/* Quatre creatures dans trois cents pixels de telephone, il faut bien qu'elles
+   se serrent : l'echelle suit leur nombre, pose par le rendu sur --s. La cible
+   reste un cran plus grande que les autres. */
 .mob .cam{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;
-  transform:rotateX(-20deg) rotateY(-32deg);animation:bob 2.6s ease-in-out infinite}
+  transform:rotateX(-20deg) rotateY(-32deg) scale(var(--s,.8));animation:bob 2.6s ease-in-out infinite}
 .mob .bx{position:absolute;transform-style:preserve-3d}
-/* Aucun filtre ici, jamais : filter aplatit le contexte 3D et les pavés
+/* Aucun filtre ici, jamais : filter aplatit le contexte 3D et les paves
    perdent leur ordre de profondeur. Les trois faces recoivent des couleurs
    deja calculees par voxelHtml(). */
 .mob i{position:absolute;inset:0;border:1px solid rgba(0,0,0,.32);transform-origin:left top}
-/* l'ombre portée ancre la bête au sol : sans elle tout flotte */
-.mob::after{content:"";position:absolute;left:-40px;top:28px;width:80px;height:20px;
+/* l'ombre portee ancre la bete au sol : sans elle tout flotte */
+.mob::after{content:"";position:absolute;left:-34px;top:30px;width:68px;height:17px;
   border-radius:50%;background:rgba(0,0,0,.15);filter:blur(4px)}
-
-.mob .pk{position:absolute;left:18px;top:-48px;font-family:var(--px);font-size:11px;color:#171C1A;background:#E4E1D8;border:1px solid #171C1A;padding:1px 4px;font-weight:400}
-.mob .pk:empty{display:none}
-
+/* La cible : nette, un cran plus grande, et un anneau pose au sol. L'anneau
+   vaut mieux qu'un cercle autour du corps — il ne depend pas de la taille de
+   la bete, et un ours n'a pas la silhouette d'un crabe. */
+.mob.on{opacity:1}
+.mob.on .cam{transform:rotateX(-20deg) rotateY(-32deg) scale(calc(var(--s,.8) * 1.22))}
+.mob.on::after{background:none;border:2px solid var(--zhu);filter:none;
+  left:-30px;top:26px;width:60px;height:15px;opacity:.85}
+.mob.ko{opacity:.2}
+/* celle qui arme un coup s'annonce */
+.mob.wind::before{content:"";position:absolute;left:-32px;top:-34px;width:64px;height:64px;
+  border:2px solid var(--zhu);border-radius:50%;opacity:.5;animation:bat .5s ease-in-out infinite alternate}
+@keyframes bat{to{transform:scale(1.12);opacity:.15}}
+/* la jauge de chaque creature, sous ses pieds */
+.mob .mhp{position:absolute;left:-26px;top:46px;width:52px;height:4px;
+  background:#BFBCB2;border:1px solid rgba(0,0,0,.45);font-style:normal}
+.mob.on .mhp{left:-32px;width:64px;height:6px;border-color:#171C1A}
+.mob .mhp>u{display:block;height:100%;text-decoration:none}
 .mob.hit i{filter:brightness(2.4) saturate(.2)}
 @keyframes shake{0%,100%{transform:none}25%{transform:translate(-3px,1px)}50%{transform:translate(3px,-1px)}75%{transform:translate(-2px,-1px)}}
 .scene.shake{animation:shake .16s steps(2)}
@@ -245,7 +268,7 @@ body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
 .mob.stag i{filter:brightness(.5) saturate(.3)}
 /* L'aura d'une rare : un halo pose DERRIERE la silhouette. Un drop-shadow
    sur la camera aplatirait la scene entiere. */
-.mob.rare::before{content:"";position:absolute;left:-52px;top:-56px;width:104px;height:104px;
+.mob.rare:not(.wind)::before{content:"";position:absolute;left:-52px;top:-56px;width:104px;height:104px;
   border-radius:50%;background:radial-gradient(circle,var(--e) 0%,transparent 68%);opacity:.5}
 @keyframes bob{0%,100%{transform:rotateX(-20deg) rotateY(-32deg) translateY(0)}
   50%{transform:rotateX(-20deg) rotateY(-32deg) translateY(-5px)}}
@@ -260,15 +283,6 @@ body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
 .tele.nopar>em{color:var(--zhu)}
 .tele>span{position:absolute;inset:0 auto 0 0;width:0;background:#171C1A}
 .tele>b{position:absolute;top:0;bottom:0;right:0;background:#6FBFA0}
-.mobs{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
-.mobs:empty{display:none}
-.mchip{flex:1;min-width:74px;background:#E4E1D8;border:1px solid #171C1A;padding:3px 5px;
-  font-family:var(--px);font-size:9px;color:#3A463F;text-align:left;line-height:1.4;opacity:.62}
-.mchip.on{opacity:1;box-shadow:2px 2px 0 #171C1A;background:#F4F1E8}
-.mchip.wind{border-color:var(--zhu)}
-.mchip b{font-family:var(--brush);font-size:15px;font-weight:400;margin-right:3px;vertical-align:-2px}
-.mchip .mb2{display:block;height:3px;background:#BFBCB2;margin-top:2px;font-style:normal}
-.mchip .mb2>u{display:block;height:100%;text-decoration:none}
 .stances{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:7px}
 .stances button{background:#E4E1D8;color:#3A463F;border:1px solid #171C1A;padding:6px 2px;font-size:8px;line-height:1.5}
 .stances button b{display:block;font-size:15px;font-weight:400}

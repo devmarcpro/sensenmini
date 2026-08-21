@@ -11,7 +11,9 @@ function pComps(){
   if(!S.comps.length)h+='<p class="hint">Personne. Engage un PNJ dont la relation atteint 50, ou descends une créature sous 25 % de ses PV et tente un jet de Dressage.</p>';
   h+=S.comps.map((c,i)=>{
     const o=ORDERS.find(x=>x.k===c.order);
-    return '<div class="card'+(c.dead?'':(c.esc?' on':''))+'"><h3><span>'+c.nom+'</span>'
+    return '<div class="card'+(c.dead?'':(c.esc?' on':''))+'">'
+     +'<div class="besline"><div class="besvox'+(c.dead?' mort':'')+'"><div class="cam">'+compHtml(c)+'</div></div>'
+     +'<div class="besinfo"><h3><span>'+c.nom+'</span>'
      +'<i>'+(c.type==='bete'?'bête':'PNJ')+' · niveau '+c.lv+'</i></h3>'
      +'<div class="meta">PV '+Math.round(c.hp)+'/'+c.max+' · humeur '+Math.round(c.mood)
      +' · potentiel '+Math.round(c.pot)+' · élément '+EL[c.el].g+' '+EL[c.el].n+'</div>'
@@ -29,7 +31,7 @@ function pComps(){
        +(c.type!=='bete'&&S.items.some(x=>x.kind==='arme')
          ?'<div class="row">'+S.items.map((x,xi)=>x.kind==='arme'
            ?'<button class="btn" data-arm="'+i+':'+xi+'">Donner '+x.nom+'</button>':'').join('')+'</div>':''))
-     +'</div>';}).join('');
+     +'</div></div></div>';}).join('');
   h+=bestiaireSection();
   return h;
 }

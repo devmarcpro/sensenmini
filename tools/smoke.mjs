@@ -226,8 +226,13 @@ async function runScenario(scen){
       if(EE.length<2)return 'pas de groupe : biome '+here().b+' occ '+S.occ+' tailles '+JSON.stringify(vus)
         +' pool '+JSON.stringify([...new Set(Array.from({length:40},()=>creaturePool(here(),false,false)))]);
       buildScene();render();
-      const chips=document.querySelectorAll('#mobs .mchip').length;
-      if(chips!==EE.length)return 'chips '+chips+' pour '+EE.length+' creatures';
+      /* chaque creature engagee a sa propre silhouette, cliquable pour la viser */
+      const sil=document.querySelectorAll('#duel .mob').length;
+      if(sil!==EE.length)return 'silhouettes '+sil+' pour '+EE.length+' creatures';
+      const paves=document.querySelectorAll('#duel .mob .bx').length;
+      if(paves<EE.length*4)return 'silhouettes vides : '+paves+' paves pour '+EE.length+' creatures';
+      if(document.querySelectorAll('#duel .mob.on').length!==1)return 'la cible ne se distingue pas';
+      if(document.getElementById('hero'))return 'le joueur est encore affiche';
       const e0=EE[0];refocus(1);
       if(!E||E===e0)return 'le changement de cible ne prend pas';
       return 'ok:'+EE.length;

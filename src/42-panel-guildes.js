@@ -18,7 +18,8 @@ function pGuilde(){
   /* guildes */
   const hall=countSlot('hall');
   const t=townAt(S.pos[0],S.pos[1]);
-  h+=grp('会','GUILDES',hall?'hall sur ton territoire — toutes joignables':(t&&t.halls&&t.halls.length?t.nom+' : '+t.halls.length+' hall(s)':'aucun hall ici'));
+  h+=foldHead('gui','g','会','GUILDES',hall?'hall sur ton territoire — toutes joignables':(t&&t.halls&&t.halls.length?t.nom+' : '+t.halls.length+' hall(s)':'aucun hall ici'));
+  if(foldOpen('gui','g','g')){
   h+='<div class="meta" style="margin-bottom:8px">Monter en rang ouvre des gabarits plus exigeants, de meilleures récompenses, et un présent à chaque palier.</div>';
   h+=GUILDS.map(g=>{
     const gu=guildOf(g.k),need=guildRankNeed(gu.rank),ok=guildReachable(g.k);
@@ -34,11 +35,13 @@ function pGuilde(){
      +'<div class="row"><button class="btn pri" data-quest="'+g.k+'" '+(S.quest||!ok?'disabled':'')+'>'
      +(S.quest?'une quête en cours':ok?'Prendre une quête':'hall hors de portée')+'</button></div></div>';
   }).join('');
+  }
   /* où trouver des halls */
   const near=kingdomsNear().map(k=>kTowns(k).filter(x=>x.halls&&x.halls.length).map(x=>({t:x,k,d:Math.abs(x.x-S.pos[0])+Math.abs(x.y-S.pos[1])}))).flat()
     .sort((a,b)=>a.d-b.d).slice(0,4);
   if(near.length){
-    h+=grp('旗','HALLS CONNUS','aucune ville ne les a tous');
+    h+=foldHead('gui','h','旗','HALLS CONNUS',near.length+' à portée',null);
+    if(foldOpen('gui','h',null))
     h+='<div class="matlist">'+near.map(o=>'<div class="mat"><b>旗</b>'+o.t.nom+' ('+o.t.x+','+o.t.y+')'
       +'<small>'+o.t.halls.map(x=>GUILDS.find(g=>g.k===x).n).join(', ')+'</small>'
       +'<small style="color:var(--dim)">à '+o.d+' cellule'+(o.d>1?'s':'')+' · '+o.k.nom+'</small></div>').join('')+'</div>';

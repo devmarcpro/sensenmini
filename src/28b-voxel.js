@@ -328,10 +328,3 @@ function compHtml(c){
   /* un compagnon humain : le squelette humanoïde, sans arme distincte */
   return boitesHtml(VOX.humanoide,3.1,coul,1);
 }
-/* Ce qui décide de recomposer l'escorte : qui la compose, et dans quel état. */
-const escorteSig=()=>escortList().map(c=>c.id+(c.cre||c.type)+(c.hp>0?1:0)).join(',');
-
-/* La signature de la tenue : tant qu'elle ne bouge pas, on ne recompose rien. */
-const heroSig=()=>[S.race,grip().k].concat(
-  ["tete","torse","bras","jambes","pieds","dos","main1","main2"]
-    .map(k=>{const it=S.eq[k];return it?(it.nom||"?")+domi(itemVec(it)):"-";})).join("|");

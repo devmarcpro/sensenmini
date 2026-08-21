@@ -118,13 +118,10 @@ function combatScene(){
    +'</div>'
    +'<div class="stage"><div class="gridfloor"></div><div class="bigk">戦</div>'
    +'<div class="eName" id="eName">—</div><div class="eInfo" id="eInfo"></div>'
-   +'<div class="duel"><div class="escorte" id="escorte"></div>'
-   +'<div class="hero" id="hero"><div class="cam" id="heroCam"></div></div>'
-   +'<div class="mob" id="mob"><div class="cam" id="mobCam"></div><b class="pk" id="mobPack"></b></div></div>'
+   +'<div class="duel" id="duel"></div>'
    +'<div class="floaters" id="floaters"></div></div>'
    +'<div class="bar2"><span id="eHp" style="background:#C8332B"></span><em id="eHpT">—</em></div>'
    +'<div class="tele" id="tele"><span id="teleF"></span><b id="teleW"></b><em id="teleG"></em></div>'
-   +'<div class="mobs" id="mobs"></div>'
    +'<div class="stances" id="stances">'+STANCE.map((st,i)=>
       '<button data-st="'+i+'" aria-pressed="'+(i===(S.stance||0))+'"><b>'+st.g+'</b>'+st.n.toUpperCase()+'<kbd>'+(i+1)+'</kbd></button>').join('')+'</div>'
    +'<div class="acts"><button id="guardBtn">護 GARDE<kbd>espace</kbd></button><button id="heavyBtn">重 LOURDE<kbd>D</kbd></button>'
@@ -154,25 +151,38 @@ function renderCombat(){
   $('eInfo').innerHTML='ARMURE <b>'+E.arm+'</b><br>FRAPPE <b>'+DT[E.dt]+'</b><br>MATCHUP <b>×'
     +(w?vmult(itemVec(w),E.vec,multOff).toFixed(2):'—')+'</b>'
     +(E.st&&E.st.length?'<br>'+statusTxt(E):'');
-  const mo=$('mob');
-  if(mo){mo.style.setProperty('--e',EL[domi(E.vec)].c);
-    mo.className='mob'+(E.stg>0?' stag':'')+(E.rare?' rare':'')+(hitFx>0?' hit':'')+(E.boss?' boss':'');
-    /* la silhouette ne se réassemble que si l'espèce ou le gabarit a changé :
-       recomposer une trentaine de pavés à chaque image serait du gâchis */
-    const coul=EL[domi(E.vec)].c;
-    const cam=$('mobCam'),sig=(E.cre||'x')+':'+voxMul(E)+':'+coul;
-    if(cam&&cam.dataset.sig!==sig){cam.dataset.sig=sig;cam.innerHTML=voxelHtml(E.cre,voxMul(E),coul,-1);}
-    /* le joueur en face : sa silhouette dit ce qu'il porte, elle ne se
-       recompose donc que s'il change d'equipement */
-    const hc=$('heroCam');
-    if(hc){const hs=heroSig();if(hc.dataset.sig!==hs){hc.dataset.sig=hs;hc.innerHTML=heroHtml();}}
-    const hw=$('hero');if(hw)hw.className='hero'+(S.guard?' garde':'');
-    const esc=$('escorte');
-    if(esc){const es=escorteSig();
-      if(esc.dataset.sig!==es){esc.dataset.sig=es;
-        esc.innerHTML=escortList().slice(0,3).map(x=>
-          '<div class="ec'+(x.hp>0?'':' ko')+'"><div class="cam">'+compHtml(x)+'</div></div>').join('');}}
-    const pk=$('mobPack');if(pk)pk.textContent=EE.length>1?'×'+EE.length:'';}
+  /* ===== TOUTES LES CRÉATURES ENGAGÉES =====
+     La scène ne montrait que la cible ; les autres se réduisaient à des
+     pastilles de texte sous le décor. On les voit maintenant toutes, chacune
+     avec sa silhouette et sa jauge, et l'on vise en touchant celle qu'on veut.
+     Le joueur, lui, ne s'affiche plus : on sait où l'on est, et la place est
+     mieux employée à montrer ce qu'on a en face. */
+  const dl=$('duel');
+  if(dl){
+    /* on indexe sur EE, pas sur engaged() : c'est l'index dont refocus() se
+       sert, et une creature a terre y reste le temps d'une image */
+    const grp=EE;
+    const sig=grp.map(x=>(x.cre||'x')+':'+voxMul(x)+':'+EL[domi(x.vec)].c).join('|');
+    if(dl.dataset.sig!==sig){
+      dl.dataset.sig=sig;
+      /* plus elles sont nombreuses, plus elles se serrent */
+      dl.style.setProperty('--s',[1,1,.84,.7,.6][Math.min(4,grp.length)]);
+      dl.innerHTML=grp.map((x,i)=>{
+        const coul=EL[domi(x.vec)].c;
+        return '<button class="mob" data-foc="'+i+'" style="--e:'+coul+'">'
+          +'<span class="cam">'+voxelHtml(x.cre,voxMul(x),coul,-1)+'</span>'
+          +'<i class="mhp"><u></u></i></button>';
+      }).join('');
+    }
+    grp.forEach((x,i)=>{
+      const el=dl.children[i];if(!el)return;
+      el.dataset.foc=i;
+      el.className='mob'+(x===E?' on':'')+(x.stg>0?' stag':'')+(x.rare?' rare':'')
+        +(x===E&&hitFx>0?' hit':'')+(x.boss?' boss':'')+(x.w>=0?' wind':'')+(x.hp>0?'':' ko');
+      const u=el.querySelector('u');
+      if(u){u.style.width=Math.max(0,x.hp)/x.max*100+'%';u.style.background=EL[domi(x.vec)].c;}
+    });
+  }
   const t=$('tele'),P=patOf(E),fen=parryWinVs(E);
   if(E.w>=0){
     const we=E.wEff||E.wind;
@@ -183,23 +193,7 @@ function renderCombat(){
     const tg=$('teleG');if(tg)tg.textContent=P.g+' '+P.n+(fen?'':' — imparable');}
   else{t.className='tele';$('teleF').style.width='0';$('guardBtn').className=S.guard?'held':'';
     const tg=$('teleG');if(tg)tg.textContent='';}
-  /* le groupe engagé : celles que tu ne regardes pas frappent dans ton dos */
-  const mb=$('mobs');
-  if(mb){
-    if(EE.length<2)mb.innerHTML='';
-    else{
-      if(mb.children.length!==EE.length)
-        mb.innerHTML=EE.map((x,i)=>'<button class="mchip" data-foc="'+i+'"><b></b><span class="mn"></span><i class="mb2"><u></u></i></button>').join('');
-      EE.forEach((x,i)=>{const el=mb.children[i];if(!el)return;
-        el.className='mchip'+(i===foc?' on':'')+(x.w>=0?' wind':'');
-        el.dataset.foc=i;
-        el.querySelector('b').textContent=x.cre&&CREATURE[x.cre]?CREATURE[x.cre].g:'獣';
-        el.querySelector('b').style.color=EL[domi(x.vec)].c;
-        el.querySelector('.mn').textContent=(i===foc?'':'背 ')+Math.round(Math.max(0,x.hp));
-        el.querySelector('u').style.width=Math.max(0,x.hp)/x.max*100+'%';
-        el.querySelector('u').style.background=EL[domi(x.vec)].c;});
-    }
-  }
+
   const p=$('past');
   if(p.children.length!==capChain())p.innerHTML=Array.from({length:capChain()},()=>'<i></i>').join('');
   for(let i=0;i<capChain();i++){const el=p.children[i],sg=S.seg[i];

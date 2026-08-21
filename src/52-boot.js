@@ -32,7 +32,7 @@ function chargementComplet(){
    rafraîchissait fichier par fichier, sans aucune atomicité.
    La feuille déclare donc sa révision, et l'on refuse de démarrer sur un
    désaccord. Les deux valeurs se bougent ensemble. */
-const CSS_REV='7';
+const CSS_REV='10';
 function styleAJour(){
   try{
     const v=getComputedStyle(document.documentElement).getPropertyValue('--css-rev').trim();

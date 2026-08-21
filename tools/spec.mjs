@@ -990,10 +990,13 @@ test('escorte — compagnons et bêtes ont une silhouette',()=>{
   /* la bête garde la silhouette de son espèce */
   ok(h2.split('class="bx"').length-1===G(c,'VOX[ARCH.loup[0]].length'),
     'le loup apprivoisé garde ses dix pavés de loup');
-  /* la signature ne bouge que si l'escorte bouge */
-  const s1=G(c,'escorteSig()');
-  R(c,'S.comps[1].hp=0;');
-  ok(G(c,'escorteSig()')!==s1,'un compagnon à terre change la signature');
+  /* et la carte du compagnon la porte, dans l'onglet COMPAGNONS */
+  const pan=G(c,'pComps()');
+  ok(pan.indexOf('besvox')>=0,'chaque compagnon montre sa silhouette sur sa carte');
+  ok(pan.split('class="bx"').length-1>=20,'et ce sont de vrais pavés');
+  R(c,'S.comps[1].dead=1;');
+  ok(G(c,'pComps()').indexOf('besvox mort')>=0,'un compagnon mort s\'efface sans disparaître');
+  R(c,'S.comps[1].dead=0;');
   /* une créature inconnue ne fait rien exploser */
   R(c,'S.comps[1].cre="nexistepas";');
   ok(G(c,'compHtml(S.comps[1])').length>100,'une espèce inconnue retombe sur une silhouette valide');

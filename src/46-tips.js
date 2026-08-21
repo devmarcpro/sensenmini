@@ -83,6 +83,52 @@ const TIPS=[
   {id:'champ',g:'田',t:'Un champ en friche',
    d:'Dans 建 BÂTIR, ouvre la parcelle et sème deux unités d\'une plante. Elle produit chaque semaine selon la fertilité, la pluie et la saison — ×1,5 avec un fermier. Les bêtes apprivoisées en bétail y rendent de la viande.',
    when:()=>countPlot('champ')>0},
+  /* ================================================================
+     LES SYSTEMES QU'ON A BATIS ET QUE PERSONNE N'ANNONCAIT.
+     Vingt-six conseils couvraient le jeu d'origine ; sept systemes ont
+     ete construits depuis — parures, vehicules, peche, alchimie de
+     plantes, enchainements, part d'ombre, gardiens nommes — et aucun ne
+     se signalait. Un systeme qu'on ne decouvre pas n'existe pas, et dans
+     un jeu qui tourne seul on ne fouille pas les onglets par curiosite.
+
+     Chacun se declenche sur l'etat qui le rend PERTINENT, pas au bout de
+     n minutes : on parle de la peche quand on est au bord de l'eau, du
+     receleur quand on porte une piece volee, de l'enchainement quand on
+     possede une seconde arme.
+     ================================================================ */
+  {id:'parure',g:'環',t:'Une parure ne se joue pas au combat',
+   d:'Anneaux, amulette, cape, ceinture, talisman : ils ne donnent ni dégâts ni armure. Ils portent des métiers, de la charge, de la faim en moins, et parfois un DON — voir les filons sur la carte, marcher sans bruit, ne plus craindre le poison. 装 ÉQUIPEMENT.',
+   when:()=>S.items.some(it=>it.kind==='parure')||Object.keys(S.eq).some(k=>S.eq[k]&&S.eq[k].kind==='parure')},
+  {id:'peche',g:'漁',t:'De l\'eau, et de quoi manger',
+   d:'掘 RÉCOLTE → Pêcher. Ni combat ni territoire : elle nourrit un blessé comme un vagabond, et le poisson se mange cru sans fièvre. Une barque double la prise. Le gel et les tempêtes la ferment.',
+   when:()=>typeof pecheBlocage==='function'&&!pecheBlocage()},
+  {id:'vehicule',g:'車',t:'Le temps du monde se gagne',
+   d:'界 MONDE → ATTELAGE. Une charrette porte vingt-six objets de plus, un voilier fait de la côte une route. Le terrain tranche : une barque ne roule pas, une charrette ne flotte pas. À la voile, le cap compte — la Navigation rabote le vent contraire.',
+   when:()=>lv('menuiserie')>=6},
+  {id:'chair',g:'病',t:'La chair crue tourne',
+   d:'Une fois sur cinq, manger de la viande crue donne la fièvre : deux points d\'endurance en moins chaque jour jusqu\'au soin. Une cuisine l\'évite, un remède la lave — et le poisson, lui, ne la donne jamais.',
+   when:()=>hasStatus(S,'infection')},
+  {id:'alchimie',g:'蒸',t:'Une plante ne donne pas une statistique',
+   d:'厨 TABLE → Distiller. Une PARTIE DE CRÉATURE donne une potion de statistique ; une PLANTE donne un effet — soin, remède, antipoison, fraîcheur, poison de lame. Achillée, herbes, racines, camomille, menthe, ortie, sauge, belladone, amanite.',
+   when:()=>Object.keys(S.food||{}).some(k=>typeof ALCHPLANTE!=='undefined'&&ALCHPLANTE[k])},
+  {id:'enchainement',g:'連',t:'L\'ordre des coups peut s\'écrire',
+   d:'自 VEILLE → ENCHAÎNEMENT. Prendre l\'épée, deux coups, une compétence, prendre le marteau, deux charges : la suite se rejoue à chaque combat. Ce qui manque s\'attend, ce qui n\'existe pas se saute. Tes compagnons ont la leur.',
+   when:()=>S.items.filter(it=>it.kind==='arme').length>=1&&(weapon()||S.modules.length>0)},
+  {id:'ombre',g:'闇',t:'Ce que tu as pris se voit',
+   d:'Aucun marchand honnête ne veut une pièce volée : il faut un receleur — un camp, ou une ville où l\'on te regarde de travers — et il n\'en donne que la moitié. La prime, elle, suit le ROYAUME : fuir la ville ne suffit pas.',
+   when:()=>typeof objetsVoles==='function'&&objetsVoles().length>0},
+  {id:'prime',g:'罪',t:'On te cherche',
+   d:'Au-delà de cent vingt or de prime, des patrouilles te coupent la route. Solder coûte le double, dans une ville du royaume (町 VILLE → PART D\'OMBRE). Une anarchie, elle, n\'a ni garde ni greffe : la loi y est un mot.',
+   when:()=>typeof primeIci==='function'&&primeIci()>60},
+  {id:'gardien',g:'主',t:'Le fond d\'un donjon a un nom',
+   d:'Chaque thème garde le sien, avec sa mécanique : l\'un appelle du renfort quand il faiblit, l\'une se recoud si on la laisse respirer, l\'un porte une gangue qui cède à mi-course, l\'une enrage à mesure qu\'elle tombe. Chacun garde une pièce nommée, toujours la même.',
+   when:()=>S.occ==='donjon'},
+  {id:'ciel',g:'嵐',t:'Le ciel n\'est pas un décor',
+   d:'Un blizzard blesse qui voyage sans abri — une torche suffit. Un orage cherche le métal que tu portes. Une tempête cloue les voiliers au port. La neige tient aux jambes, le brouillard ralentit la fouille.',
+   when:()=>{const m=METEO[meteo(here())];return !!(m&&m.extreme);}},
+  {id:'saison',g:'季',t:'La faune suit l\'année',
+   d:'Les grosses bêtes à fourrure hibernent, la vermine vit de chaleur, le gibier de passage traverse au printemps et à l\'automne. Une même case ne se chasse pas de la même façon selon le mois.',
+   when:()=>S.week>=8},
   {id:'royaume',g:'国',t:'Le seuil du royaume',
    d:'Huit cellules et cinq résidents : 国 ROYAUME te laisse choisir une gouvernance. Viennent alors les lois, la diplomatie, l\'impôt — et les raids.',
    when:()=>!S.gov&&S.claims.length>=6},

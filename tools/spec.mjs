@@ -737,6 +737,150 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('conseils — chaque systeme se signale, et sans mentir',()=>{
+  /* Un systeme qu'on ne decouvre pas n'existe pas. Vingt-six conseils
+     couvraient le jeu d'origine ; sept systemes ont ete batis depuis et
+     aucun ne se signalait — dans un jeu qui tourne seul, on ne fouille pas
+     les onglets par curiosite. */
+  const c=nouveau();
+  R(c,'S.carry=Object.keys(STATION);');
+
+  /* --- aucun conseil ne doit lever d'exception, quel que soit l'etat ---
+     C'est le vrai risque : une condition qui lit une fonction absente ou un
+     objet nul fait tomber la boucle d'interface entiere. */
+  const casse=G(c,`(()=>{
+    const ko=[];
+    const etats=[
+      ()=>{},
+      ()=>{S.hp=1;S.faim=5;S.end=0;S.mana=0;},
+      ()=>{S.occ='combat';spawn();},
+      ()=>{S.occ='donjon';here().poi='donjon';here().dj=genDungeon(here());},
+      ()=>{S.items=[];S.eq={};S.modules=[];S.spells=[[],[]];S.comps=[];},
+      ()=>{S.food={};S.mat={};S.potions=[];S.conso={};S.vehicule=null;S.prime={};},
+      ()=>{here().b='cote';S.week=40;},
+      ()=>{S.items=[mkParure('anneau',null,1.3)];S.items[0].vole=1;},
+    ];
+    TIPS.forEach(t=>{
+      etats.forEach((e,i)=>{
+        try{e();t.when();}catch(err){if(!ko.includes(t.id))ko.push(t.id+' ('+err.message+')');}
+      });
+    });
+    return ko;})()`);
+  eq(casse.length,0,'aucun conseil ne casse, quel que soit l\'état du jeu',
+    'exceptions : '+casse.join(', '));
+
+  /* --- chaque conseil doit pouvoir se declencher : un conseil dont la
+     condition est toujours fausse est une page d'aide que personne ne lira --- */
+  R(c,`globalThis.__tousEtats=()=>{
+    /* un personnage a qui il est arrive de tout : c'est le seul moyen
+       d'eprouver des conditions qui parlent de systemes differents */
+    S.carry=Object.keys(STATION);
+    S.sk.menuiserie.lv=40;S.sk.alchimie.lv=30;
+    S.hp=1;S.faim=20;S.end=5;S.mana=0;S.or=6000;
+    S.items=[mkParure('anneau',null,1.4)];
+    S.items[0].vole=1;
+    const p=FUNC.epee.comp.map(ct=>partFor(ct,['fer','chene','cuir']));
+    p.push(partFor('fixations',['fer']));
+    S.items.push(mkItem('arme','epee',p,1.2));equipItem(1);
+    S.items.push(mkItem('arme','epee',p,1.1));
+    S.food={achillee:2,herbes:2};S.mat={fer:60,chene:40,lin:40,sel:20,or:10};
+    S.ref={'tissu:lin':8,'lingot:fer':8};
+    S.books=[{id:'b1',dom:'feu',diff:4}];
+    S.modules=[{id:'projectile',dom:'feu',lv:2,xp:0}];S.spells=[[0],[]];
+    S.comps=[{id:'c1',nom:'x',el:0,lv:5,hp:10,max:10,esc:1,order:'attaquer'}];
+    S.week=40;S.st=[];addStatus(S,'infection',4,1);
+    S.prime={};const ki=kingdomHere();if(ki!==null)S.prime[ki]=400;
+    const cc=here();cc.b='cote';cc.claim=1;S.claims=[key(cc.x,cc.y)];
+    cc.plots=[{t:'batiment',slots:[{t:'meuble',k:'lit'},{t:'meuble',k:'coffre'}]}];
+    S.tresor=500;S.gov='monarchie';
+    S.occ='donjon';cc.poi='donjon';cc.dj=genDungeon(cc);
+    globalThis.__m0=meteo;meteo=()=>'blizzard';
+    globalThis.__t0=tempC;tempC=()=>18;
+  };__tousEtats();`);
+  /* Un seul etat ne peut pas rendre trente-sept conditions vraies : on est
+     soit dans un donjon soit dans un village, soit affame soit repu. On
+     eprouve donc chaque conseil sur une BATTERIE de situations, et l'on
+     demande qu'au moins une le declenche — meme methode que pour les actions
+     du plan, et pour la meme raison. */
+  const muets=G(c,`(()=>{
+    const scenes=[
+      ()=>{__tousEtats();},
+      ()=>{__tousEtats();S.occ='repos';here().poi=null;here().dj=null;},
+      ()=>{__tousEtats();S.occ='combat';here().poi=null;here().dj=null;spawn();
+           if(EE.length<2){EE.push(mkEnemy('loup',3,false,false,' Ⅱ'));}},
+      ()=>{__tousEtats();S.day=Math.floor(S.day)+23/24;S.occ='repos';},
+      /* dans une ville, riche, le sac plein */
+      ()=>{__tousEtats();const k=kingdomsNear()[0];
+           if(k){const t=kTowns(k)[0];S.pos=[t.x,t.y];here().seen=true;here().town=t.nom;
+             here().poi='village';here().dj=null;}
+           S.occ='repos';S.or=9000;
+           while(S.items.length<sacMax()+2)S.items.push(mkParure('anneau',null,1.1));},
+      /* en profondeur, sur un filon */
+      ()=>{__tousEtats();here().poi='filon';here().dj=null;here().depth=3;S.occ='recolte';},
+      /* un potentiel epuise et des relations */
+      ()=>{__tousEtats();SK.forEach(k=>{S.sk[k].pot=35;S.sk[k].lv=12;});
+           S.npcs=[{id:'n1',nom:'x',rel:70,rec:0,mood:60,cell:key(S.pos[0],S.pos[1]),race:'humain'}];
+           S.occ='repos';here().poi=null;here().dj=null;},
+      /* un territoire avec des champs et un tresor */
+      ()=>{__tousEtats();const cc=here();cc.poi=null;cc.dj=null;
+           cc.plots=[{t:'champ',crop:'ble'},{t:'batiment',slots:[{t:'meuble',k:'lit'}]}];
+           S.tresor=2000;S.occ='repos';},
+      /* au bord d'une eau libre, par temps clair */
+      ()=>{__tousEtats();const cc=here();cc.b='cote';cc.poi=null;cc.dj=null;
+           meteo=()=>'clair';S.occ='repos';},
+      /* une bete en plein armement, et du butin rare dans le sac */
+      ()=>{__tousEtats();S.occ='combat';here().poi=null;here().dj=null;spawn();
+           if(E){E.w=.4;E.wEff=1;}
+           S.items.push(mkParure('amulette',null,1.5));S.items[S.items.length-1].rar=2;},
+      /* le debut d'une partie : de l'or, aucun territoire, une ville a sec */
+      ()=>{__tousEtats();S.claims=[];here().claim=0;S.or=99999;S.gov=null;
+           here().poi=null;here().dj=null;
+           const k=kingdomsNear()[0];
+           if(k){const t=kTowns(k)[0];S.pos=[t.x,t.y];here().seen=true;t.or=1;t.orMax=500;}
+           S.occ='repos';},
+      /* un mineur devant sa strate, et un PNJ qui l'aime bien */
+      ()=>{__tousEtats();const cc=here();cc.poi=null;cc.dj=null;cc.depth=0;
+           S.sk.minage.lv=30;
+           S.items.push({id:'tp',kind:'outil',fn:'pioche',slot:'main1',
+             parts:[{ct:'fixations',f:'brut',mk:'adamant'}],q:3,dur:60,durBase:20,de:10,
+             mana:0,ela:8,vec:[.2,.2,.2,.2,.2],nom:'essai'});
+           S.day=Math.floor(S.day)+12/24;
+           S.npcs=[{id:'n2',nom:'y',rel:80,rec:0,mood:70,cell:key(S.pos[0],S.pos[1]),race:'humain'}];
+           S.rep={g:60,race:{},king:{}};
+           S.occ='repos';},
+      /* une case raclee depuis des jours, et un vieux territoire sans regime */
+      ()=>{__tousEtats();const cc=here();cc.poi=null;cc.dj=null;
+           cc.kills=200;cc.corr=10;
+           S.day+=6;S.gov=null;
+           S.claims=[];for(let i=0;i<7;i++){const c2=cell(cc.x+i+1,cc.y);c2.claim=1;S.claims.push(key(c2.x,c2.y));}
+           S.occ='repos';},
+    ];
+    const ko=[];
+    TIPS.forEach(t=>{
+      let vu=false;
+      scenes.forEach(s=>{
+        if(vu)return;
+        try{s();if(t.when())vu=true;}catch(e){}
+      });
+      if(!vu)ko.push(t.id);
+    });
+    return ko;})()`);
+  ok(muets.length===0,'chacun des '+G(c,'TIPS.length')+' conseils peut se déclencher',
+    'jamais vus : '+muets.join(', '));
+
+  /* --- et un conseil ne se montre qu'UNE fois --- */
+  R(c,'S.seen={};S.tips=true;tipQ.length=0;'
+    +'globalThis.__n=0;for(let i=0;i<200;i++){tickTips();__n=Object.keys(S.seen).length;}');
+  const vus=G(c,'__n');
+  gt(vus,0,'les conseils se montrent — '+vus+' vus');
+  R(c,'globalThis.__avant=Object.keys(S.seen).length;for(let i=0;i<200;i++)tickTips();');
+  eq(G(c,'Object.keys(S.seen).length'),G(c,'__avant'),'et jamais deux fois le même');
+
+  /* --- le mode veteran les coupe tous --- */
+  R(c,'S.seen={};S.tips=false;tipQ.length=0;for(let i=0;i<50;i++)tickTips();');
+  eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
+});
+
 test('enchainement — l ordre des coups se decide enfin',()=>{
   /* Le plan dit QUOI faire ; l'enchainement dit COMMENT frapper. Une fois le
      combat engage, tout se jouait tout seul et toujours pareil : on frappait

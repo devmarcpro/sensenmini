@@ -1378,6 +1378,37 @@ test('boutiques — les enseignes varient, et la ville décide de la qualité',(
   gte(G(c,'__noms.size'),80,'les villages portent des noms variés — '+G(c,'__noms.size')+' distincts');
 });
 
+test('modules — tout ce qui est écrit est chargé, partout',()=>{
+  /* Un module oublié quelque part ne se voit pas : le jeu marche dans le
+     navigateur et l'outil tourne à vide, ou l'inverse. C'est arrivé — le
+     simulateur chargeait par liste blanche de préfixes et laissait tomber
+     chaque nouveau fichier, jusqu'à ce que la boucle appelle une fonction
+     absente et que quatre bots sur quatre s'arrêtent à la première seconde. */
+  const modules=readdirSync(join(root,'src')).filter(f=>f.endsWith('.js')).sort();
+  gte(modules.length,50,'le jeu compte au moins cinquante modules');
+  /* index.html les charge tous, dans l'ordre des noms */
+  const html=readFileSync(join(root,'index.html'),'utf8');
+  const oublies=modules.filter(f=>!html.includes('src/'+f));
+  eq(oublies.length,0,'index.html charge chaque module','absents : '+oublies.join(', '));
+  /* et l'ordre des balises suit l'ordre des noms : les préfixes numériques
+     SONT l'ordre de chargement, un const déclaré plus loin n'existe pas avant */
+  const dansHtml=[...html.matchAll(/src\/([0-9][^"]*\.js)/g)].map(m=>m[1]);
+  const trie=dansHtml.slice().sort();
+  eq(dansHtml.join(','),trie.join(','),'et dans l\'ordre de leurs préfixes',
+    dansHtml.find((f,i)=>f!==trie[i])||'');
+  /* les trois outils chargent la même chose que le jeu */
+  for(const outil of ['spec.mjs','sim.mjs','courbe.mjs']){
+    const src=readFileSync(join(root,'tools',outil),'utf8');
+    /* la règle peut tenir sur deux lignes : on lit la ligne et sa suivante */
+    const lg=src.split('\n');
+    const idx=lg.findIndex(l=>l.includes("readdirSync(join(root,'src'))"));
+    const ligne=idx<0?null:(lg[idx]+' '+(lg[idx+1]||''));
+    ok(!!ligne,outil+' charge bien les modules du jeu');
+    ok(!!ligne&&/f\.endsWith\('\.js'\)/.test(ligne)&&!/\^\(0\[1-9\]/.test(ligne),
+      outil+' les prend tous, sans liste blanche à maintenir',ligne&&ligne.trim());
+  }
+});
+
 test('publication — feuille de style et code du même âge',()=>{
   /* Le défaut vécu : le service worker rafraîchissait fichier par fichier et
      l'on chargeait le nouveau code avec l'ancienne feuille. Ces deux valeurs

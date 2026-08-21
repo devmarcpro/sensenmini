@@ -110,6 +110,41 @@ const MODULE={
   allonge:{n:'Allonge',t:'passif',d:['maitrise'],p:{dmg:.10,reach:1}},
   economiegeste:{n:'Économie de geste',t:'passif',d:['maitrise'],p:{endcost:-.2}},
   impact:{n:'Impact',t:'passif',d:['maitrise'],p:{staggerE:.4}},
+  /* ================================================================
+     LES QUATRE ECOLES DE MANUEL ETAIENT MAIGRES : six frappes, six
+     postures, TROIS techniques, QUATRE maitrises. Or ce sont elles qui
+     font une facon de se battre — un grimoire ajoute un sort, un manuel
+     change tous les coups. Dix-neuf passifs pour dix-neuf lignes de
+     personnage, c'etait moins de choix que d'emplacements d'armure.
+
+     Quatorze de plus, et pas un qui n'invente de regle : chacun se
+     branche sur une valeur que le combat lit deja. Plusieurs ont un
+     PRIX — un passif qui ne coute rien n'est pas un choix, c'est un
+     palier de progression deguise.
+     ================================================================ */
+  /* --- frappes : ce que le coup fait --- */
+  taillade:{n:'Taillade',t:'passif',d:['frappes'],p:{dmg:.18,gardecost:.15},
+    x:'plus fort, mais la garde coûte davantage'},
+  estocade:{n:'Estocade',t:'passif',d:['frappes'],p:{pierce:.22,crit:1}},
+  volee:{n:'Volée',t:'passif',d:['frappes'],p:{multi:.14,dmg:-.06}},
+  fauchage:{n:'Fauchage',t:'passif',d:['frappes'],p:{sweep:.30,spd:-.08},
+    x:'ton coup touche le groupe — et part plus lentement'},
+  /* --- postures : ce que le corps tient --- */
+  gardebasse:{n:'Garde basse',t:'passif',d:['postures'],p:{win:.22,dmg:-.08}},
+  respiration:{n:'Respiration',t:'passif',d:['postures'],p:{regen:2.2,spd:-.05}},
+  aplomb:{n:'Aplomb',t:'passif',d:['postures'],p:{stagger:-.35,endcost:-.1}},
+  intimidation:{n:'Intimidation',t:'passif',d:['postures'],p:{weaken:1,def:1}},
+  /* --- techniques : ce qu'on sait faire d'autre --- */
+  feinte:{n:'Feinte',t:'passif',d:['techniques'],p:{crit:2,win:.12}},
+  crochetage:{n:'Crochetage',t:'passif',d:['techniques'],p:{pierce:.30,dmg:-.05}},
+  parade:{n:'Parade croisée',t:'passif',d:['techniques'],p:{gardecost:-.35,win:.15}},
+  saisie:{n:'Saisie',t:'passif',d:['techniques'],p:{stagger:-.25,riposte:1}},
+  /* --- maitrise : ce que la main a fini par comprendre --- */
+  allongelongue:{n:'Grande allonge',t:'passif',d:['maitrise'],p:{reach:1,sweep:.10},
+    x:'ton arme balaie comme une hampe'},
+  achevement:{n:'Achèvement',t:'passif',d:['maitrise'],p:{execute:.45}},
+  souffleprofond:{n:'Souffle profond',t:'passif',d:['maitrise'],p:{regen:1.4,gardecost:-.2}},
+  precision:{n:'Précision',t:'passif',d:['maitrise'],p:{crit:2,pierce:.12}},
 };
 /* ce qu'un passif fait, en clair */
 const PASSIF_TXT={dmg:'dégâts {p}%',pierce:'perforation {p}%',gardecost:'garde {p}% d\'endurance',regen:'endurance {v}/s',win:'fenêtre de parade {p}%',

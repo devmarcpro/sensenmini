@@ -325,7 +325,13 @@ function attack(heavy){
   const dtype=sd.t||F.t;
   hitN++;
   /* balayage : une hampe qui fauche, ou le passif du manuel — jamais un arc */
-  const swp=tir?(PA.sweep||0):Math.max(F.reach>=2?.4:0,PA.sweep||0);
+  /* « Allonge : +1 de portee » — le passif existait, la valeur se calculait,
+     et PERSONNE ne la lisait. Le balayage demande une arme d'allonge 2 ou
+     plus ; l'allonge acquise s'ajoute donc a celle de l'arme, et c'est
+     exactement ce que le module promet : une epee bien tenue balaie comme une
+     lance. */
+  const port=F.reach+(PA.reach||0);
+  const swp=tir?(PA.sweep||0):Math.max(port>=2?.4:0,PA.sweep||0);
   const cibles=[[E,1]];
   if(swp)engaged().forEach(x=>{if(x!==E)cibles.push([x,swp]);});
   let premier=true,mortes=[];

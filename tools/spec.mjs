@@ -786,6 +786,71 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('passifs — aucun ne promet ce que personne ne lit',()=>{
+  /* Un grimoire ajoute un sort ; un MANUEL change tous les coups. Les quatre
+     ecoles de manuel etaient maigres — six frappes, six postures, TROIS
+     techniques, QUATRE maitrises — et l'une d'elles promettait une allonge
+     que le combat ne lisait nulle part. */
+  const c=nouveau();
+
+  /* --- chaque ecole a de quoi choisir --- */
+  const parEcole=G(c,`(()=>{const p={};
+    MK.filter(k=>MODULE[k].t==='passif').forEach(k=>MODULE[k].d.forEach(d=>{p[d]=(p[d]||0)+1;}));
+    return p;})()`);
+  ['frappes','postures','techniques','maitrise'].forEach(e=>{
+    gte(parEcole[e]||0,7,'l\'école « '+e+' » offre au moins sept passifs — '+(parEcole[e]||0));
+  });
+
+  /* --- CHAQUE valeur de passif doit etre lue quelque part dans le combat.
+     C'est le defaut qu'on vient de corriger : « Allonge » calculait sa valeur
+     et personne ne la lisait. Une promesse non lue est pire qu'une absence,
+     parce qu'elle se paie en temps de lecture et en decision. --- */
+  const champs=G(c,'[...new Set(MK.filter(k=>MODULE[k].t===\'passif\').flatMap(k=>Object.keys(MODULE[k].p||{})))]');
+  /* On cherche la lecture dans le CODE DU JEU, jamais dans la table qui la
+     declare : c'est la seule facon de distinguer une promesse d'un effet. */
+  const jamaisLus=champs.filter(f=>!new RegExp('(PA|passives\\(\\))\\.'+f+'\\b').test(code));
+  eq(jamaisLus.length,0,'chacun des '+champs.length+' effets de passif est lu par le combat',
+    'jamais lus : '+jamaisLus.join(', '));
+
+  /* --- et chaque effet a son texte : un passif muet est illisible --- */
+  const sansTexte=champs.filter(f=>!G(c,'PASSIF_TXT['+JSON.stringify(f)+']'));
+  eq(sansTexte.length,0,'et chacun sait se dire en clair','sans texte : '+sansTexte.join(', '));
+
+  /* --- L'ALLONGE, precisement : elle doit ouvrir le balayage --- */
+  R(c,`S.eq={};S.items=[];S.postures=[];S.modules=[];
+    const p=FUNC.epee.comp.map(ct=>partFor(ct,['fer','chene','cuir']));
+    p.push(partFor('fixations',['fer']));
+    S.items.push(mkItem('arme','epee',p,1.2));equipItem(0);
+    S.stats.force=80;S.occ='combat';spawn();
+    /* deux creatures en face : c'est la seule facon de voir un balayage */
+    while(EE.length<3)EE.push(mkEnemy('loup',4,false,false,' Ⅱ'));
+    EE.forEach(e=>{e.hp=1e9;e.max=1e9;});
+    globalThis.__touches=()=>{let n=0;
+      for(let i=0;i<300;i++){
+        EE.forEach(e=>{e.hp=1e9;});
+        S.end=100;attack(false);
+        n+=EE.filter(e=>e.hp<1e9).length;
+      }
+      return n/300;};`);
+  const sansAllonge=G(c,'__touches()');
+  near(sansAllonge,1,.05,'une épée seule ne touche qu\'une créature à la fois');
+  R(c,'S.modules=[{id:"allongelongue",dom:"maitrise",lv:3,xp:0}];S.postures=[0];');
+  gt(G(c,'passives().reach'),0,'le passif d\'allonge se calcule');
+  gt(G(c,'__touches()'),sansAllonge,'et il ouvre vraiment le balayage — '
+    +sansAllonge.toFixed(2)+' cible puis '+G(c,'__touches()').toFixed(2));
+
+  /* --- les nouveaux passifs se lancent sans casser --- */
+  const casse=G(c,`(()=>{const ko=[];
+    MK.filter(k=>MODULE[k].t==='passif').forEach(k=>{
+      S.modules=[{id:k,dom:MODULE[k].d[0],lv:2,xp:0}];S.postures=[0];
+      try{const p=passives();
+        for(const f in p)if(typeof p[f]!=='number'||Number.isNaN(p[f]))ko.push(k+'.'+f);
+      }catch(e){ko.push(k+' : '+e.message);}
+    });
+    return ko;})()`);
+  eq(casse.length,0,'et aucun ne produit de valeur absurde','fautifs : '+casse.join(', '));
+});
+
 test('lieux — huit points d interet, et chacun un geste a lui',()=>{
   /* Cinq points d'interet pour un monde infini : village, donjon, camp,
      sanctuaire, filon. Une case sur quatre en portait un, les trois autres

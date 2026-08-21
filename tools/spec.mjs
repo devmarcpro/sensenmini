@@ -502,6 +502,36 @@ test('magie — chaque module se lance sans casser',()=>{
     S.postures=S.modules.map((m,i)=>i);__p=passives();`);
   eq(G(c,'Object.values(__p).every(v=>typeof v==="number"&&!Number.isNaN(v))'),true,
     'les passifs cumulés restent des nombres');
+  /* Ne pas lever n'est pas suffisant : un module qui se lance, coûte du mana
+     et ne fait RIEN est pire qu'un module absent — le joueur l'apprend, le
+     place dans une posture, et paie pour du vide. On observe donc l'état du
+     monde avant et après chaque lancer. */
+  const inertes=G(c,`(()=>{
+    const ko=[];S.occ='combat';S.sk.mana.lv=60;
+    MK.filter(k=>MODULE[k].t!=='passif').forEach(k=>{
+      const dom=MODULE[k].d[0];
+      S.modules=[{id:k,dom,lv:2,xp:0}];S.spells=[[0]];
+      if(MODULE[k].t!=='effet'){S.modules.push({id:'projectile',dom:'feu',lv:2,xp:0});S.spells=[[0,1]];}
+      spawn();S.mana=9999;S.buffs=[];S.summon=null;S.dodge=0;
+      /* la creature doit survivre au lancer : si elle meurt, le groupe se
+         vide et la comparaison n'a plus rien a comparer */
+      EE.forEach(e=>{e.hp=1e9;e.max=1e9;e.st=[];});
+      S.hp=Math.round(maxHp()*.5);S.end=40;S.mana=9999;
+      const avant={hp:EE.map(e=>e.hp),st:EE.map(e=>(e.st||[]).length),
+        moi:S.hp,mst:(S.st||[]).length,buffs:S.buffs.length,
+        summon:!!S.summon,dodge:S.dodge||0,end:S.end};
+      try{castSpell(0);}catch(e){return;}
+      const bouge=EE.some((e,i)=>e.hp!==avant.hp[i])
+        ||EE.some((e,i)=>(e.st||[]).length!==avant.st[i])
+        ||S.hp!==avant.moi||(S.st||[]).length!==avant.mst
+        ||S.buffs.length!==avant.buffs||(!!S.summon)!==avant.summon
+        ||(S.dodge||0)!==avant.dodge||S.end!==avant.end;
+      if(!bouge)ko.push(k);
+      S.buffs=[];S.summon=null;S.dodge=0;S.st=[];
+    });
+    return ko;})()`);
+  eq(inertes.length,0,'aucun des '+G(c,'MK.length')+' modules ne se lance pour rien',
+    'sans effet observable : '+inertes.join(', '));
 });
 
 test('boutiques — étals hebdomadaires et achats',()=>{

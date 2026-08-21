@@ -737,6 +737,35 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('recolte — ce qu on voit sur la case, on doit pouvoir le prendre',()=>{
+  /* La pire espece de contenu mort n'est pas celle qu'on ne voit jamais :
+     c'est celle qu'on VOIT et qu'on ne peut pas toucher. La glace etait
+     posee dans la toundra et sur les montagnes de cristal depuis le premier
+     jour, elle s'affichait sur la case, et aucun outil ne couvrait sa
+     categorie — canHarvest la refusait toujours, sans rien expliquer. */
+  const c=nouveau();
+  R(c,`S.items=[];S.eq={};
+    Object.keys(OUTIL).forEach(fn=>S.items.push({id:'t'+fn,kind:'outil',fn,slot:'main1',
+      parts:[{ct:'fixations',f:'brut',mk:'adamant'}],q:3,dur:60,durBase:20,de:10,mana:0,ela:8,
+      vec:[.2,.2,.2,.2,.2],nom:'essai'}));`);
+  /* toutes les matieres que le monde pose, sur tous les biomes et strates */
+  const posees=G(c,`(()=>{
+    const s=new Set();
+    Object.keys(BIOME).forEach(b=>{
+      for(let d=0;d<=5;d++)cellMats({x:0,y:0,b,depth:d,poi:null}).forEach(m=>s.add(m));
+      cellMats({x:0,y:0,b,depth:3,poi:'filon'}).forEach(m=>s.add(m));
+    });
+    return [...s];})()`);
+  const intouchables=G(c,'('+JSON.stringify(posees)+').filter(m=>!canHarvest(m))');
+  eq(intouchables.length,0,'chacune des '+posees.length+' matières posées par le monde se laisse prendre',
+    'visibles et intouchables : '+intouchables.join(', '));
+  /* et chaque categorie de matiere a bien une sorte d'outil, sauf celles
+     dont la durete est nulle — l'eau se prend a la main */
+  const sansOutil=G(c,`Object.keys(CAT).filter(cat=>!TOOLKIND[cat]
+    &&Object.keys(MAT).some(m=>MAT[m].c===cat&&MAT[m].d>2))`);
+  eq(sansOutil.length,0,'aucune catégorie dure n\'est sans outil','sans outil : '+sansOutil.join(', '));
+});
+
 test('bestiaire — le haut de la courbe existe et reste hors de portee',()=>{
   /* Quarante-quatre especes, et DEUX au-dela du niveau vingt-six : passe un
      certain point, on ne rencontrait plus rien de nouveau — les memes loups

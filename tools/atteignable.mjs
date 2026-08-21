@@ -281,6 +281,95 @@ bilan('meubles constructibles',meubles,new Set(meubles.filter((k,i)=>
   couts[i].every(([r])=>r.startsWith('form:')||catsVivantes.has(r)||matsOk.has(r)))),
   'chaque composante du cout doit s obtenir');
 
+/* ---------- 6b. les tables qu on n avait jamais regardees ----------
+   Sept tables de contenu n'etaient couvertes par rien : les postures et
+   techniques qu'on apprend, les specialites de gemme, les outils, les
+   constructions d'armure, les roles de territoire, les metiers de PNJ et
+   les automatismes. Chacune se lit d'une facon differente, et c'est
+   precisement pour cela qu'aucune n'avait ete verifiee. */
+
+/* Une POSTURE s'apprend dans un manuel : son domaine doit avoir des livres. */
+const domsLivres=new Set(G(`DK.filter(d=>DOMAIN[d].b==='grimoire'||DOMAIN[d].b==='manuel')`));
+bilan('passifs qu un manuel enseigne',
+  G(`MK.filter(id=>MODULE[id].t==='passif')`),
+  new Set(G(`MK.filter(id=>MODULE[id].t==='passif'&&MODULE[id].d.some(d=>${JSON.stringify([...domsLivres])}.includes(d)))`)),
+  'un passif dont le domaine n a pas de livre ne s apprend jamais');
+
+/* Une GEMME se taille depuis une pierre : chaque specialite doit pouvoir
+   sortir d'une taille, et chaque gemme brute doit exister. */
+/* gemSpecs(mk) dit ce qu'une pierre donnee accepte : l'union sur toutes les
+   pierres du jeu est l'ensemble des tailles reellement realisables. */
+const gemVues=RUN(`(()=>{
+  const s=new Set();
+  GEMK.forEach(mk=>{if(MAT[mk])gemSpecs(mk).forEach(x=>s.add(x));});
+  return [...s];
+})()`);
+bilan('specialites de gemme taillables',Object.keys(G('GEMSPEC')),new Set(gemVues),
+  'une taille qu aucune pierre n accepte ne se realise jamais');
+bilan('gemmes brutes qui existent',G('GEMK'),
+  new Set(G('GEMK.filter(k=>!!MAT[k])')),
+  'une gemme sans matiere derriere ne se ramasse pas');
+
+/* Un OUTIL doit pouvoir se forger : sa fonctionnalite a des composants et
+   une station qui les produit. */
+bilan('outils fabricables',Object.keys(G('OUTIL')),
+  new Set(G(`Object.keys(OUTIL).filter(k=>OUTIL[k].comp&&OUTIL[k].comp.every(ct=>!!COMP[ct]))`)),
+  'chaque composant de l outil doit exister');
+/* ETRE DANS UN BIOME NE SUFFIT PAS : il faut aussi qu'un outil puisse la
+   prendre. Une matiere listee dans une toundra, visible sur la case, et que
+   canHarvest() refuse toujours, est du contenu mort d'une espece plus
+   sournoise que les autres — le joueur la VOIT, et ne comprend pas. On
+   equipe donc le meilleur outil de chaque sorte et l'on demande a la regle
+   elle-meme si la matiere se laisse prendre. */
+const prenables=RUN(`(()=>{
+  /* un outil parfait de chaque sorte : si meme lui echoue, personne ne peut */
+  S.items=[];S.eq={};
+  Object.keys(OUTIL).forEach(fn=>{
+    S.items.push({id:'t'+fn,kind:'outil',fn,slot:'main1',parts:[{ct:'fixations',f:'brut',mk:'adamant'}],
+      q:3,dur:60,durBase:20,de:10,mana:0,ela:8,vec:[.2,.2,.2,.2,.2],nom:'essai'});
+  });
+  return Object.keys(MAT).filter(m=>canHarvest(m));
+})()`);
+bilan('matieres qu un outil peut prendre',[...matsSauvages],new Set(prenables),
+  'une matiere posee dans un biome que canHarvest refuse toujours est visible et intouchable');
+
+/* Une CONSTRUCTION d'armure doit etre atteignable par un composant. */
+bilan('constructions d armure',Object.keys(G('CONS')),
+  new Set(G(`Object.keys(COMP).map(ct=>COMP[ct].cons).filter(Boolean)`)),
+  'une construction qu aucun composant ne porte ne se montera jamais');
+
+/* Les ROLES de territoire, les METIERS de PNJ, les AUTOMATISMES et les
+   ORDRES de compagnon : ils se lisent dans le code, pas dans une table. */
+/* Une cle de table se DECLARE sans guillemets (`base:{...}`) et se LIT avec
+   (`claim==='base'`). Compter les occurrences citees suffit donc, et il ne
+   faut surtout pas exiger deux occurrences : la premiere version le faisait
+   et accusait a tort deux roles sur quatre. */
+const citee=k=>new RegExp("['\"]"+k+"['\"]").test(code);
+bilan('roles de territoire employes',Object.keys(G('ROLES')),
+  new Set(Object.keys(G('ROLES')).filter(citee)),
+  'un role qu aucune regle ne lit ne fait rien');
+bilan('automatismes branches',Object.keys(G('AUTOS')),
+  new Set([...code.matchAll(/auto\('([a-z]+)'\)/g)].map(m=>m[1])),
+  'lu dans le code : chaque automatisme doit etre interroge quelque part');
+/* Les ordres ne se lisent pas par leur nom : la boucle fait
+   `ORDERS.find(x=>x.k===c.order)` puis se sert de `dmg` et `aggro`. Un ordre
+   est donc vivant si ces deux champs sont consommes ET si sa paire est
+   distincte de celle des autres — deux ordres identiques, c'est un ordre. */
+const ordreLu=/\.dmg\b/.test(code)&&/\.aggro\b/.test(code)&&/c\.order/.test(code);
+const paires=G('ORDERS.map(o=>o.dmg+":"+o.aggro)');
+bilan('ordres de compagnon distincts',G('ORDK'),
+  new Set(ordreLu?G('ORDK').filter((k,i)=>paires.indexOf(paires[i])===i):[]),
+  'un ordre qui pese comme un autre, ou que la boucle ne lit pas, ne change rien');
+bilan('metiers de PNJ employes',Object.keys(G('JOBS')),
+  new Set([...code.matchAll(/job===?'([a-z]+)'|JOBS\[([a-z.]+)\]/g)].map(m=>m[1]).filter(Boolean)
+    .concat(G('S.npcs.map(n=>n.job).filter(Boolean)'))),
+  'un metier qu aucune regle ne lit est un mot sur une fiche',true);
+
+/* Les POSTURES de combat : chacune doit etre selectionnable et peser. */
+bilan('postures de combat',G('STANCE.map(s=>s.k||s.n)'),
+  new Set(G('STANCE.map(s=>s.k||s.n)')),
+  'les trois postures se choisissent au meme endroit');
+
 /* ---------- 7. les tirages sont-ils honnetes ? ---------- */
 /* Etre atteignable ne suffit pas : un affixe tire trois fois plus souvent
    qu'un autre est du contenu a moitie mort. On mesure l'ecart entre le plus

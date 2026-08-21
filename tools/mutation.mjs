@@ -51,6 +51,7 @@ const MUT=[
     "+(typeof hasStatus==='function'&&hasStatus(S,'beni')?1:0)",'']]],
   ['statut : infection','cinq qui manquaient',[['src/25-modules.js',
     "-(k==='endu'&&typeof malusInfection==='function'?malusInfection():0)",'']]],
+  ['recolte : la pelle prend la glace','on voit sur la case',[['src/03-data-craft.js',",meteo:'pelle'};",'};']]],
   /* le hors-la-loi */
   ['loi : anarchie sans gardes','hors-la-loi',[['src/21-reputation.js',
     'if(sansGardes(ki)){','if(false){']]],

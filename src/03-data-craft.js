@@ -102,8 +102,17 @@ const OUTIL={
   pelle:{n:'Pelle',comp:['teteoutil','manche'],cat:'terre'},
   serpe:{n:'Serpe',comp:['lame','manche'],cat:'vegetal'},
 };
+/* Quelle sorte d outil prend quelle categorie. Deux categories n y
+   figuraient pas : "meteo" et "liquide". L eau a une durete de zero, donc
+   les mains nues suffisaient — mais la GLACE a une durete de SIX. Elle est
+   posee dans la toundra et sur les montagnes de cristal depuis le premier
+   jour, elle s affiche sur la case, et canHarvest la refusait toujours :
+   aucun outil ne couvrait sa categorie. Visible et intouchable, ce qui est
+   la pire espece de contenu mort — le joueur la voit et ne comprend pas.
+   La pelle prend la neige, la cendre et la glace ; il en faut une bonne pour
+   la derniere. */
 const TOOLKIND={roche:'pioche',metal:'pioche',mineral:'pioche',fossile:'pioche',gemme:'pioche',
-                bois:'hachebois',terre:'pelle',vegetal:'serpe'};
+                bois:'hachebois',terre:'pelle',vegetal:'serpe',meteo:'pelle'};
 const SLOTS=[
   {k:'tete',n:'Casque',g:'頭',zone:'tete'},{k:'torse',n:'Cuirasse',g:'胴',zone:'torse'},
   {k:'bras',n:'Brassards-gants',g:'腕',zone:'bras'},{k:'jambes',n:'Jambières',g:'脚',zone:'jambes'},

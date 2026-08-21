@@ -333,6 +333,11 @@ function attack(heavy){
     /* le poison de lame (F.9) : il ne vient pas de l arme mais de ce qu on a
        etale dessus, et il vaut ce qu on n arrive pas a tuer autrement */
     if(S.lame>0)addStatus(tgt,'poison',6,Math.max(1,maxHp()*.010));
+    /* « Huile d arme : prochain combat, +1d4 feu par coup » (F.5). Elle ne
+       change ni l arme ni son vecteur : elle AJOUTE du feu a des coups qui
+       n en portaient pas, ce qu aucune gemme ne fait sans serti. */
+    if(S.huile>0){const f=roll(1,4);tgt.hp-=f;dpsA+=f;
+      if(Math.random()<.25)addStatus(tgt,'brulure',3,Math.max(1,f*.4));}
     /* la frappe lourde chancelle, le résolveur enracine */
     if(heavy)addStatus(tgt,'etourdi',1+PA.staggerE,1);
     if(resolver){addStatus(tgt,'enracine',2.5,1);if(PA.weaken)addStatus(tgt,'affaibli',4,1);}

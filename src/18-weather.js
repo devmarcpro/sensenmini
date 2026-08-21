@@ -102,7 +102,11 @@ function tempStress(){
   return null;
 }
 /* lumière : une lanterne dans un bâtiment tient la nuit à distance */
+/* Une lanterne demande un batiment, et un batiment un territoire. La torche
+   eclaire ce qu'on ne possede pas : c'est la seule lumiere d'un voyageur, et
+   elle brule dix minutes. */
 const eclaireIci=()=>{const c=here();
+  if(typeof torcheAllumee==='function'&&torcheAllumee())return true;
   return !!(c.plots&&c.plots.some(p=>p&&p.t==='batiment'&&p.slots.some(sl=>sl&&(sl.k==='lanterne'||sl.k==='foyer'||sl.k==='torchere'))));};
 /* sommeil (E.21) */
 const litIci=()=>{const c=here();

@@ -141,6 +141,12 @@ const ACTES={
      recolter, manger, dormir. Tout ce qui a ete bati depuis — l'alchimie,
      l'attelage, la part d'ombre — restait hors de sa portee, donc hors de
      portee d'un jeu qui se joue seul. */
+  utiliser:{n:'se servir d\'un consommable',g:'具',d:'bandage, torche, ration — celui qui sert ici',
+    peut:()=>CONSK.some(k=>consoDe(k)>0&&CONSO[k].utile()),
+    fais:()=>{const k=CONSK.find(x=>consoDe(x)>0&&CONSO[x].utile());if(k)consoUser(k);}},
+  fabriquer:{n:'faire des consommables',g:'工',d:'ce qu\'il manque, si les matières sont là',
+    peut:()=>CONSK.some(k=>consoDe(k)<2&&!consoBlocage(k)),
+    fais:()=>{const k=CONSK.find(x=>consoDe(x)<2&&!consoBlocage(x));if(k)consoFaire(k);}},
   boire:{n:'boire une fiole',g:'薬',d:'la plus utile parmi celles qu\'on porte',
     peut:()=>(S.potions||[]).some(p=>p.e&&potionUtile(p)),
     fais:()=>{const i=(S.potions||[]).findIndex(p=>p.e&&potionUtile(p));

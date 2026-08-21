@@ -737,6 +737,57 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('consommables — quatre objets que le catalogue promettait',()=>{
+  /* Ce ne sont pas des potions : on n'en distille pas, on les FAIT. Chacun
+     repond a un manque precis que rien d'autre ne couvre. */
+  const c=nouveau();
+  R(c,`S.carry=Object.keys(STATION);S.conso={};
+    S.mat={chene:40,lin:40,sel:20,gres:20,terre:20};
+    S.ref={'tissu:lin':10};`);
+
+  /* --- chacun se fabrique, par lots --- */
+  const bloques=G(c,'CONSK.filter(k=>!!consoBlocage(k))');
+  ok(bloques.length===0,'les quatre se fabriquent avec ce qu\'on a',
+    'bloqués : '+bloques.map((k,i)=>k+' → '+G(c,'consoBlocage("'+k+'")')).join(' | '));
+  R(c,'CONSK.forEach(k=>consoFaire(k));');
+  const lots=G(c,'CONSK.map(k=>consoDe(k)-CONSO[k].lot)');
+  eq(lots.filter(x=>x!==0).length,0,'et chacun rend le lot annoncé, ni plus ni moins');
+
+  /* --- BANDAGE : il ferme une plaie sans alambic --- */
+  R(c,'S.st=[];addStatus(S,"saignement",20,3);S.hp=Math.round(maxHp()*.4);'
+    +'globalThis.__hp0=S.hp;consoUser("bandage");');
+  eq(G(c,'hasStatus(S,"saignement")'),false,'le bandage arrête la plaie');
+  gt(G(c,'S.hp'),G(c,'__hp0'),'et rend un peu de vie');
+
+  /* --- TORCHE : elle éclaire une cellule qu'on ne possède pas --- */
+  R(c,'S.torche=0;here().plots=null;here().claim=0;');
+  eq(G(c,'eclaireIci()'),false,'une cellule nue et sans bâtiment est sombre');
+  R(c,'consoUser("torche");');
+  eq(G(c,'eclaireIci()'),true,'une torche l\'éclaire — sans territoire ni bâtiment');
+  R(c,'for(let i=0;i<700;i++)tickConso(1);');
+  eq(G(c,'eclaireIci()'),false,'et elle s\'éteint au bout de son temps');
+
+  /* --- HUILE : elle ajoute du feu à des coups qui n'en portaient pas --- */
+  R(c,'S.huile=0;S.stats.force=200;S.occ="combat";spawn();'
+    +'globalThis.__deg=()=>{EE.forEach(e=>{e.hp=1e9;e.max=1e9;e.st=[];});'
+    +'const h=EE[0].hp;attack(false);return h-EE[0].hp;};'
+    +'globalThis.__R=Math.random;');
+  const sansHuile=G(c,'(()=>{let s=0;for(let i=0;i<400;i++)s+=__deg();return s/400;})()');
+  R(c,'consoUser("huile");');
+  const avecHuile=G(c,'(()=>{let s=0;for(let i=0;i<400;i++)s+=__deg();return s/400;})()');
+  gt(avecHuile,sansHuile,'l\'huile ajoute du feu au coup — '+sansHuile.toFixed(1)
+    +' puis '+avecHuile.toFixed(1));
+  R(c,'for(let i=0;i<400;i++)tickConso(1);');
+  eq(G(c,'S.huile'),0,'elle s\'use au temps, pas aux coups');
+
+  /* --- RATION : elle nourrit sans le risque de la chair crue --- */
+  R(c,'S.st=[];S.faim=20;globalThis.__inf=0;'
+    +'for(let i=0;i<60;i++){S.conso.ration=1;S.faim=20;consoUser("ration");'
+    +'if(hasStatus(S,"infection"))__inf++;S.st=[];}');
+  eq(G(c,'__inf'),0,'soixante rations, aucune fièvre — c\'est tout le propos');
+  gt(G(c,'S.faim'),20,'et elle nourrit franchement');
+});
+
 test('recolte — ce qu on voit sur la case, on doit pouvoir le prendre',()=>{
   /* La pire espece de contenu mort n'est pas celle qu'on ne voit jamais :
      c'est celle qu'on VOIT et qu'on ne peut pas toucher. La glace etait
@@ -934,7 +985,11 @@ test('consignes — le plan apprend les verbes des nouveaux systemes',()=>{
   R(c,`globalThis.__prep=()=>{
     S.carry=Object.keys(STATION);S.sk.alchimie.lv=30;S.sk.menuiserie.lv=40;
     S.potions=[{e:'soin',v:1,n:'x'}];S.hp=1;
-    S.food={achillee:2,herbes:2};S.mat={fer:80,or:3};S.vivres=5;
+    S.food={achillee:2,herbes:2};S.vivres=5;
+    /* de quoi fabriquer : une matiere de chaque categorie, et du tissu */
+    S.mat={fer:80,or:3,chene:20,lin:20,sel:10,terre:20,gres:20,os:10};
+    S.ref={'tissu:lin':6,'lingot:fer':6,'tanne:cuir':4};
+    S.conso={bandage:2,torche:2};
     S.items=[mkParure('anneau',null,1.2)];S.items[0].vole=1;
     S.vehicule={k:'charrette',pv:1,crie:0};
     S.st=[];addStatus(S,'infection',4,1);addStatus(S,'poison',4,1);

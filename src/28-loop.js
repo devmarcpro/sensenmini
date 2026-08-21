@@ -12,6 +12,7 @@ function step(dt){
   salirUtil();
   tickBuffs(dt);
   tickLame(dt);
+  tickConso(dt);
   if(buffOf('regenhp'))S.hp=Math.min(maxHp(),S.hp+buffOf('regenhp')*dt);
   /* stress thermique : malus progressifs, puis dégâts (E.28) */
   const ts=tempStress();

@@ -36,6 +36,21 @@ function pTable(){
        +'. Chaque ingrédient de plus la renforce.'
      : 'Une PLANTE alchimique donne une potion d’effet — achillée, herbes, racines, camomille, menthe, ortie, sauge, belladone, amanite. '
        +'Une PARTIE DE CRÉATURE donne une potion de statistique.')+'</div></div>';
+  /* Les consommables : on ne les distille pas, on les FAIT. Ils vivent a
+     cote des potions parce que c'est le meme geste — preparer d'avance ce
+     dont on aura besoin loin de tout. */
+  h+=grp('具','CONSOMMABLES',CONSK.reduce((a,k)=>a+consoDe(k),0)+' en réserve');
+  h+='<div class=matlist>'+CONSK.map(k=>{const D=CONSO[k],b2=consoBlocage(k),n=consoDe(k);
+    return '<div class=mat><b>'+D.g+'</b>'+D.n+' × '+n
+     +'<small>'+D.d+'</small>'
+     +'<small>'+costTxt(D.cout)+' → '+D.lot+(D.st?' · '+STATION[D.st].n:'')+'</small>'
+     +'<div class=row style=margin-top:5px>'
+     +'<button class="btn" data-consofaire="'+k+'" '+(b2?'disabled':'')+' style="padding:3px 8px">'+(b2||'fabriquer')+'</button>'
+     +'<button class="btn pri" data-consouser="'+k+'" '+(n?'':'disabled')+' style="padding:3px 8px">utiliser</button>'
+     +'</div></div>';}).join('')+'</div>';
+  if(S.torche>0||S.huile>0)
+    h+='<div class="meta">'+(S.torche>0?'松 torche allumée — '+Math.ceil(S.torche)+' s':'')
+      +(S.torche>0&&S.huile>0?' · ':'')+(S.huile>0?'油 huile sur la lame — '+Math.ceil(S.huile)+' s':'')+'</div>';
   /* potions */
   h+=grp('薬','POTIONS',S.potions.length+'');
   h+=S.potions.length?'<div class="matlist">'+S.potions.map((p,i)=>

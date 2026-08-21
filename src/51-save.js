@@ -87,6 +87,11 @@ function sanitize(){
   if(S.vehicule&&!VEHICULE[S.vehicule.k])S.vehicule=null;
   if(S.vehicule&&!(S.vehicule.pv>0))S.vehicule=null;
   /* une prime sur un royaume qui n'existe plus ne doit pas envoyer de gardes */
+  /* un consommable d une version disparue ne doit pas rester dans le compte */
+  S.conso=S.conso||{};
+  Object.keys(S.conso).forEach(k=>{if(!CONSO[k]||!(S.conso[k]>0))delete S.conso[k];});
+  if(!(S.torche>0))S.torche=0;
+  if(!(S.huile>0))S.huile=0;
   S.prime=S.prime||{};
   Object.keys(S.prime).forEach(i=>{if(!S.kingdoms[i]||!(S.prime[i]>0))delete S.prime[i];});
   S.coffres=S.coffres||{};

@@ -224,10 +224,21 @@ async function runScenario(scen){
     const rel=await evalJs('S.guard===false');
     if(!rel)report(scen.name,'combat','la garde ne retombe pas au relachement');
     if(!scen.touch){
-      await cdp('Input.dispatchKeyEvent',{type:'keyDown',code:'Space',key:' '});await sleep(150);
-      const kh=await evalJs('S.guard===true||(typeof E!=="undefined"&&!!E&&E.w>=0)');
-      if(!kh)report(scen.name,'combat','Espace ne leve pas la garde');
-      await cdp('Input.dispatchKeyEvent',{type:'keyUp',code:'Space',key:' '});
+      /* Espace ne LEVE pas toujours la garde : si la creature est pile dans
+         la fenetre, la touche declenche une parade parfaite a la place, et
+         la garde reste basse. C'est le comportement voulu. On presse donc
+         plusieurs fois et l'on demande que la garde monte AU MOINS une
+         fois — une parade parfaite d'affilee cinq fois n'arrive pas.
+         L'ancienne verification lisait une variable inexistante qui n'existe
+         nulle part : elle ne pouvait reussir que par court-circuit, quand
+         il n'y avait aucune creature en face. */
+      let kh=false;
+      for(let i=0;i<5&&!kh;i++){
+        await cdp('Input.dispatchKeyEvent',{type:'keyDown',code:'Space',key:' '});await sleep(120);
+        kh=await evalJs('S.guard===true');
+        await cdp('Input.dispatchKeyEvent',{type:'keyUp',code:'Space',key:' '});await sleep(80);
+      }
+      if(!kh)report(scen.name,'combat','Espace ne leve jamais la garde en cinq essais');
     }
     await tap('#heavyBtn');await sleep(300);
     await shot('4-combat');await checkOverflow('combat');flushErrors('combat');

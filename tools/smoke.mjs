@@ -290,8 +290,17 @@ async function runScenario(scen){
   await sleep(200);flushErrors('retour au premier plan');
   /* rechargement : la partie doit revenir */
   await evalJs('save()');await sleep(100);
-  await cdp('Page.navigate',{url});await sleep(900);flushErrors('rechargement');
-  const back=await evalJs('!!S.race&&document.getElementById("gate").hidden');
+  await cdp('Page.navigate',{url});
+  /* On attend que la page soit PRETE, pas neuf cents millisecondes : le jeu
+     charge une soixantaine de fichiers, et une attente fixe qui tenait a
+     quarante tombe a soixante. Le test accusait alors la sauvegarde d'un
+     defaut qui n'etait qu'une seconde de chargement. */
+  let back=false;
+  for(let i=0;i<40&&!back;i++){
+    await sleep(150);
+    back=await evalJs('document.readyState==="complete"&&!!S&&!!S.race&&document.getElementById("gate").hidden').catch(()=>false);
+  }
+  flushErrors('rechargement');
   if(!back)report(scen.name,'sauvegarde','la partie n\'est pas rechargee depuis localStorage — '
     +await evalJs('JSON.stringify({race:S.race,gate:document.getElementById("gate").hidden,saved:(localStorage.getItem(KEY)||"").length,ready:document.readyState})'));
   /* export / import : le texte doit recharger la meme partie */
@@ -317,11 +326,37 @@ async function runScenario(scen){
   const swState=await evalJs('(async()=>{if(!("serviceWorker" in navigator))return "absent";try{const r=await Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),6000))]);if(!r)return "timeout";for(let i=0;i<40&&!navigator.serviceWorker.controller;i++)await new Promise(r=>setTimeout(r,150));return navigator.serviceWorker.controller?"ok":"sans controleur";}catch(e){return "erreur "+e.message;}})()');
   if(swState!=='ok')report(scen.name,'hors-ligne','service worker : '+swState);
   else{
-    await sleep(1500);  /* laisser l'installation finir de remplir le cache */
+    /* On DEMANDE au service worker si sa reserve est complete, au lieu
+       d'attendre une duree au hasard et d'esperer. S'il manque un fichier,
+       on saura lequel — c'est la seule chose utile a savoir quand le
+       hors-ligne tombe. */
+    let res=null;
+    for(let i=0;i<40;i++){
+      await sleep(200);
+      res=await evalJs('(()=>new Promise(r=>{'
+        +'const t=setTimeout(()=>r(null),1500);'
+        +'navigator.serviceWorker.addEventListener("message",function h(e){'
+        +'if(e.data&&e.data.r==="reserve"){clearTimeout(t);navigator.serviceWorker.removeEventListener("message",h);r(e.data);}});'
+        +'navigator.serviceWorker.controller.postMessage({q:"reserve"});}))()');
+      if(res&&Array.isArray(res.manque)&&!res.manque.length)break;
+    }
+    if(res&&Array.isArray(res.manque)&&res.manque.length)
+      report(scen.name,'hors-ligne','reserve incomplete : '+res.manque.join(', '));
     await cdp('Network.enable');
     await cdp('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:-1,uploadThroughput:-1});
-    await cdp('Page.navigate',{url});await sleep(1200);
-    const off=await evalJs('(()=>{try{return {race:!!S.race,tabs:document.querySelectorAll("#tabs button").length,css:getComputedStyle(document.body).backgroundColor};}catch(e){return {err:String(e)};}})()');
+    await cdp('Page.navigate',{url});
+    /* On attend la CONDITION, pas une duree. Une attente fixe de 1 200 ms
+       tenait quand le jeu avait quarante fichiers ; a soixante elle tombait
+       une fois sur deux, et le test accusait le hors-ligne d'un defaut qui
+       n'etait qu'une seconde de chargement. */
+    let off=null;
+    for(let i=0;i<40;i++){
+      await sleep(150);
+      off=await evalJs('(()=>{try{return {race:!!S.race,tabs:document.querySelectorAll("#tabs button").length,css:getComputedStyle(document.body).backgroundColor};}catch(e){return {err:String(e)};}})()');
+      /* la barre d'onglets apparait AVANT que les scripts finissent : on
+         attend le personnage, qui n'existe qu'une fois tout charge */
+      if(off&&!off.err&&off.tabs>=16&&off.race)break;
+    }
     if(!off.race||off.tabs<16||off.css!=='rgb(11, 13, 12)')report(scen.name,'hors-ligne','la page ne se charge pas sans reseau : '+JSON.stringify(off));
     await cdp('Network.emulateNetworkConditions',{offline:false,latency:0,downloadThroughput:-1,uploadThroughput:-1});
     flushErrors('hors-ligne');

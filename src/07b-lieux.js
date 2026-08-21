@@ -126,6 +126,7 @@ function lieuVisiter(){
   let dit='';
   try{dit=D.fais(c);}catch(e){dit='';}
   if(D.hebdo)c.lieuW=S.week;
+  questTick('lieu',1);
   if(dit)cutIn(D.g,D.n,dit);
   paint();
 }

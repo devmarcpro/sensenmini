@@ -77,6 +77,75 @@ const QTPL=[
   /* --- dressage : les prospecteurs et aventuriers achètent des bêtes --- */
   {id:'capture',g:'aventuriers',r:2,t:'tame',n:[1,2],or:150,xp:40,
    txt:q=>'Apprivoiser '+q.need+' bête'+(q.need>1?'s':'')},
+  /* ================================================================
+     VINGT-DEUX GABARITS DE PLUS. Douze guildes, vingt-neuf gabarits :
+     deux ou trois chacune, et les rangs quatre et cinq n'ouvraient
+     RIEN — monter de rang ne donnait qu'une meilleure recompense sur
+     les memes trois quetes. Un rang qui n'ouvre pas de travail nouveau
+     n'est pas un rang, c'est un multiplicateur.
+     Chaque guilde a desormais quatre a six gabarits etales sur les cinq
+     rangs, et les plus hauts demandent ce qu'on ne fait qu'apres avoir
+     appris a jouer : des gardiens, des chaines completes, des fioles
+     distillees, des lieux qu'il faut trouver avant de les visiter.
+     ================================================================ */
+  /* --- guerriers, gladiateurs, assassins : le combat --- */
+  {id:'battue',g:'guerriers',r:3,t:'killcat',cat:'bete',n:[10,20],or:20,xp:34,
+   txt:q=>'Mener une battue : '+q.need+' bêtes'},
+  {id:'gardien',g:'guerriers',r:4,t:'killrare',n:[2,4],or:300,xp:110,
+   txt:q=>'Abattre '+q.need+' gardiens ou créatures rares'},
+  {id:'nocturne',g:'gladiateurs',r:2,t:'killnight',n:[6,14],or:26,xp:28,
+   txt:q=>'Vaincre '+q.need+' fois à la nuit tombée'},
+  {id:'invaincu',g:'gladiateurs',r:4,t:'chain',n:[8,16],or:90,xp:120,
+   txt:q=>'Résoudre '+q.need+' chaînes sans interruption'},
+  {id:'silence',g:'assassins',r:1,t:'killnight',n:[3,7],or:44,xp:24,
+   txt:q=>'Frapper '+q.need+' fois dans le noir'},
+  {id:'purge',g:'assassins',r:3,t:'killcat',cat:'corrompu',n:[8,16],or:32,xp:48,
+   txt:q=>'Purger '+q.need+' créatures corrompues'},
+  {id:'tete',g:'assassins',r:4,t:'killrare',n:[1,3],or:340,xp:130,
+   txt:q=>'Livrer '+q.need+' tête'+(q.need>1?'s':'')+' de rareté'},
+  /* --- aventuriers, navigateurs, tresors : la route --- */
+  {id:'cartographie',g:'aventuriers',r:0,t:'explore',n:[8,18],or:12,xp:16,
+   txt:q=>'Lever '+q.need+' cellules de la carte'},
+  {id:'reconnaissance',g:'aventuriers',r:3,t:'lieu',n:[2,4],or:120,xp:52,
+   txt:q=>'Visiter '+q.need+' points d\'intérêt'},
+  {id:'expedition',g:'aventuriers',r:4,t:'donjon',n:[6,14],or:60,xp:120,
+   txt:q=>'Nettoyer '+q.need+' salles de donjon'},
+  {id:'cabotage',g:'navigateurs',r:0,t:'peche',n:[8,20],or:8,xp:14,
+   txt:q=>'Ramener '+q.need+' prises de la ligne'},
+  {id:'hauturier',g:'navigateurs',r:2,t:'explore',n:[10,22],or:16,xp:30,
+   txt:q=>'Ouvrir '+q.need+' cellules à la navigation'},
+  {id:'peche_rare',g:'navigateurs',r:4,t:'peche',n:[40,80],or:6,xp:110,
+   txt:q=>'Remplir les cales : '+q.need+' prises'},
+  {id:'pillage',g:'tresors',r:1,t:'loot',n:[3,7],rar:2,or:70,xp:28,
+   txt:q=>'Rapporter '+q.need+' pièces rares ou mieux'},
+  {id:'catacombes',g:'tresors',r:3,t:'donjon',n:[8,16],or:40,xp:60,
+   txt:q=>'Descendre '+q.need+' salles'},
+  {id:'relique',g:'tresors',r:4,t:'lieu',n:[3,6],or:180,xp:130,
+   txt:q=>'Fouiller '+q.need+' lieux oubliés'},
+  /* --- prospecteurs, artisans, batisseurs : la matiere --- */
+  {id:'veine',g:'prospecteurs',r:1,t:'harvest',n:[25,60],or:4,xp:22,
+   txt:q=>'Extraire '+q.need+' × '+matName(q.mat)},
+  {id:'carriere',g:'prospecteurs',r:3,t:'harvest',n:[60,140],or:3,xp:52,
+   txt:q=>'Ouvrir une carrière : '+q.need+' × '+matName(q.mat)},
+  {id:'lapidaire',g:'prospecteurs',r:4,t:'gem',n:[3,6],or:130,xp:110,
+   txt:q=>'Tailler '+q.need+' gemmes pour la compagnie'},
+  {id:'commande_arme',g:'artisans',r:1,t:'craft',n:[2,5],or:70,xp:24,
+   txt:q=>'Forger '+q.need+' pièce'+(q.need>1?'s':'')+' pour la guilde'},
+  {id:'officine',g:'artisans',r:3,t:'potion',n:[2,5],or:100,xp:54,
+   txt:q=>'Distiller '+q.need+' fioles'},
+  {id:'oeuvre',g:'artisans',r:4,t:'craft',n:[8,16],or:60,xp:130,
+   txt:q=>'Livrer '+q.need+' pièces à la commande'},
+  {id:'muraille',g:'batisseurs',r:3,t:'build',n:[5,10],or:70,xp:56,
+   txt:q=>'Élever '+q.need+' structures de défense'},
+  /* --- developpement et magie : la commune et l'etude --- */
+  {id:'grenier',g:'developpement',r:3,t:'peche',n:[20,45],or:7,xp:50,
+   txt:q=>'Remplir le grenier : '+q.need+' prises'},
+  {id:'prosperite',g:'developpement',r:4,t:'build',n:[6,12],or:90,xp:125,
+   txt:q=>'Bâtir '+q.need+' structures pour la commune'},
+  {id:'grimoire',g:'magie',r:3,t:'book',n:[3,6],or:130,xp:60,
+   txt:q=>'Déchiffrer '+q.need+' ouvrages difficiles'},
+  {id:'archimage',g:'magie',r:4,t:'spell',n:[60,140],or:3,xp:135,
+   txt:q=>'Lancer '+q.need+' sorts au combat'},
 ];
 /* présents de rang (7.3) : ce que la guilde ouvre en montant */
 const GUILDGIFT={
@@ -125,6 +194,11 @@ function newQuest(gk){
 /* le monde signale ce qui se passe ; la quête retient ce qui la concerne.
    `extra` : la matière pour une récolte, {cat,rare,boss} pour une mise à mort,
    la rareté pour un butin. */
+/* Deux types de plus. Les gabarits ne pouvaient parler que de ce que
+   questTick savait compter — tuer, recolter, batir, cuisiner, lire, lancer,
+   tailler, livrer, explorer, apprivoiser, resoudre une chaine, descendre.
+   La peche et les points d'interet sont arrives depuis, et aucune guilde ne
+   pouvait en parler. */
 function questTick(type,n,extra){
   const q=S.quest;if(!q)return;
   const T=q.type;

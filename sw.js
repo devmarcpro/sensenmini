@@ -16,17 +16,45 @@
    VERSION est un condensé du contenu réel, pose par tools/stamp.mjs : dès
    qu'un fichier change, l'installation se rejoue et les anciens caches
    disparaissent. `npm test` vérifie qu'elle est à jour. */
-const VERSION='sensen-mini-3d962df6';
+const VERSION='sensen-mini-7eadeaa1';
 const SHELL=['./','./index.html','./manifest.webmanifest','./icons/icon.svg','./icons/apple-touch-icon.png'];
 
+/* La mise en réserve AVALAIT SES PROPRES ÉCHECS : `cache.add(u).catch(()=>{})`
+   ignorait tout fichier qui ne se téléchargeait pas. Le jeu s'installait donc
+   « avec succès » avec un fichier manquant et ne se lançait pas hors-ligne,
+   sans que rien, nulle part, ne dise lequel. Un échec silencieux dans le
+   chemin de l'installation est le pire endroit possible pour en mettre un.
+
+   On garde le comportement tolérant — mieux vaut une réserve incomplète que
+   pas de réserve du tout — mais on RETIENT ce qui a manqué, on le dit dans
+   la console, et la page peut l'interroger. */
+function refsDe(html){
+  return [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(m=>m[1])
+    .filter(u=>!/^(https?:)?\/\//.test(u)&&!u.startsWith('data:'));
+}
 async function precache(){
   const cache=await caches.open(VERSION);
   const html=await (await fetch('./index.html',{cache:'no-store'})).text();
-  const refs=[...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(m=>m[1])
-    .filter(u=>!/^(https?:)?\/\//.test(u)&&!u.startsWith('data:'));
-  const urls=[...new Set(SHELL.concat(refs))];
-  await Promise.all(urls.map(u=>cache.add(u).catch(()=>{})));
+  const urls=[...new Set(SHELL.concat(refsDe(html)))];
+  const rates=[];
+  await Promise.all(urls.map(u=>cache.add(u).catch(()=>{rates.push(u);})));
+  if(rates.length)console.warn('service worker : '+rates.length+' fichier(s) hors réserve — '+rates.join(', '));
+  return rates;
 }
+/* de quoi interroger la réserve depuis la page : combien de fichiers attendus,
+   et lesquels manquent vraiment */
+self.addEventListener('message',e=>{
+  if(!e.data||e.data.q!=='reserve')return;
+  e.waitUntil((async()=>{
+    const cache=await caches.open(VERSION);
+    let html='';try{html=await (await fetch('./index.html',{cache:'no-store'})).text();}catch(x){}
+    const urls=[...new Set(SHELL.concat(refsDe(html)))];
+    const manque=[];
+    for(const u of urls)if(!(await cache.match(u)))manque.push(u);
+    const src=e.source||(await self.clients.matchAll())[0];
+    if(src)src.postMessage({r:'reserve',total:urls.length,manque});
+  })());
+});
 self.addEventListener('install',e=>{
   e.waitUntil((async()=>{await precache();await self.skipWaiting();})());
 });

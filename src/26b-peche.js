@@ -106,6 +106,9 @@ function pecheTick(dt){
   S.end=Math.max(0,S.end-.8);
   noteRate('harv');
   questTick('harvest',n,MAT[k]?k:null);
+  /* et la peche est un type de quete a elle : « ramener N prises » ne se dit
+     pas avec « recolter N fois du fer » */
+  questTick('peche',n);
   if(S.end<=0){S.resume='peche';S.occ='repos';log('Souffle coupé. La ligne attendra.');}
 }
 /* le groupe de potentiel de chaque prise vivante (A.9.1) */

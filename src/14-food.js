@@ -180,6 +180,7 @@ function distill(sel2){
     dur:Math.round(60*q*(1+plantes*.5)),n:QNAME(q)+' de '+BUFFN[base.alch]};
   S.potions.push(pot);
   gainXp('alchimie',60+plantes*30);
+  questTick('potion',1);
   log('Distillé : potion '+pot.n+' — +'+pot.v+' pendant '+pot.dur+' s');
 }
 /* une potion d'effet : la plante donne la nature, le reste donne la force */
@@ -192,6 +193,7 @@ function distillEffet(sel2,pl){
   const pot={e,v,n:QNAME(q)+' — '+E2.n};
   S.potions.push(pot);
   gainXp('alchimie',90+autres*25);
+  questTick('potion',1);
   log('Distillé : '+pot.n+' — '+E2.sub(v));
   return pot;
 }

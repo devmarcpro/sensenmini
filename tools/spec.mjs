@@ -737,6 +737,98 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('gardiens — le fond du donjon vaut la descente',()=>{
+  /* La salle du gardien posait une creature ordinaire avec six fois ses PV
+     et « Gardien — » devant son nom : huit etages pour retrouver le rodeur
+     du premier couloir en plus gros. Et l'artefact au bout tirait son nom
+     dans deux listes de six mots — jamais deux fois le meme, donc jamais
+     memorable. */
+  const c=nouveau();
+  R(c,`globalThis.__donjon=(theme,majeur)=>{
+    const cc=here();cc.poi='donjon';
+    cc.dj=genDungeon(cc);cc.dj.theme=theme;cc.dj.majeur=majeur?1:0;
+    /* on se place directement dans la salle du gardien */
+    cc.dj.f=cc.dj.floors.length-1;
+    cc.dj.r=cc.dj.floors[cc.dj.f].length-1;
+    cc.dj.floors[cc.dj.f][cc.dj.r]={t:'boss',mobs:1,done:false};
+    S.occ='donjon';E=null;EE=[];spawn();
+    return EE[0];};`);
+
+  /* --- chaque theme a SON gardien, reconnaissable --- */
+  const noms=G(c,'Object.keys(GARDIEN).map(t=>{const e=__donjon(t,false);return e?e.nom:null;})');
+  eq(new Set(noms).size,noms.length,'chaque thème pose un gardien différent — '+noms.join(', '));
+  eq(noms.filter(n=>!n||/^Gardien —/.test(n)).length,0,'et aucun ne s\'appelle « Gardien — quelque chose »');
+  /* un donjon majeur a le sien */
+  const majeur=G(c,'__donjon("ruine",true).nom');
+  eq(majeur,G(c,'GARDIEN_MAJEUR.n'),'un donjon majeur pose le sien');
+  /* chacun a son espece, donc sa silhouette */
+  const especes=G(c,'Object.keys(GARDIEN).map(t=>GARDIEN[t].cre)');
+  eq(especes.filter(k=>!G(c,'CREATURE["'+k+'"]')).length,0,'chaque gardien a une espèce réelle');
+
+  /* --- le trait de chacun FAIT quelque chose --- */
+  /* la Veilleuse se recoud si on la laisse respirer */
+  R(c,'__donjon("crypte",false);E.hp=E.max*.5;globalThis.__h0=E.hp;'
+    +'for(let i=0;i<60;i++)gardienTick(.2);');
+  gt(G(c,'E.hp'),G(c,'__h0'),'la Veilleuse se recoud si on la laisse respirer');
+  /* mais pas si on la frappe */
+  R(c,'E.hp=E.max*.5;__h0=E.hp;for(let i=0;i<60;i++){E.hp-=.001;gardienTick(.2);}');
+  ok(G(c,'E.hp')<=G(c,'__h0'),'et pas du tout si on frappe sans relâche');
+
+  /* le Sergent appelle du renfort sous la moitie */
+  R(c,'__donjon("ruine",false);globalThis.__n0=EE.length;E.hp=E.max*.4;gardienTick(.2);');
+  gt(G(c,'EE.length'),G(c,'__n0'),'le Sergent Muré appelle du renfort quand il faiblit');
+  R(c,'globalThis.__n1=EE.length;E.hp=E.max*.2;for(let i=0;i<20;i++)gardienTick(.2);');
+  eq(G(c,'EE.length'),G(c,'__n1'),'et une seule fois — il n\'en a pas d\'autre');
+
+  /* le Fendu porte une gangue qui cede */
+  R(c,'__donjon("mine",false);globalThis.__a0=E.arm;');
+  eq(G(c,'E.gangue'),1,'le Fendu commence sous sa gangue');
+  R(c,'E.hp=E.max*.5;gardienTick(.2);');
+  ok(G(c,'E.arm')<G(c,'__a0'),'elle cède à mi-course — '+G(c,'__a0')+' d\'armure puis '+G(c,'E.arm'));
+
+  /* la Mere des Ronces enrage */
+  R(c,'__donjon("repaire",false);E.hp=E.max;gardienTick(.2);globalThis.__r0=E.rage||1;'
+    +'E.hp=E.max*.1;gardienTick(.2);');
+  gt(G(c,'E.rage'),G(c,'__r0'),'la Mère des Ronces enrage à mesure qu\'elle tombe');
+  /* et la rage se lit dans les degats recus */
+  /* On mesure sur la MEME creature, maintenue en vie et remise a neuf entre
+     chaque coup : sinon on mesure la derive de l'etat de combat — un premier
+     jet donnait 31,4 puis 4,6 parce que la bete etait morte en route. */
+  R(c,`__donjon('repaire',false);S.eq={};salirUtil();
+    globalThis.__mordu=(r)=>{let s=0;
+      for(let i=0;i<300;i++){
+        E.hp=E.max;E.rage=r;E.st=[];S.st=[];
+        const h=S.hp=maxHp();resolveHit(0,E);s+=h-S.hp;
+      }
+      return s/300;};`);
+  const calme=G(c,'__mordu(1)'),enrage=G(c,'__mordu(1.8)');
+  gt(enrage,calme,'et cela se lit dans les coups reçus — '+calme.toFixed(1)+' puis '+enrage.toFixed(1));
+
+  /* --- LA PIECE NOMMEE : ecrite, pas tiree --- */
+  const uniques=G(c,'Object.keys(GARDIEN).map(t=>GARDIEN[t].arte).concat([GARDIEN_MAJEUR.arte])');
+  eq(uniques.filter(k=>!G(c,'ARTEFACT["'+k+'"]')).length,0,'chaque gardien garde une pièce qui existe');
+  /* Et elle tombe VRAIMENT quand on nettoie la salle : appeler la fonction
+     a la main ne prouve pas qu'elle est branchee au donjon. */
+  R(c,'__donjon("mine",false);S.items=[];S.stats.force=10;djAdvance();');
+  eq(G(c,'S.items.filter(it=>it.unique==="pic").length'),1,
+    'nettoyer la salle du gardien fait tomber SA pièce');
+  R(c,'S.items=[];dropArtefactNomme("pic",4);');
+  eq(G(c,'S.items.length'),1,'elle tombe');
+  eq(G(c,'S.items[0].nom'),G(c,'ARTEFACT.pic.n'),'sous son nom, toujours le même');
+  eq(G(c,'S.items[0].aff.map(a=>a.id).join(",")'),G(c,'ARTEFACT.pic.aff.map(a=>a[0]).join(",")'),
+    'avec ses effets écrits, pas tirés');
+  /* deux exemplaires portent les memes effets — c'est le propos d'une piece nommee */
+  R(c,'S.items=[];dropArtefactNomme("pic",1);dropArtefactNomme("pic",8);');
+  eq(G(c,'S.items[0].aff.map(a=>a.id+JSON.stringify(a.p)).join("|")'),
+     G(c,'S.items[1].aff.map(a=>a.id+JSON.stringify(a.p)).join("|")'),
+    'deux exemplaires ont exactement les mêmes effets');
+  ok(G(c,'S.items[1].q')>G(c,'S.items[0].q'),'seule la qualité suit l\'étage où on l\'a arrachée');
+  /* et chaque affixe cite existe vraiment */
+  const affFausses=G(c,`Object.keys(ARTEFACT).flatMap(k=>ARTEFACT[k].aff.map(a=>a[0]))
+    .filter(id=>!AFF.some(x=>x.id===id))`);
+  eq(affFausses.length,0,'et chaque effet cité existe','inconnus : '+affFausses.join(', '));
+});
+
 test('peche — une troisieme voie de subsistance',()=>{
   /* Un tiers des biomes touche l'eau, et l'on n'y faisait rien que la meme
      chose qu'ailleurs. La peche ne ressemble ni a la chasse ni a

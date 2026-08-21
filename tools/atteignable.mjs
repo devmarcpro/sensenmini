@@ -370,6 +370,25 @@ bilan('postures de combat',G('STANCE.map(s=>s.k||s.n)'),
   new Set(G('STANCE.map(s=>s.k||s.n)')),
   'les trois postures se choisissent au meme endroit');
 
+/* Les gardiens nommes et leurs pieces : chaque theme de donjon doit en
+   poser un, chaque gardien doit garder une piece qui existe, et chaque
+   effet cite doit etre un vrai affixe. Une piece nommee est ECRITE — si
+   elle cite un effet disparu, elle tombe sans rien faire. */
+bilan('themes qui ont un gardien',Object.keys(G('DJTHEME')),
+  new Set(Object.keys(G('GARDIEN'))),
+  'un theme sans gardien retombe sur une bete agrandie');
+bilan('gardiens dont l espece existe',Object.keys(G('GARDIEN')).concat(['majeur']),
+  new Set(G('Object.keys(GARDIEN).filter(t=>!!CREATURE[GARDIEN[t].cre])')
+    .concat(G('!!CREATURE[GARDIEN_MAJEUR.cre]')?['majeur']:[])),
+  'un gardien sans espece n a pas de silhouette');
+bilan('pieces nommees gardees',Object.keys(G('ARTEFACT')),
+  new Set(G('Object.keys(GARDIEN).map(t=>GARDIEN[t].arte).concat([GARDIEN_MAJEUR.arte])')),
+  'une piece que personne ne garde ne tombera jamais');
+bilan('effets cites par les pieces nommees',
+  G('[...new Set(Object.keys(ARTEFACT).flatMap(k=>ARTEFACT[k].aff.map(a=>a[0])))]'),
+  new Set(G('AFF.map(a=>a.id)')),
+  'un effet disparu ferait tomber une piece qui ne fait rien');
+
 /* ---------- 7. les tirages sont-ils honnetes ? ---------- */
 /* Etre atteignable ne suffit pas : un affixe tire trois fois plus souvent
    qu'un autre est du contenu a moitie mort. On mesure l'ecart entre le plus

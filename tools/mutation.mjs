@@ -64,6 +64,11 @@ const MUT=[
     "    if(off.t==='item')marquerVole(off.it);",'']]],
   ['peche : la barque au large','peche',[['src/26b-peche.js',"const bateau=vehUtile()&&vehDef().eau?.55:1;",'const bateau=1;']]],
   ['peche : le gel ferme l eau','peche',[['src/26b-peche.js','  if(eauGelee())return','  if(false)return']]],
+  ['gardien : la rage','gardiens',[['src/24-combat.js',"atk.dmg*(atk.rage||1)*P.dm",'atk.dmg*P.dm']]],
+  ['gardien : le renfort','gardiens',[['src/17b-gardiens.js',"    if(part<.5&&!g.renfort){",'    if(false){']]],
+  ['gardien : la gangue','gardiens',[['src/17b-gardiens.js',"    if(part<.6&&g.gangue){",'    if(false){']]],
+  ['gardien : il se recoud','gardiens',[['src/17b-gardiens.js',"    if(g.repos>2.5){",'    if(false){']]],
+  ['gardien : sa piece nommee','gardiens',[['src/17-dungeon.js',"    if(G2&&ARTEFACT[G2.arte]&&!sacPlein())dropArtefactNomme(G2.arte,d.floors.length);",'']]],
   /* le ciel et l annee */
   ['ciel : temps de trajet','ciel',[['src/28-loop.js','*mv*mm;','*mv;']]],
   ['ciel : blizzard qui mord','ciel',[['src/28-loop.js','if(fx(c).gel&&!eclaireIci()&&!foyerIci()){','if(false){']]],

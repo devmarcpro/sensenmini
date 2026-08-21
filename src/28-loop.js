@@ -100,7 +100,10 @@ function combatTick(dt){
      tour par tour, parce que le temps ici est reel (5.0). */
   if(hasStatus(S,'gel')){
     if(Math.random()<dt*(.35+st('force')*.03))soigner('gel','tu brises la glace');
-    tickStatus(S,dt,true);return;
+    tickStatus(S,dt,true);
+  /* le gardien nomme joue sa mecanique : appeler du renfort, se recoudre,
+     fendre sa gangue, enrager */
+  gardienTick(dt);return;
   }
   const reserve=(auto('deto')&&S.seg.length===capChain()-1&&S.end<S.thr+22)||hasStatus(S,'etourdi');
   while(atkT>=iv&&E&&guard++<8){atkT-=iv;if(S.end>=S.thr&&!reserve)attack(false);}

@@ -125,10 +125,23 @@ function mkEnemy(ck,power,rare,boss,suffixe){
   let hp=Math.round(40*Math.pow(1.21,power)*C.hp),dmg=4.2*Math.pow(1.13,power)*C.dmg;
   let nom=C.cat==='corrompu'&&!C.vec?C.n+' '+pick(MOBS):C.n;
   if(rare){hp*=2.6;dmg*=1.7;}
-  if(boss){hp*=6;dmg*=1.7;nom='Gardien — '+nom;}
-  const e={hp,max:hp,rare,boss,vec:v,cre:ck,
-    nom:(rare?pick(EPITH)+' ':'')+nom+(suffixe||''),
-    dmg,arm:Math.round((1+power*.55)*C.arm),
+  /* UN GARDIEN NOMME, et non une bete ordinaire six fois plus grosse. Le
+     thème du donjon decide lequel ; un donjon majeur a le sien. Sa mecanique
+     compte plus que ses chiffres — voir 17b-gardiens.js. */
+  let gard=null;
+  if(boss){
+    const D=typeof gardienDe==='function'?gardienDe(dj()):null;
+    if(D){
+      gard=D===GARDIEN_MAJEUR?'__majeur':Object.keys(GARDIEN).find(k=>GARDIEN[k]===D);
+      hp*=D.hp;dmg*=D.dmg;nom=D.n;
+    } else {hp*=6;dmg*=1.7;nom='Gardien — '+nom;}
+  }
+  const e={hp,max:hp,rare,boss,gard,vec:v,cre:ck,
+    /* un gardien nomme ne prend pas d'epithete : « Vieux Le Fendu » n'est
+       le nom de personne */
+    nom:(rare&&!gard?pick(EPITH)+' ':'')+nom+(suffixe||''),
+    dmg,arm:Math.round((1+power*.55)*C.arm*(gard?(gardienDe(dj())||{arm:1}).arm:1)),
+    gangue:gard&&(gardienDe(dj())||{}).trait==='carapace'?1:0,
     dt:C.dt||pick(['tranchant','percant','contondant']),
     delay:(boss?C.delay*.8:C.delay),wind:boss?C.wind*.85:C.wind,
     drop:C.mats.length?pick(C.mats):null,fuit:C.fuit,venin:C.venin,nuee:C.nuee,brule:C.brule,affaiblit:C.affaiblit,
@@ -166,8 +179,11 @@ function spawn(){
   const nuit=isNight()&&!inDj&&!eclaireIci()&&!don('nuitvue');
   const power=inDj?djPower():1+c.corr/26*(nuit?1.1:1)+c.depth*0.6;
   const rare=Math.random()<0.02;
-  const ck=creaturePool(c,inDj,nuit,power),C=CREATURE[ck];
   const boss=inDj&&room&&room.t==='boss';
+  /* Un gardien a son espece a lui : c'est ce qui le rend reconnaissable
+     d'un donjon a l'autre, silhouette comprise. */
+  const gd=boss&&typeof gardienDe==='function'?gardienDe(c.dj):null;
+  const ck=gd&&CREATURE[gd.cre]?gd.cre:creaturePool(c,inDj,nuit,power),C=CREATURE[ck];
   /* combien : une meute vient en meute, une salle gardée envoie sa garde,
      un camp est un camp. Le gardien vient seul — il suffit à lui-même. */
   let n=1;
@@ -410,7 +426,8 @@ function resolveHit(q,atk){
   }
   const zk=pickZone(),z=ZONE[zk];
   const sl=SLOTS.find(x=>x.zone===zk),it=eqOf(sl.k);
-  const raw=atk.dmg*P.dm*z.mult*vmult(atk.vec,avgVec(),multDef)*(hasStatus(atk,'affaibli')?.7:1)*(dos?backMul():1);
+  /* la rage d'un gardien : chaque blessure le rend plus dangereux (17b) */
+  const raw=atk.dmg*(atk.rage||1)*P.dm*z.mult*vmult(atk.vec,avgVec(),multDef)*(hasStatus(atk,'affaibli')?.7:1)*(dos?backMul():1);
   if(S.dodge&&q!==2){S.dodge=0;float('影 esquive','#B9A7D6');gainXp('esquive',raw);atk.w=-1;atk.tt=0;return;}
   const G=grip(),GB=gripBonus();
   if(q===2){                                    /* parade parfaite */

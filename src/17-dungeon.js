@@ -139,6 +139,11 @@ function djAdvance(){
   questTick('donjon',1);noteRate('djroom');
   if(room.t==='boss'){
     d.clear=true;
+    /* La piece nommee du gardien, et non un tirage. On sait ce qu'on va
+       chercher, et l'on peut le vouloir : c'est toute la difference entre
+       un butin et une raison de descendre. */
+    const G2=gardienDe(d);
+    if(G2&&ARTEFACT[G2.arte]&&!sacPlein())dropArtefactNomme(G2.arte,d.floors.length);
     here().djDone=S.day+1.5;          /* délai de grâce avant que la cellule redevienne normale */
     S.occ='repos';E=null;sceneMode='';
     cutIn('制',d.nom+' est nettoyé','la cellule redeviendra ordinaire dans 1,5 jour');

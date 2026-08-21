@@ -49,7 +49,7 @@ function tameBeast(){
 const compEl=c=>c.eq?domi(itemVec(c.eq)):c.el;
 function compDmg(c,tgt){
   tgt=tgt||E;if(!tgt)return 0;
-  const o=ORDERS.find(x=>x.k===c.order);
+  const o=ORDERS.find(x=>x.k===(typeof compSeqOrdre==='function'?compSeqOrdre(c):c.order));
   const moodF=Math.max(.5,Math.min(1.2,c.mood/100*1.4));
   let d=(2.2+c.lv*1.5)*o.dmg*moodF*weakF(c);
   if(c.eq){const F=FUNC[c.eq.fn];
@@ -76,7 +76,10 @@ function compTick(dt){
   const list=escortList();
   if(!list.length||!E)return;
   list.forEach(c=>{
-    if(!E||c.order==='suivre')return;
+    /* l'ordre du moment : celui de son enchainement s'il en a un, le sien
+       sinon. Un compagnon avait UN ordre fige pour toute la partie. */
+    const ord=typeof compSeqOrdre==='function'?compSeqOrdre(c):c.order;
+    if(!E||ord==='suivre')return;
     c.t=(c.t||0)+dt;
     const iv=2.8-Math.min(1.4,c.lv*.02);
     if(c.t<iv)return;
@@ -84,7 +87,7 @@ function compTick(dt){
     /* les compagnons ne se collent pas à ta cible : ils prennent les autres en charge */
     const grp=engaged();
     if(!grp.length)return;
-    const tgt=c.order==='tenir'?grp[grp.length-1]:pick(grp);
+    const tgt=ord==='tenir'?grp[grp.length-1]:pick(grp);
     const d=Math.max(1,compDmg(c,tgt)*(1-tgt.arm*.5/(tgt.arm*.5+10)));
     const applied=Math.min(d,tgt.hp);
     tgt.hp-=d;dpsA+=d;
@@ -92,13 +95,14 @@ function compTick(dt){
     compXp(c,applied);
     gainXp('leadership',applied*.25);
     if(tgt.hp<=0)kill(tgt);
+    if(typeof compSeqAvance==='function')compSeqAvance(c);
   });
 }
 /* la créature répartit ses coups : c'est l'ordre qui décide de l'exposition */
 function pickTarget(){
-  const list=escortList().filter(c=>c.order!=='suivre');
+  const list=escortList().filter(c=>(typeof compSeqOrdre==='function'?compSeqOrdre(c):c.order)!=='suivre');
   if(!list.length)return null;
-  const w=list.map(c=>ORDERS.find(o=>o.k===c.order).aggro);
+  const w=list.map(c=>(ORDERS.find(o=>o.k===(typeof compSeqOrdre==='function'?compSeqOrdre(c):c.order))||{aggro:1}).aggro);
   const tot=w.reduce((a,b)=>a+b,0)+2.6;          /* 2.6 = ta propre exposition */
   let r=Math.random()*tot;
   for(let i=0;i<list.length;i++){r-=w[i];if(r<=0)return list[i];}

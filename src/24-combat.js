@@ -197,6 +197,10 @@ function spawn(){
   EE=[];
   for(let i=0;i<n;i++)EE.push(mkEnemy(ck,power,i===0&&rare,boss,n>1?' '+'ⅠⅡⅢⅣ'[i]:''));
   foc=0;refocus();hitN=0;
+  /* « a chaque combat l'enchainement se fait » : il reprend au premier geste,
+     sinon un combat commence au milieu d'une suite pensee pour le debut */
+  if(typeof seqReset==='function')seqReset();
+  S.comps.forEach(c=>{c.si=0;c.sn=0;});
   /* la salle lâche tout son groupe d'un coup : elle se vide d'autant */
   if(inDj&&room)room.mobs=Math.max(0,room.mobs-n);
   if(n>1)log('<span class="bd">'+n+' '+CREATURE[ck].n.toLowerCase()+'s t\'encerclent.</span>');

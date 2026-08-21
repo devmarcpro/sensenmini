@@ -52,6 +52,11 @@ const MUT=[
   ['statut : infection','cinq qui manquaient',[['src/25-modules.js',
     "-(k==='endu'&&typeof malusInfection==='function'?malusInfection():0)",'']]],
   ['recolte : la pelle prend la glace','on voit sur la case',[['src/03-data-craft.js',",meteo:'pelle'};",'};']]],
+  /* l enchainement */
+  ['enchainement : il prend la main','enchainement',[['src/28-loop.js',"  if(!enchaine)while(atkT>=iv",'  if(true)while(atkT>=iv']]],
+  ['enchainement : l ordre ecrit','enchainement',[['src/24b-sequence.js',"    if(seqRep>=n){Q.i++;seqRep=0;}",'    Q.i=Math.floor(Math.random()*Q.r.length);seqRep=0;']]],
+  ['enchainement : le geste absent se saute','enchainement',[['src/24b-sequence.js',"    if(D.absent&&D.absent(g)){Q.i++;seqRep=0;seqSaut=0;continue;}",'']]],
+  ['enchainement : la rotation du compagnon','enchainement',[['src/24b-sequence.js',"  return g.o;",'  return c.order;']]],
   /* le hors-la-loi */
   ['loi : anarchie sans gardes','hors-la-loi',[['src/21-reputation.js',
     'if(sansGardes(ki)){','if(false){']]],

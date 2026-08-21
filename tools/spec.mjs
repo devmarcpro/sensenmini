@@ -737,6 +737,104 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('enchainement — l ordre des coups se decide enfin',()=>{
+  /* Le plan dit QUOI faire ; l'enchainement dit COMMENT frapper. Une fois le
+     combat engage, tout se jouait tout seul et toujours pareil : on frappait
+     des qu'il y avait du souffle, chaque sort partait des qu'il etait pret,
+     et l'ordre ne se decidait nulle part. Or l'ordre EST le jeu. */
+  const c=nouveau();
+  R(c,`globalThis.__arme=(fn)=>{
+      const p=FUNC[fn].comp.map(ct=>partFor(ct,['fer','chene','cuir']));
+      p.push(partFor('fixations',['fer']));
+      return mkItem('arme',fn,p,1.2);};
+    globalThis.__combat=()=>{S.occ='combat';S.hp=maxHp();S.end=100;S.mana=maxMana();
+      E=null;EE=[];spawn();EE.forEach(e=>{e.hp=1e9;e.max=1e9;});};
+    /* on trace ce qui part vraiment : chaque coup, chaque sort */
+    globalThis.__trace=[];
+    (()=>{const a0=attack;attack=function(h){__trace.push(h?'lourd':'coup');return a0.apply(this,arguments);};
+          const c0=castSpell;castSpell=function(i){const r=c0.apply(this,arguments);if(r)__trace.push('sort'+i);return r;};})();
+    S.stats.force=60;S.stats.endu=60;S.stats.vol=60;`);
+
+  /* --- a l'arret, rien ne change : le combat se joue comme avant --- */
+  R(c,'S.seq={on:false,i:0,r:[]};S.items=[__arme("epee")];equipItem(0);'
+    +'__combat();__trace.length=0;for(let i=0;i<200;i++)combatTick(.1);');
+  gt(G(c,'__trace.length'),0,'sans enchaînement, on frappe comme avant');
+
+  /* --- l'ordre programme est celui qui sort --- */
+  R(c,`S.items=[__arme('epee'),__arme('marteau')];S.eq={};equipItem(0);
+    S.seq={on:true,i:0,r:[
+      {t:'arme',v:'marteau',n:1},
+      {t:'coup',v:null,n:2},
+      {t:'arme',v:'epee',n:1},
+      {t:'lourd',v:null,n:1},
+    ]};seqReset();
+    __combat();__trace.length=0;globalThis.__armes=[];
+    for(let i=0;i<400;i++){combatTick(.1);
+      const w=weapon();if(w)__armes.push(w.fn);}`);
+  const suite=G(c,'__trace.slice(0,6).join(" ")');
+  eq(G(c,'__trace.slice(0,3).join(" ")'),'coup coup lourd',
+    'les gestes sortent dans l\'ordre écrit — '+suite);
+  /* et l'arme a bien change de main au bon moment */
+  eq(G(c,'__armes.some(f=>f==="marteau")&&__armes.some(f=>f==="epee")'),true,
+    'l\'arme change de main quand l\'enchaînement le dit');
+
+  /* --- il tourne en boucle --- */
+  eq(G(c,'__trace.slice(0,6).join(" ")'),'coup coup lourd coup coup lourd',
+    'et la suite se rejoue en boucle');
+
+  /* --- un sort prend sa place dans la suite --- */
+  R(c,`S.modules=[{id:'projectile',dom:'feu',lv:3,xp:0}];S.spells=[[0],[]];
+    S.seq={on:true,i:0,r:[{t:'coup',v:null,n:1},{t:'sort',v:0,n:1}]};seqReset();
+    __combat();__trace.length=0;for(let i=0;i<300;i++)combatTick(.1);`);
+  eq(G(c,'__trace.slice(0,4).join(" ")'),'coup sort0 coup sort0',
+    'un sort prend sa place dans la suite, au tour qu\'on lui donne');
+
+  /* --- un geste impayable attend, puis se saute : il ne fige rien --- */
+  R(c,`S.modules=[];S.spells=[[],[]];
+    S.seq={on:true,i:0,r:[{t:'sort',v:0,n:1},{t:'coup',v:null,n:1}]};seqReset();
+    __combat();__trace.length=0;for(let i=0;i<300;i++)combatTick(.1);`);
+  gt(G(c,'__trace.filter(x=>x==="coup").length'),0,
+    'un sort désappris ne fige pas la suite — le coup suivant part quand même');
+  eq(G(c,'__trace.some(x=>/^sort/.test(x))'),false,'et le sort absent ne part pas');
+  /* Et il se saute TOUT DE SUITE, pas apres douze battements de patience :
+     attendre un sort desappris n'a aucun sens, et la difference entre « pas
+     encore » et « jamais » est tout l'interet de la regle. On compte donc les
+     coups sur une duree courte — s'il fallait patienter, il n'y en aurait
+     presque aucun. */
+  R(c,`S.seq={on:true,i:0,r:[{t:'sort',v:0,n:1},{t:'coup',v:null,n:1}]};seqReset();
+    __combat();__trace.length=0;for(let i=0;i<60;i++)combatTick(.1);`);
+  const vite=G(c,'__trace.filter(x=>x==="coup").length');
+  gte(vite,2,'le geste absent est sauté sur-le-champ — '+vite+' coups en six secondes');
+
+  /* --- il repart au premier geste a chaque combat --- */
+  R(c,`S.seq={on:true,i:0,r:[{t:'coup',v:null,n:1},{t:'lourd',v:null,n:1}]};
+    __combat();__trace.length=0;for(let i=0;i<40;i++)combatTick(.1);
+    globalThis.__avant=S.seq.i;
+    __combat();`);
+  eq(G(c,'S.seq.i'),0,'chaque combat reprend au premier geste');
+
+  /* --- LES COMPAGNONS : un ordre fige devient une rotation --- */
+  R(c,`S.comps=[{id:'c1',type:'bete',nom:'Essai',el:0,lv:10,hp:200,max:200,xp:0,
+      esc:1,order:'attaquer',seq:[{o:'tenir',n:2},{o:'attaquer',n:3}],si:0,sn:0}];
+    S.stats.cha=30;S.sk.leadership.lv=30;`);
+  eq(G(c,'compSeqOrdre(S.comps[0])'),'tenir','le compagnon commence par tenir');
+  R(c,'compSeqAvance(S.comps[0]);');
+  eq(G(c,'compSeqOrdre(S.comps[0])'),'tenir','deux temps durant');
+  R(c,'compSeqAvance(S.comps[0]);');
+  eq(G(c,'compSeqOrdre(S.comps[0])'),'attaquer','puis il frappe');
+  R(c,'compSeqAvance(S.comps[0]);compSeqAvance(S.comps[0]);compSeqAvance(S.comps[0]);');
+  eq(G(c,'compSeqOrdre(S.comps[0])'),'tenir','et la rotation boucle');
+  /* sans enchaînement, il garde son ordre fixe */
+  R(c,'S.comps[0].seq=[];S.comps[0].order="repli";');
+  eq(G(c,'compSeqOrdre(S.comps[0])'),'repli','sans enchaînement, l\'ordre fixe reste');
+  /* et l'ordre du moment décide vraiment de son exposition */
+  R(c,`S.comps[0].seq=[{o:'tenir',n:1}];S.comps[0].si=0;S.comps[0].sn=0;
+    __combat();globalThis.__ag1=(ORDERS.find(o=>o.k===compSeqOrdre(S.comps[0]))||{}).aggro;
+    S.comps[0].seq=[{o:'repli',n:1}];S.comps[0].si=0;
+    globalThis.__ag2=(ORDERS.find(o=>o.k===compSeqOrdre(S.comps[0]))||{}).aggro;`);
+  gt(G(c,'__ag1'),G(c,'__ag2'),'et son exposition suit l\'ordre du moment, pas l\'ancien');
+});
+
 test('gardiens — le fond du donjon vaut la descente',()=>{
   /* La salle du gardien posait une creature ordinaire avec six fois ses PV
      et « Gardien — » devant son nom : huit etages pour retrouver le rodeur

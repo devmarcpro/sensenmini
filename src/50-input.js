@@ -92,6 +92,14 @@ function handle(e){
   if(b=t.closest('[data-cook]')){cook(selFood.slice());selFood=[];paint();return;}
   if(b=t.closest('[data-distill]')){distill(selFood.slice());selFood=[];paint();return;}
   if(b=t.closest('[data-drink]')){drink(+b.dataset.drink);paint();return;}
+  if(b=t.closest('[data-seqon]')){const Q=seq();Q.on=!Q.on;if(Q.on&&!Q.r.length)Q.r=seqDefaut();seqReset();paint();return;}
+  if(b=t.closest('[data-seqadd]')){seqAjout();paint();return;}
+  if(b=t.closest('[data-seqreset]')){seq().r=seqDefaut();seqReset();paint();return;}
+  if(b=t.closest('[data-sequp]')){seqMonte(+b.dataset.sequp);paint();return;}
+  if(b=t.closest('[data-seqdown]')){seqDescend(+b.dataset.seqdown);paint();return;}
+  if(b=t.closest('[data-seqdel]')){seqSuppr(+b.dataset.seqdel);paint();return;}
+  if(b=t.closest('[data-csadd]')){compSeqAjout(+b.dataset.csadd);paint();return;}
+  if(b=t.closest('[data-csdel]')){const q=b.dataset.csdel.split(':');compSeqSuppr(+q[0],+q[1]);paint();return;}
   if(b=t.closest('[data-consofaire]')){consoFaire(b.dataset.consofaire);paint();return;}
   if(b=t.closest('[data-consouser]')){consoUser(b.dataset.consouser);paint();return;}
   if(b=t.closest('[data-voler]')){const q=b.dataset.voler.split(':');volerOffre(q[0],+q[1]);paint();return;}
@@ -183,6 +191,11 @@ $('panel').addEventListener('change',e=>{
   if(t.dataset.plancond!==undefined){planRegler(+t.dataset.plancond,'c',t.value);paint();return;}
   if(t.dataset.planacte!==undefined){planRegler(+t.dataset.planacte,'a',t.value);paint();return;}
   if(t.dataset.planval!==undefined){planRegler(+t.dataset.planval,'v',t.value);paint();return;}
+  if(t.dataset.seqt!==undefined){seqRegler(+t.dataset.seqt,'t',t.value);paint();return;}
+  if(t.dataset.seqv!==undefined){seqRegler(+t.dataset.seqv,'v',t.value);paint();return;}
+  if(t.dataset.seqn!==undefined){seqRegler(+t.dataset.seqn,'n',t.value);paint();return;}
+  if(t.dataset.cso!==undefined){const q=t.dataset.cso.split(':');compSeqRegler(+q[0],+q[1],'o',t.value);paint();return;}
+  if(t.dataset.csn!==undefined){const q=t.dataset.csn.split(':');compSeqRegler(+q[0],+q[1],'n',t.value);paint();return;}
   if(t.dataset.role){const cc=S.world[t.dataset.role];if(cc)cc.claim=t.value;paint();return;}
   if(t.dataset.assign){const n=S.npcs.find(x=>x.id===t.dataset.assign);
     if(n){n.assign=t.value||null;if(n.assign&&!n.cell.includes(',')===false&&!S.claims.includes(n.cell))n.cell=S.claims[0]||n.cell;}

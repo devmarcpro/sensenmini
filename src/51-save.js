@@ -88,6 +88,13 @@ function sanitize(){
   if(S.vehicule&&!(S.vehicule.pv>0))S.vehicule=null;
   /* une prime sur un royaume qui n'existe plus ne doit pas envoyer de gardes */
   /* un consommable d une version disparue ne doit pas rester dans le compte */
+  /* un enchainement qui cite une arme ou un sort disparu ne doit pas figer
+     le combat : on nettoie ce qui n'a plus de sens */
+  S.seq=S.seq||{on:false,i:0,r:[]};
+  S.seq.r=(S.seq.r||[]).filter(g=>g&&GESTES[g.t]
+    &&(g.t!=='arme'||!!FUNC[g.v]));
+  S.seq.i=0;
+  S.comps=(S.comps||[]).map(c=>{if(Array.isArray(c.seq))c.seq=c.seq.filter(g=>g&&ORDK.includes(g.o));return c;});
   S.conso=S.conso||{};
   Object.keys(S.conso).forEach(k=>{if(!CONSO[k]||!(S.conso[k]>0))delete S.conso[k];});
   if(!(S.torche>0))S.torche=0;

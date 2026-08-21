@@ -105,8 +105,12 @@ function combatTick(dt){
      fendre sa gangue, enrager */
   gardienTick(dt);return;
   }
+  /* L'ENCHAINEMENT PROGRAMME prend la main sur la frappe automatique ET sur
+     les sorts : c'est tout son propos — decider de l'ordre. Quand il n'y en
+     a pas, rien ne change et le combat se joue comme avant. */
+  const enchaine=seqTick(dt);
   const reserve=(auto('deto')&&S.seg.length===capChain()-1&&S.end<S.thr+22)||hasStatus(S,'etourdi');
-  while(atkT>=iv&&E&&guard++<8){atkT-=iv;if(S.end>=S.thr&&!reserve)attack(false);}
+  if(!enchaine)while(atkT>=iv&&E&&guard++<8){atkT-=iv;if(S.end>=S.thr&&!reserve)attack(false);}
   /* décroissance de la chaîne : un segment toutes les 3 s sans acte qui touche */
   if(S.seg.length){decay+=dt;
     if(decay>=3){decay=0;const last=S.seg.pop();
@@ -148,10 +152,10 @@ function combatTick(dt){
     }
     if(!E)return;
   }
-  if(auto('deto')&&E&&S.seg.length===capChain()-1&&S.end>=S.thr+22)attack(true);
+  if(!enchaine&&auto('deto')&&E&&S.seg.length===capChain()-1&&S.end>=S.thr+22)attack(true);
   compTick(dt);
   spellT+=dt;
-  if(E&&spellT>=1){
+  if(E&&spellT>=1&&!enchaine){
     spellT=0;
     for(let i=0;i<S.spells.length;i++){
       const sp=compileSpell(S.spells[i]||[]);

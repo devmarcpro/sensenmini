@@ -54,7 +54,7 @@ function pVille(){
       h+=grp(d.g,d.n.toUpperCase(),open?(list.length?'arrivage de la semaine':'étal vide jusqu\'à la semaine prochaine'):(isNight()?'fermé la nuit':'on ne te sert pas'));
       h+='<div class="meta" style="margin-bottom:6px">'+d.d+'</div>';
       if(list.length)h+='<div class="matlist">'+list.map((o,i)=>'<button class="mat" data-buy="'+sk+':'+i+'" '+(open&&S.or>=o.p?'':'disabled')+'>'
-        +'<b>'+d.g+'</b>'+o.label+'<small>'+o.sub+'</small><small style="color:'+(S.or>=o.p?'var(--terre)':'var(--zhu)')+'">'+o.p+' or</small></button>').join('')+'</div>';
+        +(o.t==='item'?iconeHtml(o.it,2.7,'coin'):'')+'<b>'+d.g+'</b>'+o.label+'<small>'+o.sub+'</small><small style="color:'+(S.or>=o.p?'var(--terre)':'var(--zhu)')+'">'+o.p+' or</small></button>').join('')+'</div>';
     });
   }
   /* marché local */

@@ -4,7 +4,7 @@
      sert une version avec le code d'une autre — le jeu s'affiche alors en
      morceaux sans que rien ne le signale. On recharge plutôt une fois.
      Les deux valeurs se bougent ensemble ; `npm test` le vérifie. */
-  --css-rev:10;
+  --css-rev:11;
   --ink:#0B0D0C;--sumi:#131817;--panel:#181E1C;--line:#26302C;--line2:#3C4F47;
   --paper:#F4F1E8;--bone:#E6E2D6;--dim:#7E9187;
   --zhu:#C8332B;
@@ -203,6 +203,19 @@ body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
 .besvox i{position:absolute;inset:0;border:1px solid rgba(0,0,0,.3);transform-origin:left top}
 .besvox.mort{opacity:.3}
 .besinfo{flex:1;min-width:0}
+/* Une icone d objet : meme mecanique de paves que les creatures, en petit.
+   La forme vient de ce que l objet EST, la couleur de sa matiere principale. */
+.ico{position:relative;display:inline-block;width:38px;height:38px;flex:none;
+  perspective:280px;vertical-align:middle}
+.ico .cam{position:absolute;left:50%;top:56%;width:0;height:0;transform-style:preserve-3d;
+  transform:rotateX(-18deg) rotateY(-30deg)}
+.ico .bx{position:absolute;transform-style:preserve-3d}
+.ico i{position:absolute;inset:0;border:1px solid rgba(0,0,0,.35);transform-origin:left top}
+.ico.gros{width:56px;height:56px;perspective:360px}
+/* posee dans un coin de vignette, l icone ne pousse rien */
+.ico.coin{position:absolute;right:3px;top:3px;width:36px;height:36px;perspective:260px}
+.mat{position:relative}
+.objh>.ico{margin-right:2px}
 @media(max-width:520px){.besvox{width:60px;height:60px}}
 /* Le pantin d'equipement : la silhouette du joueur, composee de ce qu'il porte
    reellement. Elle a quitte la scene de combat pour ici, ou elle sert. */

@@ -18,7 +18,7 @@ function chargementComplet(){
       &&genCell&&NEW&&gainXp&&gainStat&&mkItem&&partFor&&formeNom&&ALLIAGE&&allier&&cutGem&&GEMSPEC&&mkNpc&&linkFamilies&&JOBS
       &&GOV&&GUILDS&&QTPL&&PLANTE&&cook&&escortList&&ORDERS&&PLOT&&MEUBLE&&plots&&genDungeon&&DJTHEME
       &&METEO&&SEASON&&offline&&AUTOS&&CONDS&&ACTES&&planTick&&STATUS&&addStatus&&KSIZE&&kingdomsNear&&hameauAt&&starterKit&&SHOPDEF
-      &&CREATURE&&noteBestiaire&&PATTERN&&VOX&&VOXMAT&&voxelHtml&&matHtml&&compHtml&&heroHtml&&vide&&STANCE&&attack&&compileSpell&&harvestTick&&tickClock&&step&&paint&&grp&&foldHead
+      &&CREATURE&&noteBestiaire&&PATTERN&&VOX&&VOXMAT&&voxelHtml&&matHtml&&compHtml&&ICONE&&iconeHtml&&heroHtml&&vide&&STANCE&&attack&&compileSpell&&harvestTick&&tickClock&&step&&paint&&grp&&foldHead
       &&pMonde&&pCell&&pAtelier&&pEquip&&pMagie&&pTable&&pVille&&pPnj&&pComps&&pBatir&&pRoyaume
       &&pGuilde&&pSac&&pAuto&&pSkills&&pParam&&TRICHES&&pRecolte&&TIPS&&SFX&&save&&exportSave
       &&buildGate&&applyBirth&&defaultStart&&repLocale&&lawsHere&&handle&&tabsEdges);
@@ -32,7 +32,7 @@ function chargementComplet(){
    rafraîchissait fichier par fichier, sans aucune atomicité.
    La feuille déclare donc sa révision, et l'on refuse de démarrer sur un
    désaccord. Les deux valeurs se bougent ensemble. */
-const CSS_REV='10';
+const CSS_REV='11';
 function styleAJour(){
   try{
     const v=getComputedStyle(document.documentElement).getPropertyValue('--css-rev').trim();

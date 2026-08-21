@@ -150,16 +150,28 @@ async function runScenario(scen){
   if(!born)report(scen.name,'creation','le personnage n\'est pas ne');
   await shot('2-monde');await checkOverflow('onglet monde');
   /* tous les onglets */
+  /* La barre d'onglets defile horizontalement : un tap peut ne pas atterrir,
+     et un delai fixe ne le rattrape pas. On attend donc la confirmation que
+     l'onglet est ouvert, et on retape une fois si besoin. Sans cela le test
+     echoue au hasard, et un test instable ne vaut plus rien. */
+  const ouvrir=async t=>{
+    for(let essai=0;essai<3;essai++){
+      if(!await tap('#tabs button[data-tab="'+t+'"]'))return false;
+      for(let i=0;i<20;i++){
+        await sleep(40);
+        if(await evalJs('tab')===t)return true;
+      }
+    }
+    return false;
+  };
   const hauteurs=[];
   const tabs=await evalJs('[...document.querySelectorAll("#tabs button")].map(b=>b.dataset.tab)');
   const panels=['monde','cell','recolte','atelier','equip','magie','table','ville','pnj','comps','batir','royaume','guilde','sac','autos','skills'];
   const missing=panels.filter(k=>!tabs.includes(k));
   if(missing.length)report(scen.name,'onglet inaccessible','panneau sans bouton dans la nav : '+missing.join(', '));
   for(const t of tabs){
-    if(!await tap('#tabs button[data-tab="'+t+'"]'))continue;
-    await sleep(150);flushErrors('onglet '+t);
-    const sel=await evalJs('tab');
-    if(sel!==t)report(scen.name,'onglet','le tap sur '+t+' a ouvert '+sel);
+    if(!await ouvrir(t)){report(scen.name,'onglet','impossible d\'ouvrir '+t);continue;}
+    await sleep(60);flushErrors('onglet '+t);
     await checkOverflow('onglet '+t);
     if(['atelier','royaume','skills','sac','autos','guilde','equip','magie','pnj'].includes(t))await shot('3-'+t);
     /* longueur du panneau : au-delà d'une vingtaine d'écrans, on ne trouve plus rien */
@@ -182,8 +194,8 @@ async function runScenario(scen){
   })()`);
   const lourds=[];
   for(const t of ['atelier','equip','sac','magie','table','skills','autos','guilde']){
-    if(!await tap('#tabs button[data-tab="'+t+'"]'))continue;
-    await sleep(160);flushErrors('onglet chargé '+t);
+    if(!await ouvrir(t)){report(scen.name,'onglet','impossible d\'ouvrir '+t+' sur partie avancée');continue;}
+    await sleep(60);flushErrors('onglet chargé '+t);
     const m=await evalJs('({ec:Math.round(document.getElementById("panel").scrollHeight/innerHeight*10)/10,'
       +'onglet:tab,car:document.getElementById("panel").innerHTML.length})');
     const ec=m.ec;

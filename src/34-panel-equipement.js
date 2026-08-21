@@ -12,6 +12,7 @@ function pEquip(){
   h+='<div class="matlist">'+SLOTS.map(sl=>{
     const it=eqOf(sl.k);
     return '<button class="mat'+(it?'':'')+'" data-unslot="'+sl.k+'" '+(it?'':'disabled')+'>'
+      +(it?iconeHtml(it,2.7,'coin'):'')
       +'<b>'+sl.g+'</b>'+sl.n+'<small>'+(it?it.nom:'vide')+'</small>'
       +(it?'<small style="color:var(--jade)">q'+it.q.toFixed(2)+' · retirer</small>':'<small>—</small>')+'</button>';
   }).join('')+'</div>';
@@ -34,7 +35,7 @@ function pEquip(){
     h+='<div class="meta" style="margin-bottom:6px">Un coffre appartient à sa cellule : ce qu\'on y range ne se reprend que sur place.</div>';
     h+='<div class="row" style="margin-bottom:8px"><button class="btn" data-rangetout="1" '+(S.items.length&&l.length<cap?'':'disabled')+'>Tout ranger</button></div>';
     if(l.length)h+='<div class="matlist">'+l.map((it,i)=>'<button class="mat" data-reprendre="'+i+'" '+(sacPlein()?'disabled':'')+'>'
-      +'<b>'+(it.kind==='arme'?'刀':it.kind==='armure'?'甲':it.kind==='statue'?'像':'具')+'</b>'+it.nom
+      +iconeHtml(it,2.7,'coin')+'<b>'+(it.kind==='arme'?'刀':it.kind==='armure'?'甲':it.kind==='statue'?'像':'具')+'</b>'+it.nom
       +'<small>'+(it.rar?RARITY[it.rar].n+' · ':'')+'q'+it.q.toFixed(2)+(it.aff&&it.aff.length?' · '+it.aff.length+' affixe(s)':'')+'</small>'
       +'<small style="color:var(--jade)">'+(sacPlein()?'sac plein':'reprendre')+'</small></button>').join('')+'</div>';
     else h+='<p class="hint">Coffre vide.</p>';}
@@ -51,6 +52,7 @@ function pEquip(){
   h+=S.items.map((it,i)=>{
     const ouv=foldOpen('obj',it.id,null);
     let s='<div class="card"><button class="objh'+(ouv?' on':'')+'" data-fold="obj:'+it.id+'">'
+      +iconeHtml(it,2.8)
       +'<span>'+it.nom+'</span>'
       +'<i>'+(it.rar?RARITY[it.rar].n+' · ':'')+'q'+it.q.toFixed(2)
       +(it.aff&&it.aff.length?' · '+it.aff.length+' affixe'+(it.aff.length>1?'s':''):'')

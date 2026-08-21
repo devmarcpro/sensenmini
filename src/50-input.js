@@ -54,6 +54,7 @@ function handle(e){
   if(b=t.closest('[data-allier]')){allier(b.dataset.allier);paint();return;}
   if(b=t.closest('[data-carry]')){toggleCarry(b.dataset.carry);paint();return;}
   if(b=t.closest('[data-auto]')){buyAuto(b.dataset.auto);paint();return;}
+  if(b=t.closest('[data-stance]')){S.stance=+b.dataset.stance;sceneMode='';paint();return;}
   if(b=t.closest('[data-tips]')){if(S.tips===false)tipsReset();else tipsOff();paint();return;}
   if(b=t.closest('[data-sfx]')){S.sfx=S.sfx===false?true:false;if(S.sfx!==false)sfx('coin');paint();return;}
   if(b=t.closest('[data-export]')){saveIO=saveIO==='export'?null:'export';paint();return;}

@@ -605,7 +605,11 @@ const CHRON=c=>G(c,'CHRON_MAX');
 
 test('panneaux — chaque onglet se rend, replié ou déplié',()=>{
   const c=nouveau();
-  const onglets=['monde','cell','recolte','atelier','equip','magie','table','ville','pnj','comps','batir','royaume','guilde','sac','autos','skills','param'];
+  /* La liste des onglets se lit dans index.html : ecrite a la main ici, elle
+     aurait oublie le dix-huitieme le jour ou on l'ajoute — et c'est
+     exactement ce qui est arrive a l'onglet COMBAT. */
+  const onglets=[...readFileSync(join(root,'index.html'),'utf8')
+    .matchAll(/data-tab="([a-z]+)"/g)].map(m=>m[1]);
   /* sur une partie neuve et sur une partie avancée */
   for(const avance of [false,true]){
     if(avance)R(c,`S.or=99999;claimCell();
@@ -620,11 +624,20 @@ test('panneaux — chaque onglet se rend, replié ou déplié',()=>{
     const ko=G(c,`(()=>{const ko=[];
       const P={monde:pMonde,cell:pCell,recolte:pRecolte,atelier:pAtelier,equip:pEquip,magie:pMagie,
         table:pTable,ville:pVille,pnj:pPnj,comps:pComps,batir:pBatir,royaume:pRoyaume,
-        guilde:pGuilde,sac:pSac,autos:pAuto,skills:pSkills,param:pParam};
+        guilde:pGuilde,sac:pSac,combat:pCombat,autos:pAuto,skills:pSkills,param:pParam};
       for(const k in P){try{const s=P[k]();if(typeof s!=='string'||!s.length)ko.push(k+': vide');}
         catch(e){ko.push(k+': '+e.message);}}
       return ko;})()`);
-    eq(ko.length,0,'les dix-sept onglets se rendent'+(avance?' sur une partie avancée':' sur une partie neuve'),ko.join(' | '));
+    /* Un bouton de la barre sans panneau derriere est pire qu'un bouton
+       absent : il se clique et ne rend rien. On compare donc la barre au
+       tableau des panneaux, dans les deux sens. */
+    const rendus=G(c,`Object.keys({monde:1,cell:1,recolte:1,atelier:1,equip:1,magie:1,table:1,ville:1,
+      pnj:1,comps:1,batir:1,royaume:1,guilde:1,sac:1,combat:1,autos:1,skills:1,param:1})`);
+    const orphelins=onglets.filter(t=>!rendus.includes(t));
+    eq(orphelins.length,0,'chaque bouton de la barre a son panneau','sans panneau : '+orphelins.join(', '));
+    const invisibles=rendus.filter(t=>!onglets.includes(t));
+    eq(invisibles.length,0,'et chaque panneau a son bouton','sans bouton : '+invisibles.join(', '));
+    eq(ko.length,0,'les '+onglets.length+' onglets se rendent'+(avance?' sur une partie avancée':' sur une partie neuve'),ko.join(' | '));
   }
   /* les sections repliables : une seule ouverte, et le choix se retient */
   R(c,'S.fold={};__a=pAtelier();');

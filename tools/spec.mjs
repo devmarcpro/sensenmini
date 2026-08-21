@@ -750,6 +750,66 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('raid — on peut enfin defendre son territoire soi-meme',()=>{
+  /* « Joueur present sur place : l'attaque se joue en temps reel ; joueur
+     absent : elle est simulee » (14.5). Elle etait TOUJOURS simulee. On
+     rentrait chez soi, le journal annoncait qu'un raid avait eu lieu pendant
+     qu'on etait la, et l'on n'avait rien pu faire. */
+  const c=nouveau();
+  R(c,`globalThis.__terre=(n)=>{
+    S.claims=[];S.npcs=[];S.tresor=5000;S.dette=0;S.detteW=0;S.raid=null;
+    for(let i=0;i<(n||10);i++){const cc=cell(S.pos[0]+i,S.pos[1]);cc.claim=1;S.claims.push(key(cc.x,cc.y));}
+    const ici=here();ici.claim=1;if(!S.claims.includes(key(ici.x,ici.y)))S.claims.push(key(ici.x,ici.y));
+    ici.corr=90;S.claims.forEach(k=>{if(S.world[k])S.world[k].corr=90;});
+    S.occ='repos';E=null;EE=[];
+  };
+  /* on force le raid : le jet hebdomadaire est rare, et l'on ne teste pas
+     le hasard mais ce qui se passe APRES */
+  globalThis.__raid=()=>{
+    __terre();
+    const R0=Math.random;Math.random=()=>0;
+    const r=[];try{weeklyKingdom(r);}finally{Math.random=R0;}
+    return r.join(' | ');
+  };`);
+
+  /* --- sur place, le raid devient un combat --- */
+  const rapport=G(c,'__raid()');
+  eq(G(c,'S.occ'),'combat','sur ta cellule, le raid devient un combat');
+  gt(G(c,'EE.length'),0,'des assaillants en chair, et non un jet');
+  eq(G(c,'EE.every(e=>e.raid)'),true,'tous marqués comme assaillants');
+  ok(/EN COURS/.test(rapport),'et le journal le dit — '+rapport.slice(0,60));
+
+  /* --- les repousser annule la perte et rapporte --- */
+  R(c,'globalThis.__tr0=S.tresor;S.stats.force=400;'
+    +'while(EE.length){const e=EE[0];e.hp=1;kill(e);}');
+  eq(G(c,'S.raid'),null,'tous abattus, le raid est repoussé');
+  gt(G(c,'S.tresor'),G(c,'__tr0'),'et le butin des assaillants va au trésor — '
+    +G(c,'__tr0')+' puis '+G(c,'S.tresor'));
+
+  /* --- rompre le contact le perd, et cela coute --- */
+  R(c,'__raid();globalThis.__tr1=S.tresor;S.raid.def=0;S.raid.force=400;'
+    +'S.hp=1;combatTick(.1);');
+  eq(G(c,'S.raid'),null,'rompre le contact perd le raid');
+  ok(G(c,'S.tresor')<G(c,'__tr1'),'et le trésor le paie — '+G(c,'__tr1')+' puis '+G(c,'S.tresor'));
+
+  /* --- tomber pendant l'assaut le perd aussi --- */
+  R(c,'__raid();globalThis.__tr2=S.tresor;S.raid.def=0;S.raid.force=400;down();');
+  eq(G(c,'S.raid'),null,'tomber pendant l\'assaut le perd');
+  ok(G(c,'S.tresor')<G(c,'__tr2'),'et cela coûte aussi');
+
+  /* --- loin de chez soi, il se resout comme avant, sans combat --- */
+  R(c,`__terre();S.pos=[S.pos[0]+40,S.pos[1]+40];here().seen=true;S.occ='repos';
+    globalThis.__r2=(()=>{const R0=Math.random;Math.random=()=>0;
+      const r=[];try{weeklyKingdom(r);}finally{Math.random=R0;}return r.join(' | ');})();`);
+  eq(G(c,'S.occ'),'repos','loin de chez soi, rien ne t\'engage');
+  eq(G(c,'S.raid'),null,'et le raid se résout par la formule, comme avant');
+  ok(/raid/.test(G(c,'__r2')),'mais il a bien eu lieu — '+G(c,'__r2').slice(0,70));
+
+  /* --- et un raid ne survit pas a une sauvegarde --- */
+  R(c,'__raid();sanitize();');
+  eq(G(c,'S.raid'),null,'un raid à moitié joué ne se sauvegarde pas');
+});
+
 test('residents — les champs nourrissent enfin ceux qui exploitent',()=>{
   /* Un garde-manger allegeait l'entretien d'un or par semaine, et c'etait
      tout ce qui reliait l'agriculture au royaume : on cultivait des champs

@@ -198,6 +198,38 @@ function weeklyKingdom(r){
     const renfort=allies?Math.round(valeur*.22*allies):0;
     const def=defense()+renfort;
     if(renfort)r.push('renforts alliés : +'+renfort+' de défense');
+    /* ================================================================
+       « JOUEUR PRESENT SUR PLACE : l'attaque se joue en temps reel ;
+       joueur absent : elle est simulee » (14.5). Elle etait TOUJOURS
+       simulee. On rentrait chez soi, on regardait le journal annoncer
+       qu'un raid avait eu lieu pendant qu'on etait la, et l'on n'avait
+       rien pu faire — la seule chose qui rendait un territoire vivant se
+       jouait sans son proprietaire.
+       Quand la case attaquee est celle ou l'on se tient, le raid devient
+       un COMBAT : des pillards, en chair, autant que la force du raid le
+       permet. Les tenir en echec annule la perte ; se faire deborder la
+       double, parce qu'on etait la et qu'on n'a pas tenu.
+       ================================================================ */
+    if(S.claims.includes(key(S.pos[0],S.pos[1]))&&S.occ!=='donjon'&&!S.raid){
+      S.raid={force:Math.round(force),def:Math.round(def),reste:0};
+      const puiss=Math.max(1,Math.min(28,Math.round(force/12)));
+      const n=Math.max(1,Math.min(MAXENG,1+Math.floor(force/60)));
+      EE=[];E=null;
+      for(let i=0;i<n;i++){
+        const ck=creaturePool(here(),false,isNight(),puiss);
+        EE.push(mkEnemy(ck,puiss,i===0&&force>valeur*.3,false,n>1?' '+'ⅠⅡⅢⅣ'[i]:''));
+        EE[i].raid=1;
+      }
+      S.raid.reste=EE.length;
+      foc=0;refocus();hitN=0;
+      if(typeof seqReset==='function')seqReset();
+      S.occ='combat';sceneMode='';
+      cutIn('襲','Ton territoire est attaqué',
+        EE.length+' assaillant'+(EE.length>1?'s':'')+' · défense '+Math.round(def)+' contre '+Math.round(force)
+        +' — les repousser toi-même annule la perte');
+      r.push('<span class="bd">raid EN COURS sur ta cellule — défends-toi</span>');
+      return;
+    }
     if(def>=force)r.push('<span class="gd">raid repoussé — défense '+Math.round(def)+' contre '+Math.round(force)+'</span>');
     else{
       const perte=Math.round((force-def)*1.5);

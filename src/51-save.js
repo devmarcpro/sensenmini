@@ -90,6 +90,9 @@ function sanitize(){
   /* un consommable d une version disparue ne doit pas rester dans le compte */
   /* un enchainement qui cite une arme ou un sort disparu ne doit pas figer
      le combat : on nettoie ce qui n'a plus de sens */
+  /* un raid ne survit pas a la fermeture du jeu : ses assaillants sont dans
+     EE, qui ne se sauvegarde pas. Le garder laisserait un compteur fantome. */
+  S.raid=null;
   S.seq=S.seq||{on:false,i:0,r:[]};
   S.seq.r=(S.seq.r||[]).filter(g=>g&&GESTES[g.t]
     &&(g.t!=='arme'||!!FUNC[g.v]));

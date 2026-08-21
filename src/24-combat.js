@@ -484,12 +484,24 @@ function resolveHit(q,atk){
 }
 const consMult=(c,t)=>CONS[c].fort.includes(t)?.8:CONS[c].faible.includes(t)?1.25:1;
 /* mort (A.10) : −10 % de l'or porté, aucune compétence perdue, réveil au dernier lit — sinon sur place */
+/* Un raid qu'on abandonne coute plus cher qu'un raid subi de loin : on
+   etait la, et l'on n'a pas tenu. C'est la contrepartie de pouvoir le
+   gagner. */
+function raidPerdu(pourquoi){
+  if(!S.raid)return;
+  const perte=Math.round(Math.max(0,S.raid.force-S.raid.def)*3);
+  S.tresor=Math.max(0,(S.tresor||0)-perte);
+  EE=EE.filter(e=>!e.raid);E=EE[0]||null;
+  cutIn('敗','Le raid passe',pourquoi+' · −'+perte+' or au trésor');
+  S.raid=null;
+}
 function down(){
   /* « Autel domestique : resurrection a domicile » (F.6). Ici la mort ne
      coute pas une resurrection mais un dixieme de la bourse ; un autel chez
      soi en reprend la moitie. C'est le seul batiment qui rende quelque chose
      quand on echoue, et cela vaut d'etre construit avant de descendre. */
   const autels=typeof meubleTerritoire==='function'?meubleTerritoire('autelmaison'):0;
+  if(S.raid)raidPerdu('tu es tombé pendant l\'assaut');
   const perte=Math.floor(S.or*(autels?.05:.1));S.or-=perte;
   S.hp=maxHp();S.end=100;S.seg=[];S.bonus=0;E=null;EE=[];foc=0;S.st=[];
   S.occ='repos';S.resume=null;sceneMode='';
@@ -515,6 +527,17 @@ function kill(who){
     S.items.push({id:'i'+(S.nid++),kind:'statue',nom:'Statue de '+C.n.toLowerCase()+' (1:1)',parts:[],q:1,dur:0,durBase:0,de:0,mana:0,vec:[.2,.2,.2,.2,.2],rar:3,val:C.lv*40+40,slots:0});
     cutIn('像','Statue de '+C.n.toLowerCase(),'la créature elle-même, changée en pierre — trophée, prestige, et '+(C.lv*40+40)+' or chez un érudit');}
   if(K.livre&&Math.random()<.5)dropBook(2);
+  /* un assaillant abattu retire une part de la menace : les repousser tous
+     annule la perte de la semaine (14.5) */
+  if(K.raid&&S.raid){
+    S.raid.reste=Math.max(0,S.raid.reste-1);
+    if(!S.raid.reste){
+      S.tresor=(S.tresor||0)+Math.round(S.raid.force*.4);
+      gainXp('leadership',S.raid.force);
+      cutIn('守','Le raid est repoussé','+'+Math.round(S.raid.force*.4)+' au trésor — le butin des assaillants');
+      S.raid=null;
+    }
+  }
   c.kills=(c.kills||0)+1;
   if(c.kills%5===0){c.cleared++;
     if(c.cleared===3)cutIn('浄',(c.town||BIOME[c.b].n)+' se calme','la corruption reflue chaque semaine');}

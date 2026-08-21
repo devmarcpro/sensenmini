@@ -87,6 +87,7 @@ function combatTick(dt){
   else S.end=Math.min(100,S.end+((S.guard?2:6)+passives().regen+buffOf('regen')+gemEndurance())*dt);
   if(S.hp<maxHp()*.25&&E&&!hasStatus(S,'enracine')){
     const oc=S.occ;
+    if(S.raid)raidPerdu('tu as rompu le contact');
     disengage(true);S.resume=oc;
     log('<span class="bd">Tu romps le contact et te replies.</span>');return;}
   if(respawnT>0){respawnT-=dt;if(respawnT<=0&&!E){spawn();sceneMode='';}return;}

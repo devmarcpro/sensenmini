@@ -92,6 +92,9 @@ const MUT=[
   ['vehicule : usure','vehicules',[['src/22b-vehicules.js',
     'm*= 1+(1-v.pv/D.pv)*.45;','']]],
   /* le territoire */
+  ['raid : on le defend soi-meme','raid',[['src/13-kingdom.js',"    if(S.claims.includes(key(S.pos[0],S.pos[1]))&&S.occ!=='donjon'&&!S.raid){",'    if(false){']]],
+  ['raid : le repousser paie','raid',[['src/24-combat.js',"  if(K.raid&&S.raid){",'  if(false){']]],
+  ['raid : l abandonner coute','raid',[['src/28-loop.js',"    if(S.raid)raidPerdu('tu as rompu le contact');",'']]],
   ['residents : ils mangent','residents',[['src/13-kingdom.js','    S.vivres=Math.max(0,(S.vivres||0)-pris);','']]],
   ['residents : le garde-manger nourrit','residents',[['src/13-kingdom.js',"meubleTerritoire('gardemanger')*3;",'0;']]],
   ['residents : le creux coute','residents',[['src/13-kingdom.js','*creux;   /* 2 semaines','; /* 2 semaines']]],

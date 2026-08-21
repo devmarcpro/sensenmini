@@ -91,6 +91,10 @@ const MUT=[
   ['vehicule : vent','vehicules',[['src/22b-vehicules.js','m*=(1+malus-aide)/Math.max(.2,mv2);','']]],
   ['vehicule : usure','vehicules',[['src/22b-vehicules.js',
     'm*= 1+(1-v.pv/D.pv)*.45;','']]],
+  /* le territoire */
+  ['residents : ils mangent','residents',[['src/13-kingdom.js','    S.vivres=Math.max(0,(S.vivres||0)-pris);','']]],
+  ['residents : le garde-manger nourrit','residents',[['src/13-kingdom.js',"meubleTerritoire('gardemanger')*3;",'0;']]],
+  ['residents : le creux coute','residents',[['src/13-kingdom.js','*creux;   /* 2 semaines','; /* 2 semaines']]],
   /* les meubles */
   ['meuble : bibliotheque','meubles',[['src/25-modules.js',
     "+(typeof meubleIci==='function'?Math.min(6,meubleIci('bibliotheque')*3):0);",';']]],

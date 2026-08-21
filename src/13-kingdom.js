@@ -72,12 +72,16 @@ function weeklyKingdom(r){
   const lits=beds();let li=0;
   S.npcs.filter(n=>n.rec).forEach(n=>{n.home=li++<lits;});
   const prod={or:0,mat:0,vivres:0,comp:0};
+  /* Un resident qui a manque de vivres la semaine passee travaille moins.
+     C'est la seule consequence, et elle suffit : le territoire se remet des
+     qu'on remplit le garde-manger. */
+  const creux=S.faimRes?Math.max(.45,1-S.faimRes*.12):1;
   S.npcs.filter(n=>n.rec&&n.assign).forEach(n=>{
     const j=JOBS[n.assign];
     const moodF=Math.max(.4,Math.min(1.2,n.mood/100*1.5));
     const zone=S.world[n.cell]||here();
     const rich=zone.res||.5;
-    const rend=(1+n.lv*.35)*moodF*7*((S.detteW||0)>=2?.75:1);   /* 2 semaines impayées : productivité −25 % (14.6) */
+    const rend=(1+n.lv*.35)*moodF*7*((S.detteW||0)>=2?.75:1)*creux;   /* 2 semaines impayées : productivité −25 % (14.6) ; le ventre vide coûte davantage */
     if(n.assign==='mineur'||n.assign==='bucheron'||n.assign==='herboriste'){
       const cats=n.assign==='mineur'?['metal','roche','mineral','gemme','fossile']:n.assign==='bucheron'?['bois']:['vegetal'];
       const pool=cellMats(zone).filter(m=>cats.includes(MAT[m].c));
@@ -117,6 +121,36 @@ function weeklyKingdom(r){
     }
     if(gain){S.tresor+=gain;r.push('étal : '+ventes+' clients, +'+gain+' or au trésor');}
   }
+  /* ================================================================
+     LES RESIDENTS MANGENT (E.15 / 7.4)
+     Un garde-manger allegeait l'entretien d'un or par semaine, et c'etait
+     tout ce qui reliait l'agriculture au royaume : on cultivait des champs
+     dont la recolte partait au sac, et les residents vivaient de rien.
+
+     Ils mangent desormais : une bouche par resident recrute et par
+     semaine, prise sur les VIVRES, et un garde-manger nourrit trois
+     bouches d'avance. Stock vide → l'humeur tombe et la production avec,
+     jamais la mort : « penalite, pas gestion punitive » (E.15).
+
+     Ce qui compte ici n'est pas le chiffre, c'est le raccord : les champs
+     nourrissent la population qui exploite le territoire. Sans cela,
+     l'agriculture n'avait aucune raison d'exister a cote de la chasse. */
+  const bouches=S.npcs.filter(n=>n.rec).length;
+  if(bouches){
+    const reserve=(S.vivres||0)+meubleTerritoire('gardemanger')*3;
+    const manque=Math.max(0,bouches-reserve);
+    const pris=Math.min(S.vivres||0,bouches);
+    S.vivres=Math.max(0,(S.vivres||0)-pris);
+    if(manque>0){
+      /* on ne meurt pas de faim ici : on boude, et l'on travaille moins */
+      S.npcs.filter(n=>n.rec).forEach(n=>{n.mood=Math.max(10,n.mood-6);});
+      S.faimRes=manque;
+      r.push('<span class="bd">'+manque+' résident'+(manque>1?'s ont':' a')+' manqué de vivres — humeur en baisse</span>');
+    } else {
+      S.faimRes=0;
+      if(pris)r.push('résidents nourris : −'+pris+' vivres');
+    }
+  } else S.faimRes=0;
   /* entretien (A.8.1) */
   const up=upkeep();
   if(up){

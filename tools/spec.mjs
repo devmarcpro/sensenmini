@@ -750,6 +750,57 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('residents — les champs nourrissent enfin ceux qui exploitent',()=>{
+  /* Un garde-manger allegeait l'entretien d'un or par semaine, et c'etait
+     tout ce qui reliait l'agriculture au royaume : on cultivait des champs
+     dont la recolte partait au sac, et les residents vivaient de rien.
+     Sans ce raccord, l'agriculture n'avait aucune raison d'exister a cote
+     de la chasse. */
+  const c=nouveau();
+  R(c,`globalThis.__base=(n,vivres,gm)=>{
+    const cc=here();cc.claim=1;S.claims=[key(cc.x,cc.y)];
+    cc.plots=[{t:'batiment',slots:[]}];
+    for(let i=0;i<8;i++)cc.plots[0].slots.push({t:'meuble',k:'lit'});
+    for(let i=0;i<(gm||0);i++)cc.plots.push({t:'batiment',slots:[{t:'meuble',k:'gardemanger'}]});
+    S.npcs=[];
+    for(let i=0;i<n;i++)S.npcs.push({id:'n'+i,nom:'r'+i,rec:1,assign:'mineur',
+      cell:key(cc.x,cc.y),lv:5,mood:80,rel:60,race:'humain',home:true});
+    S.vivres=vivres;S.tresor=99999;S.dette=0;S.detteW=0;S.gov='monarchie';
+    S.faimRes=0;S.mat={};
+  };`);
+
+  /* --- ils mangent : une bouche par resident et par semaine --- */
+  R(c,'__base(4,20,0);weekly();');
+  eq(G(c,'S.vivres'),16,'quatre résidents mangent quatre vivres par semaine');
+  eq(G(c,'S.faimRes'),0,'et personne ne manque tant qu\'il y en a');
+
+  /* --- un garde-manger nourrit trois bouches d'avance --- */
+  R(c,'__base(3,0,1);weekly();');
+  eq(G(c,'S.faimRes'),0,'un garde-manger couvre trois bouches sans vivres');
+  R(c,'__base(6,0,1);weekly();');
+  eq(G(c,'S.faimRes'),3,'au-delà, il en manque autant qu\'il en manque');
+
+  /* --- manquer coute l'humeur, jamais la vie --- */
+  R(c,'__base(5,0,0);globalThis.__m0=S.npcs[0].mood;weekly();');
+  ok(G(c,'S.npcs[0].mood')<G(c,'__m0'),'un ventre vide fait tomber l\'humeur — '
+    +G(c,'__m0')+' puis '+G(c,'S.npcs[0].mood'));
+  eq(G(c,'S.npcs.length'),5,'mais personne ne meurt de faim : pénalité, pas gestion punitive');
+
+  /* --- et la production baisse : c'est la vraie consequence --- */
+  R(c,`__base(4,99,0);S.mat={};weekly();
+    globalThis.__repus=Object.values(S.mat).reduce((a,b)=>a+b,0);`);
+  const repus=G(c,'__repus');
+  gt(repus,0,'quatre mineurs nourris rapportent — '+repus+' unités');
+  R(c,`__base(4,0,0);S.faimRes=4;S.mat={};weekly();
+    globalThis.__affames=Object.values(S.mat).reduce((a,b)=>a+b,0);`);
+  ok(G(c,'__affames')<repus,'affamés, ils rapportent moins — '+G(c,'__affames')+' contre '+repus);
+
+  /* --- et le territoire se remet des qu'on remplit le garde-manger --- */
+  R(c,`__base(4,99,0);S.faimRes=4;S.mat={};weekly();S.mat={};weekly();
+    globalThis.__remis=Object.values(S.mat).reduce((a,b)=>a+b,0);`);
+  gte(G(c,'__remis'),repus*.9,'une fois nourris, ils reprennent leur rythme');
+});
+
 test('conseils — chaque systeme se signale, et sans mentir',()=>{
   /* Un systeme qu'on ne decouvre pas n'existe pas. Vingt-six conseils
      couvraient le jeu d'origine ; sept systemes ont ete batis depuis et

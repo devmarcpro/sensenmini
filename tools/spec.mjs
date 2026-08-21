@@ -622,6 +622,31 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('butin — la richesse suit le danger',()=>{
+  const c=nouveau();
+  /* Règle explicite du GDD (3.0) : « la richesse suit toujours le danger
+     (loot ∝ corruption locale), jamais l'inverse ». Elle était écrite mais
+     pas faite : la corruption pilotait la rareté et la fréquence, pas la
+     qualité de la pièce. */
+  R(c,'S.sx.force.v=200;globalThis.__q=(corr,depth)=>{'
+    +'here().corr=corr;here().depth=depth;const l=[];'
+    +'for(let i=0;i<300;i++){S.items=[];dropLoot(here(),false);if(S.items[0])l.push(S.items[0].q);}'
+    +'S.items=[];return l.reduce((a,b)=>a+b,0)/Math.max(1,l.length);};');
+  const paisible=G(c,'__q(0,0)'),mortelle=G(c,'__q(90,0)'),fond=G(c,'__q(90,5)');
+  gt(paisible,0,'une case paisible laisse tomber quelque chose');
+  gt(mortelle,paisible*1.15,'une terre corrompue rend mieux — q'+mortelle.toFixed(2)
+    +' contre q'+paisible.toFixed(2));
+  gt(fond,mortelle,'et la profondeur ajoute encore — q'+fond.toFixed(2));
+  /* mais jamais sans borne : le plafond protège l'atelier */
+  ok(fond<paisible*1.6,'le lieu ne rattrape pas ce qu\'un forgeron accompli sait faire',
+    'q'+fond.toFixed(2)+' contre q'+paisible.toFixed(2));
+  /* la rareté suit aussi, comme avant */
+  R(c,'here().corr=0;here().depth=0;globalThis.__r=(corr)=>{here().corr=corr;let n=0;'
+    +'for(let i=0;i<300;i++){S.items=[];dropLoot(here(),false);if(S.items[0]&&S.items[0].rar>=2)n++;}'
+    +'S.items=[];return n;};');
+  gt(G(c,'__r(90)'),G(c,'__r(0)'),'et les pièces rares y sont plus fréquentes');
+});
+
 test('libellés — une forme ne répète pas sa matière',()=>{
   const c=nouveau();
   /* FORM.tanne s'appelle « Cuir tanné » : on lisait « Cuir tanné de Cuir ». */

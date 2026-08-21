@@ -471,18 +471,28 @@ function dropLoot(c,rare){
   const rar=rare?ri(2,3):(Math.random()<.05+c.corr/300+c.depth*.04?2:1);
   /* les matériaux du lieu, plus un fond commun : chaque composant reçoit une matière qui lui convient */
   const mats=cellMats(c).concat(['fer','chene','cuir','os']);
+  /* « La richesse suit toujours le danger » (3.0) — c'était écrit, ce n'était
+     pas fait. La corruption pilotait la RARETÉ (donc les affixes) et la
+     fréquence des trouvailles, mais la qualité de la pièce était tirée à plat :
+     une épée ramassée dans une case paisible valait celle d'une terre
+     mortelle, à un affixe près. La courbe d'équipement l'a montré — médiane 9,8
+     à corruption zéro contre 10,7 à soixante-dix, soit rien. Le lieu pèse
+     désormais sur la qualité, sans jamais rattraper ce qu'un forgeron
+     accompli sait faire de ses mains. */
+  const risque=Math.min(1.35,1+c.corr/300+c.depth*.03);
+  const qLoot=()=>+((0.7+Math.random()*0.9+(rare?.3:0))*risque).toFixed(2);
   let it;
   if(Math.random()<.5){
     const fn=pick(Object.keys(FUNC));
     const parts=FUNC[fn].comp.map(ct=>partFor(ct,mats));
     parts.push(partFor('fixations',mats));
-    it=mkItem('arme',fn,parts,+(0.7+Math.random()*0.9+(rare?.3:0)).toFixed(2));
+    it=mkItem('arme',fn,parts,qLoot());
   } else {
     const sl=pick(SLOTS.filter(x=>x.zone)).k;
     const ct=pick(ARMPARTS);
     const major=partFor(ct,mats);
     const parts=[major,partFor('sangles',mats),partFor('fixations',mats)];
-    it=mkItem('armure',sl,parts,+(0.7+Math.random()*0.9+(rare?.3:0)).toFixed(2));
+    it=mkItem('armure',sl,parts,qLoot());
     it.cons=COMP[ct].cons;
     it.nom=armorName(sl,it.cons,major.mk);
   }

@@ -179,6 +179,15 @@ if(aMax<bMax)alertes.push('l\'atelier plafonne sous le butin : forger ne sert a 
 if(bMax<dep.sc*2)alertes.push('le butin ne double meme pas l\'arme de depart sur toute la courbe');
 if(out.boutique[3].s.med<out.boutique[0].s.med*1.2)alertes.push('une capitale ne vend pas mieux qu\'un hameau');
 if(out.atelier[5].s.med<out.atelier[0].s.med*3)alertes.push('la competence et la matiere pesent trop peu a l\'atelier');
+/* « La richesse suit toujours le danger » (GDD 3.0) : une terre mortelle doit
+   rapporter visiblement mieux qu'une case paisible, pas a un affixe pres. */
+const paisible=out.butin[0].commun.med,mortelle=out.butin[2].commun.med;
+if(mortelle<paisible*1.2)alertes.push('le butin ne suit pas le danger : corruption 70 rapporte '
+  +mortelle.toFixed(1)+' contre '+paisible.toFixed(1)+' en case paisible');
+/* « Descendre est toujours un choix qui paie » (GDD, donjons et strates) */
+const surface=out.butin[2].commun.p90,fond=out.butin[4].commun.p90;
+if(fond<surface*1.15)alertes.push('descendre ne paie pas : la strate 5 rapporte '
+  +fond.toFixed(1)+' contre '+surface.toFixed(1)+' en surface');
 if(alertes.length){console.log('');alertes.forEach(a=>console.log('  ALERTE : '+a));}
 else console.log('\n  aucune alerte : les trois voies montent, et l\'atelier reste la plus haute.');
 console.log('');

@@ -193,6 +193,7 @@ const ARCH={
   glouton:['quadrupede',.8],salamandre:['reptile',.7],sangsues:['nuee',.9],
   naufrageur:['humanoide',1],mercenaire:['humanoide',1.1],colosse:['humanoide',1.5],
   cauchemar:['amorphe',1.35],
+  chauvesouris:['nuee',.8],
   /* le haut du bestiaire : dix-huit especes de plus, aucune forme nouvelle —
      un squelette existant a la bonne taille suffit a les distinguer, et la
      couleur vient de leur element dominant */

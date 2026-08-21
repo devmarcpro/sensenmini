@@ -176,6 +176,21 @@ const MAT={
   tourbecomp:{n:"Tourbe compactée",c:'mineral',d:5,de:8,v:3,iso:4,ela:12,wx:{1:0.5,2:0.5},col:'#4A3E2E'},
   bitume:{n:"Bitume",c:'mineral',d:4,de:10,v:7,iso:3,ela:15,wx:{1:0.7,2:0.3},col:'#1C1A18'},
   cinabre:{n:"Cinabre",c:'mineral',d:9,de:15,v:20,m:6,iso:1,lum:6,ela:3,wx:{1:0.6,2:0.4},col:'#B02A1E'},
+  /* Ce que les huit nouveaux biomes ont apporte : onze matieres reelles,
+     toutes rattachees a une categorie existante — donc toutes recoltables
+     avec un outil qui existe deja. On n'ajoute pas d'outil : on ajoute de
+     la matiere pour ceux qu'on a. */
+  soude:{n:"Soude",c:'mineral',d:2,de:6,v:6,iso:2,ela:3,col:'#DCD8C4'},
+  borax:{n:"Borax",c:'mineral',d:2,de:6,v:9,iso:2,ela:3,col:'#EFEDE0'},
+  natron:{n:"Natron",c:'mineral',d:2,de:6,v:7,iso:2,ela:3,col:'#E6E9E4'},
+  stalactite:{n:"Stalactite",c:'roche',d:12,de:13,v:5,iso:3,ela:3,col:'#CFC7B4'},
+  brique:{n:"Brique",c:'roche',d:11,de:9,v:4,iso:6,ela:3,col:'#A85F44'},
+  ceramique:{n:"Céramique",c:'roche',d:9,de:8,v:9,iso:5,ela:2,col:'#D8C7A8'},
+  verre:{n:"Verre",c:'mineral',d:7,de:9,v:11,m:4,iso:2,lum:14,ela:2,col:'#BFE0DE'},
+  ivoire:{n:"Ivoire",c:'fossile',d:10,de:7,v:26,iso:4,ela:14,col:'#EFE7D2'},
+  caoutchouc:{n:"Caoutchouc",c:'vegetal',d:2,de:3,v:12,iso:8,ela:88,col:'#4E463F'},
+  lierre:{n:"Lierre",c:'vegetal',d:1,de:1,v:2,iso:5,ela:30,nutr:2,grp:'Vie',col:'#3F6B3C'},
+  dattes:{n:"Dattes",c:'vegetal',d:1,de:2,v:6,iso:3,nutr:20,grp:'Vie',crop:1,col:'#8A5A2E'},
   ocre:{n:"Ocre",c:'mineral',d:3,de:8,v:4,iso:2,ela:8,col:'#C9862B'},
   lapis:{n:"Lapis-lazuli",c:'mineral',d:15,de:10,v:30,m:11,iso:2,lum:8,ela:3,wx:{3:0.4,4:0.6},col:'#26529C'},
   turquoise:{n:"Turquoise",c:'mineral',d:14,de:9,v:26,m:10,iso:2,lum:6,ela:4,wx:{2:0.5,4:0.5},col:'#40B5AD'},
@@ -218,6 +233,27 @@ const BIOME={
   foret:{n:"Forêt tempérée",c:'#3F6B45',fert:0.9,mats:['chene','hetre','bouleau','erable','noyer','cerisier','charme','chataignier','tilleul','if','pin','champignons','herbes','framboise','myrtille','cuir','fourrure','os','sauge','achillee','ortie','amanite','pierre','limon','noisetier','robinier','buis','terre','boispetrifie']},
   foretmana:{n:"Forêt de mana",c:'#4B7F86',fert:0.8,mats:['ebene','if','sequoia','amethyste','opale','quartz','cristalmana','soie','ambre','emeraude','herbes','sauge','fluorine','mica','champignons','boisfer','buis']},
   desert:{n:"Désert aride",c:'#C9A25E',fert:0.2,mats:['gres','sable','sel','cuivre','os','topaze','racines','palmier','acacia','soufre','salpetre','turquoise','gypse','silex','ocre','etain','eucalyptus','boispetrifie','phosphorite']},
+  /* ================================================================
+     HUIT BIOMES DE PLUS (C.7)
+     Douze biomes pour un monde infini, c'est peu : on en avait fait le
+     tour en une journee de marche, et la carte se repetait. L'annexe en
+     annonce « 12, extensibles vers 20+ » — voici les huit qui manquaient.
+
+     Aucun n'invente de matiere : chacun REDISTRIBUE ce que le catalogue
+     porte deja, en le combinant autrement. C'est ce qui les rend utiles —
+     une steppe donne du cheval et du crin la ou la plaine donne du ble, et
+     un karst donne de la roche calcaire sans la montagne qui va avec.
+     Chacun s'intercale dans la generation par une combinaison de bruits
+     que rien n'occupait : ils ne prennent la place de personne.
+     ================================================================ */
+  steppe:{n:"Steppe",c:'#A8A05C',fert:0.45,mats:['terre','argile','gres','paille','lin','chanvre','laine','cuir','os','sel','calcaire','silex','tourbe','ble','orge','fer']},
+  jungle:{n:"Jungle",c:'#2F6B3A',fert:0.95,mats:['acajou','teck','bambou','liege','ebene','caoutchouc','coton','soie','champignons','herbes','baies','racines','cuir','ecaille','ambre','malachite','argile','eaupure','belladone','palmier']},
+  badlands:{n:"Bad-lands",c:'#9C6A44',fert:0.12,mats:['gres','argile','ocre','silex','schiste','ardoise','gypse','sel','soufre','cuivre','fer','plomb','breche','tuf','os','boispetrifie','ammonite']},
+  karst:{n:"Karst",c:'#B4B0A0',fert:0.35,mats:['calcaire','travertin','marbre','gypse','argile','eaupure','silex','champignons','stalactite','salpetre','quartz','fluorine','racines']},
+  salines:{n:"Salines",c:'#D8D0BC',fert:0.15,mats:['sel','gypse','argile','sable','limon','coquillage','soude','borax','natron','eaupure','roseau','phosphorite']},
+  banquise:{n:"Banquise",c:'#CFE4EE',fert:0.05,mats:['glace','neige','eaupure','coquillage','os','fourrure','ivoire','sel','ambre']},
+  oasis:{n:"Oasis",c:'#5C8F6E',fert:0.85,mats:['palmier','dattes','eaupure','roseau','argile','limon','terrefertile','lin','coton','herbes','baies','sel','turquoise','sable']},
+  ruines:{n:"Ruines anciennes",c:'#7E7468',fert:0.30,mats:['pierre','marbre','granit','brique','fer','bronze','cuivre','plomb','verre','ceramique','os','argent','tuf','breche','lierre']},
   cendres:{n:"Désert de cendres",c:'#7A5348',fert:0.1,mats:['basalte','obsidienne','cendre','charbon','anthracite','soufre','rubis','tuf','ponce','pyrite','bitume','cinabre','boiscalcine','rhyolite','andesite','breche','antimoine','boispetrifie']},
   toundra:{n:"Toundra",c:'#8FA3A8',fert:0.3,mats:['glace','neige','limon','laine','fourrure','calcaire','racines','bouleau','saule','tourbe','schiste','grenat','gravier','tourbecomp','terre']},
   taiga:{n:"Taïga",c:'#4C6B5C',fert:0.6,mats:['pin','sapin','epicea','meleze','chene','fer','os','laine','fourrure','champignons','tourbe','ardoise','charbon','myrtille','cedre','noisetier','terre','tourbecomp']},

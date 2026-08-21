@@ -18,17 +18,38 @@ function genCell(x,y){
   const s=S.seed;
   const alt=noise(x,y,s,1,5),temp=noise(x,y,s,2,7),hum=noise(x,y,s,3,6),
         mana=noise(x,y,s,4,4),res=noise(x,y,s,5,3),veg=noise(x,y,s,6,4),dang=noise(x,y,s,7,3);
+  /* VINGT BIOMES. Les huit nouveaux s'intercalent dans des combinaisons de
+     bruits que rien n'occupait — ils ne prennent la place de personne, ils
+     remplissent des trous. L'ordre compte : le plus specifique d'abord, et
+     chaque test qui echoue laisse passer au suivant, si bien qu'aucun biome
+     ne peut disparaitre par recouvrement. */
   let b;
   if(mana>.72&&veg>.5)b='foretmana';
   else if(alt>.74&&mana>.62)b='montcris';
+  /* des ruines : peu de vie, un vieux danger, une altitude moyenne */
+  else if(res>.72&&veg<.42&&alt>.35&&alt<.66)b='ruines';
   else if(temp>.74&&alt>.55)b='cendres';
   else if(dang>.76&&hum>.55)b='marcorr';
+  /* un karst : de la roche tendre creusee par l'eau, donc humide et haute */
+  else if(alt>.62&&hum>.58&&temp>.34)b='karst';
   else if(alt>.70)b='montagne';
+  /* une banquise : le froid extreme au bord de l'eau */
+  else if(alt<.24&&temp<.16)b='banquise';
+  /* des salines : le bord de mer sec et chaud */
+  else if(alt<.28&&hum<.30&&temp>.52)b='salines';
   else if(alt<.24)b='cote';
   else if(temp<.28)b=hum>.5?'taiga':'toundra';
+  /* une oasis : de l'eau dans un desert, donc chaud, sec autour, humide ici */
+  else if(temp>.68&&hum>.44&&hum<.62&&veg>.40&&alt<.5)b='oasis';
   else if(temp>.68&&hum<.34)b='desert';
+  /* des bad-lands : chaud, sec, casse — entre le desert et la montagne */
+  else if(temp>.60&&hum<.42&&alt>.46)b='badlands';
   else if(hum>.70)b='marecage';
+  /* une jungle : le chaud et l'humide ensemble, avec de la vegetation */
+  else if(temp>.62&&hum>.58&&veg>.46)b='jungle';
   else if(veg>.52)b='foret';
+  /* une steppe : la plaine seche, celle ou rien ne pousse haut */
+  else if(hum<.36&&veg<.42)b='steppe';
   else b='plaine';
   const c={x,y,b,alt:+alt.toFixed(2),temp:+temp.toFixed(2),hum:+hum.toFixed(2),
     mana:+mana.toFixed(2),res:+res.toFixed(2),veg:+veg.toFixed(2),

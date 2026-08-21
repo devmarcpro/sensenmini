@@ -801,8 +801,18 @@ test('gardiens — le fond du donjon vaut la descente',()=>{
         const h=S.hp=maxHp();resolveHit(0,E);s+=h-S.hp;
       }
       return s/300;};`);
+  /* On mesure dans les DEUX ORDRES et l'on exige les deux fois le meme
+     verdict : un premier jet donnait 12,8 puis 23,2 et paraissait probant,
+     alors que l'ecart venait de la derive de l'etat de combat — debrancher
+     la rage ne changeait rien au resultat. Une mesure qui ne survit pas a
+     l'inversion de l'ordre ne mesure pas ce qu'on croit. */
   const calme=G(c,'__mordu(1)'),enrage=G(c,'__mordu(1.8)');
-  gt(enrage,calme,'et cela se lit dans les coups reçus — '+calme.toFixed(1)+' puis '+enrage.toFixed(1));
+  const enrage2=G(c,'__mordu(1.8)'),calme2=G(c,'__mordu(1)');
+  /* avec une marge : une rage de 1,8 doit se voir franchement, sinon deux
+     mesures bruitees se depassent l'une l'autre par hasard — c'est ce qui
+     arrivait, et le test passait meme l'effet debranche */
+  gt(enrage,calme*1.4,'la rage se lit dans les coups reçus — '+calme.toFixed(1)+' puis '+enrage.toFixed(1));
+  gt(enrage2,calme2,'et dans l\'ordre inverse aussi — '+enrage2.toFixed(1)+' puis '+calme2.toFixed(1));
 
   /* --- LA PIECE NOMMEE : ecrite, pas tiree --- */
   const uniques=G(c,'Object.keys(GARDIEN).map(t=>GARDIEN[t].arte).concat([GARDIEN_MAJEUR.arte])');
@@ -1224,7 +1234,10 @@ test('consignes — le plan apprend les verbes des nouveaux systemes',()=>{
       empoisonne:[()=>addStatus(S,'poison',5,1),()=>{S.st=[];}],
       vehiculeuse:[()=>{S.vehicule={k:'charrette',pv:1,crie:0};},()=>{S.vehicule=null;}],
       potiondispo:[()=>{S.potions=[{e:'soin',v:1,n:'x'}];},()=>{S.potions=[];}],
-      froid:[()=>{globalThis.__ft3=feltTemp;feltTemp=()=>-30;},()=>{if(globalThis.__ft3)feltTemp=__ft3;}],
+      /* on force les DEUX bornes : si le lieu de depart est deja glacial,
+         poser le froid ne change rien et la bascule paraitrait inerte */
+      froid:[()=>{globalThis.__ft3=globalThis.__ft3||feltTemp;feltTemp=()=>-30;},
+             ()=>{globalThis.__ft3=globalThis.__ft3||feltTemp;feltTemp=()=>18;}],
       /* l'eau : on la pose sur la case, et le gel la reprend */
       aubordeleau:[()=>{here().b='cote';globalThis.__tc=tempC;tempC=()=>18;meteo=()=>'clair';},
                    ()=>{here().b='plaine';if(globalThis.__tc)tempC=__tc;}],
@@ -1947,6 +1960,9 @@ test('consignes — l\'ordre décide, et rien ne s\'interrompt en route',()=>{
   R(c,'plan().on=false;S.occ="repos";S.faim=10;S.hp=1;for(let i=0;i<40;i++)step(.5);');
   eq(G(c,'S.occ'),'repos','à l\'arrêt, les consignes ne décident de rien');
   /* la première consigne vraie ET possible l'emporte, les suivantes sont ignorées */
+  /* Le depart peut tomber sur un village, et l'on ne se bat pas dans les
+     rues : sans cette ligne, le test mesurerait la carte au lieu du plan. */
+  R(c,'here().town=null;');
   R(c,'S.plan={on:true,r:['
     +'{c:"faimbasse",v:50,a:"reposer",on:true},'
     +'{c:"toujours",v:0,a:"combattre",on:true}]};'

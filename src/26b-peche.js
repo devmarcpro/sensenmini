@@ -36,6 +36,15 @@ const PECHE={
   taiga:     {poisson:6,roseau:2,tourbe:2},
   desert:    {poisson:2,sel:4,sable:3},
   cendres:   {poisson:1,soufre:3,cendre:3},
+  /* les huit biomes nouveaux : chacun donne ce que son eau porte */
+  steppe:    {poisson:5,roseau:3,argile:2,sel:1},
+  jungle:    {poisson:7,anguille:4,algue:3,caoutchouc:1,champignons:1},
+  badlands:  {poisson:2,argile:3,ocre:2,gypse:2},
+  karst:     {poisson:6,eaupure:3,stalactite:2,salpetre:1},
+  salines:   {sel:8,natron:3,borax:2,soude:2,coquillage:2,poisson:1},
+  banquise:  {poisson:7,glace:6,coquillage:2,ivoire:.3},
+  oasis:     {poisson:6,eaupure:4,roseau:3,dattes:2,limon:2},
+  ruines:    {poisson:4,brique:2,ceramique:2,verre:1,eaupure:2},
 };
 /* Trois prises ne sont pas des matières du catalogue : ce sont des vivres.
    On les traduit en nourriture, avec l'élément du lieu. */

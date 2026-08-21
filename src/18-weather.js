@@ -44,6 +44,49 @@ function meteo(c,day){
   if(sp>.50)return humide?'brouillard':'nuageux';
   return 'clair';
 }
+/* ==================================================================
+   CE QUE LE CIEL FAIT (E.28)
+   Dix etats de meteo, et le seul qui changeait quelque chose etait la
+   temperature ressentie. La pluie arrosait les cultures, et c'est tout :
+   une tempete valait un ciel clair, un blizzard aussi, et les trois
+   extremes annonces la veille par les PNJ n'annoncaient rien.
+
+   Ici il n'y a pas de blocs a arracher ni de foudre a placer sur un mat :
+   il reste ce qui compte a l'echelle de la carte — le temps qu'un trajet
+   coute, le souffle qu'il prend, ce qu'on peut recolter, et le risque
+   qu'on prend a rester dehors. C'est assez pour que s'abriter devienne
+   une decision plutot qu'un decor.
+   ================================================================== */
+/* Les valeurs ont ete CALIBREES, pas devinees. Un premier jeu de chiffres
+   — blizzard x1,9 de marche, exploration a 35 % — coutait soixante pour cent
+   du rythme sur soixante jours : l'equipement n'avancait plus d'un point, et
+   l'or accelerait en fin de partie faute de butin en debut. L'instrument de
+   partie longue l'a vu, et c'est exactement ce pour quoi il existe. Un ciel
+   doit se sentir sans casser la boucle. */
+const METEOFX={
+  clair:{},
+  nuageux:{},
+  brouillard:{explore:.75,d:'on ne voit pas a dix pas — l exploration traine'},
+  pluie:{explore:.9,d:'la pluie brouille les pistes'},
+  orage:{explore:.85,foudre:1,d:'la foudre cherche ce qui depasse'},
+  neige:{marche:1.12,d:'la neige tient aux jambes'},
+  vent:{voile:.6,dist:.85,d:'le vent devie les traits'},
+  tempete:{marche:1.25,voile:0,dist:.6,explore:.7,
+    d:'un voilier n y est plus gouvernable, et les traits partent de travers'},
+  blizzard:{marche:1.45,voile:0,explore:.55,gel:1,
+    d:'voyager sans abri coute des points de vie a chaque case'},
+  canicule:{marche:1.15,recolte:.8,fane:1,
+    d:'les cultures fanent sans arrosage, et l effort coute davantage'},
+};
+const fx=(c,day)=>METEOFX[meteo(c||here(),day)]||{};
+/* multiplicateur de temps de trajet du a la meteo */
+const meteoMarche=c=>fx(c).marche||1;
+/* un voilier dans une tempete n est pas lent : il est ingouvernable (E.24) */
+const meteoVoile=c=>{const v=fx(c).voile;return v===undefined?1:v;};
+/* le temps d une pulsation d exploration */
+const meteoExplore=()=>fx().explore||1;
+/* les armes de jet dans le vent */
+const meteoDist=()=>fx().dist||1;
 /* température ressentie (E.28) */
 function tempC(c){
   let T=-8+c.temp*46;

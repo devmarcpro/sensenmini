@@ -28,7 +28,7 @@ const B=join(dirname(fileURLToPath(import.meta.url)),'..');
 
 /* [nom, suite a lancer, [[fichier, cherche, remplace], ...]] */
 const MUT=[
-  ['parure : marche','parures',[['src/28-loop.js','*(1-util().marche)*mv;','*mv;']]],
+  ['parure : marche','parures',[['src/28-loop.js','*(1-util().marche)*mv*mm;','*mv*mm;']]],
   ['parure : cicatrisation','parures',[
     ['src/28-loop.js','*.06*dt*(1+util().soin));','*.06*dt);'],
     ['src/28-loop.js','*.015*dt*(S.thermal||1)*(1+util().soin));','*.015*dt*(S.thermal||1));'],
@@ -62,13 +62,21 @@ const MUT=[
     '  if(refuseVole(it))return toast(','  if(false)return toast(']]],
   ['loi : marque du vol','hors-la-loi',[['src/21b-horslaloi.js',
     "    if(off.t==='item')marquerVole(off.it);",'']]],
+  /* le ciel et l annee */
+  ['ciel : temps de trajet','ciel',[['src/28-loop.js','*mv*mm;','*mv;']]],
+  ['ciel : blizzard qui mord','ciel',[['src/28-loop.js','if(fx(c).gel&&!eclaireIci()&&!foyerIci()){','if(false){']]],
+  ['ciel : foudre','ciel',[['src/28-loop.js','if(fx(c).foudre&&!eclaireIci()){','if(false){']]],
+  ['ciel : voiles ingouvernables','ciel',[['src/22b-vehicules.js',
+    'if(D.voile&&meteoVoile(c)<=0)return false;','']]],
+  ['ciel : traits devies','ciel',[['src/24-combat.js','if(isDist(w))base*=meteoDist();','']]],
+  ['annee : la faune suit','saisons',[['src/23c-creatures.js','      w*=saisonMul(k);','']]],
   /* les vehicules */
-  ['vehicule : vitesse','vehicules',[['src/28-loop.js','*(1-util().marche)*mv;','*(1-util().marche);']]],
+  ['vehicule : vitesse','vehicules',[['src/28-loop.js','*(1-util().marche)*mv*mm;','*(1-util().marche)*mm;']]],
   ['vehicule : cargo','vehicules',[['src/10-craft.js',
     "+(typeof vehCargo==='function'?vehCargo():0);",';']]],
   ['vehicule : terrain','vehicules',[['src/22b-vehicules.js',
     'return D.eau?surEau(c):!surEau(c);','return true;']]],
-  ['vehicule : vent','vehicules',[['src/22b-vehicules.js','m*=1+malus-aide;','']]],
+  ['vehicule : vent','vehicules',[['src/22b-vehicules.js','m*=(1+malus-aide)/Math.max(.2,mv2);','']]],
   ['vehicule : usure','vehicules',[['src/22b-vehicules.js',
     'm*= 1+(1-v.pv/D.pv)*.45;','']]],
   /* les meubles */

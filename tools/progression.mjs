@@ -189,11 +189,18 @@ dit(penteEq<0.04,'l equipement progresse encore dans la seconde moitie',
 
 /* 3. l or a-t-il un puits ? Un idle sans puits finit par n avoir plus de
       decision a prendre : tout est achetable, donc rien ne se choisit. */
+/* Comparer la seconde moitie a la premiere ne dit rien d'utile : le debut
+   d'une partie est presque plat, et le moindre demarrage donne un rapport
+   enorme. Un EMBALLEMENT, c'est autre chose — c'est une croissance qui
+   continue de multiplier. On regarde donc quatre quarts de partie et l'on
+   n'accuse que si chaque quart triple le precedent, deux fois de suite. */
+const q=[0,1,2,3].map(i=>moy[Math.min(moy.length-1,Math.round((i+1)*moy.length/4)-1)].or);
+const d1=Math.max(1,q[1]-q[0]),d2=Math.max(1,q[2]-q[1]),d3=Math.max(1,q[3]-q[2]);
+const emballe=(d2/d1>3)&&(d3/d2>3);
 const orParJour=dernier.or/JOURS;
-const orAccel=(dernier.or-milieu.or)/Math.max(1,milieu.or-premier.or);
-dit(orAccel>3.5,'l or ne s emballe pas',
-  'bourse : '+Math.round(premier.or)+' → '+Math.round(milieu.or)+' → '+Math.round(dernier.or)
-  +' or (acceleration ×'+orAccel.toFixed(2)+', '+Math.round(orParJour)+' or/jour)');
+dit(emballe,'l or ne s emballe pas',
+  'gagne par quart de partie : '+Math.round(d1)+' → '+Math.round(d2)+' → '+Math.round(d3)
+  +' or (×'+(d2/d1).toFixed(1)+' puis ×'+(d3/d2).toFixed(1)+') · '+Math.round(orParJour)+' or/jour au total');
 
 /* 4. une competence qui ecrase les autres */
 const ecart=dernier.meilleure/Math.max(1,dernier.niveaux/Math.max(1,dernier.exercees));

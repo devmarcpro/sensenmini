@@ -121,6 +121,13 @@ function cropYield(c,p){
   const m=meteo(c),pluie=(METEO[m].pousse||0)+season().pousse;
   const fermier=S.npcs.some(n=>n.rec&&n.assign==='fermier'&&n.cell===key(c.x,c.y));
   let y=6*(BIOME[c.b].fert+.15)*(1+pluie)*(fermier?1.5:1)*(1+lv('agriculture')*.02);
+  /* « Canicule : les cultures fletrissent SANS arrosage » (E.28). Sans
+     systeme d'eau, l'arrosage est ce qui borde le champ : un puits, une
+     cote, un marecage. Ailleurs, la moisson brule sur pied. */
+  if(fx(c).fane){
+    const eau=surEau(c)||c.poi==='filon'||cellMats(c).includes('eaupure');
+    y*=eau?.85:.25;
+  }
   if(m==='canicule')y*=.3;
   return Math.max(1,Math.round(y));
 }

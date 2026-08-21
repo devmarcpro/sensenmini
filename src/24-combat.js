@@ -281,6 +281,8 @@ function attack(heavy){
   let base=roll(F.d[0]+extra,F.d[1])*puis*w.q*sf(lv(w.fn));
   base+=gemSum(w,'degats')*sf(lv(w.fn));                 /* gemmes : des dégâts plats, jamais une règle */
   const crit=d20()>=F.crit-PA.crit;if(crit)base*=1.8;
+  /* « projectiles devies » (E.28) : le vent ne gene que ce qui vole */
+  if(isDist(w))base*=meteoDist();
   const GB=gripBonus(),tir=isDist(w);
   /* à l'arc, c'est la Dextérité qui porte le trait, pas la Force (E.3) */
   base*=sd.dmg*(heavy?2.6*(1+PA.heavy):1)*(1+PA.dmg+buffOf('dmg')*.12)

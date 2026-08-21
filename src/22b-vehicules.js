@@ -69,6 +69,8 @@ const vehDef=()=>{const v=vehicule();return v?VEHICULE[v.k]:null;};
 function vehUtile(c){
   const v=vehicule(),D=vehDef();
   if(!v||v.pv<=0)return false;
+  /* une voile dans une tempete ne sert a rien du tout */
+  if(D.voile&&meteoVoile(c)<=0)return false;
   return D.eau?surEau(c):!surEau(c);
 }
 /* ce que le véhicule ajoute au dos — et seulement là où il peut suivre */
@@ -82,12 +84,17 @@ function vehVitesse(dx,dy,c){
   /* l'usure compte : un essieu fendu ne va pas vite */
   m*= 1+(1-v.pv/D.pv)*.45;
   if(D.voile){
+    /* « vent violent : vehicules a voiles ingouvernables » (E.24/E.28). Un
+       zero ici veut dire qu'on ne prend pas la mer, pas qu'on y va lentement :
+       vehUtile le refuse et l'on marche. */
+    const mv2=meteoVoile(c);
+    if(mv2<=0)return 1;
     const f=ventFaveur(dx,dy,c);
     /* face au vent, on tire des bords : jusqu'à +70 % de temps, moins ce que
        la Navigation sait reprendre */
     const malus=Math.max(0,-f)*.70*(1-Math.min(.6,lv('navigation')*.02));
     const aide=Math.max(0,f)*.20;
-    m*=1+malus-aide;
+    m*=(1+malus-aide)/Math.max(.2,mv2);
   }
   return Math.max(.28,m);
 }

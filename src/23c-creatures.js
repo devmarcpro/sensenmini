@@ -142,6 +142,41 @@ const DJTHEME={
   mine:{n:'Mine',noms:['Mine noyée','Puits ancien','Galerie morte','Veine muette'],pop:{eclat:3,scorpion:2,serpent:2,bandit:2,rodeur:1,colosse:1}},
   repaire:{n:'Repaire',noms:['Gouffre','Tanière','Faille','Antre'],pop:{oursbrun:3,loup:3,lynx:2,chef:1,loupblanc:1,crocodile:1,glouton:2,crabetour:1}},
 };
+/* ==================================================================
+   LA FAUNE SUIT L'ANNEE (E.28 / 12)
+   Les saisons modulaient la pousse des cultures et la temperature, et
+   rien d'autre. Une toundra en plein ete peuplait exactement comme en
+   hiver, et un ours n'avait jamais dormi.
+
+   Trois regles, pas une de plus, et toutes tirees de ce que les betes
+   font vraiment :
+     — les grosses betes a fourrure HIBERNENT : on ne les croise plus en
+       hiver, et elles reviennent au printemps affamees ;
+     — les insectes et la vermine DISPARAISSENT au froid, et pullulent
+       en ete ;
+     — le gibier de passage MIGRE : plus nombreux au printemps et a
+       l'automne, quand il traverse.
+   Consequence de jeu : une meme case ne se chasse pas de la meme facon
+   selon le mois, et l'hiver d'une toundra devient un endroit vide et
+   dur — ce qu'il doit etre.
+   ================================================================== */
+const HIBERNE=['oursbrun','ourspolaire','ourse','sanglier','serpent','crocodile','vipereroi','scarabee','salamandre'];
+const VERMINE_CHAUD=['abeilles','moustiques','sangsues','scorpion'];
+const MIGRE=['cerf','renne','oie','heron','goeland','vautour','cerfblanc','aigle','harfang'];
+/* le multiplicateur de presence d'une espece a la saison courante */
+function saisonMul(k,si){
+  const s=si===undefined?seasonIdx():si;
+  const C=CREATURE[k];
+  if(!C)return 1;
+  let m=1;
+  /* hiver : les dormeuses se font rares, sans disparaitre */
+  if(HIBERNE.includes(k))m*=s===3?.35:s===0?1.2:1;
+  /* la vermine vit de chaleur */
+  if(VERMINE_CHAUD.includes(k)||C.cat==='vermine')m*=[1,1.4,.9,.5][s];
+  /* le passage : printemps et automne */
+  if(MIGRE.includes(k))m*=[1.35,.9,1.35,.85][s];
+  return m;
+}
 /* pool de spawn pour une cellule : biome, heure, corruption, donjon ou camp */
 function creaturePool(c,inDj,night,power){
   const pool=[];
@@ -160,6 +195,8 @@ function creaturePool(c,inDj,night,power){
       if(C.corr&&c.corr>=C.corr)w+=1+Math.floor((c.corr-C.corr)/20);
       if(night&&C.nuit)w*=C.nuit;
       if(night&&C.fuit)w*=.4;
+      /* et l'annee pese autant que l'heure */
+      w*=saisonMul(k);
     }
     if(w>0)pool.push([k,w]);});
   if(!pool.length)return 'rodeur';

@@ -737,6 +737,134 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('ciel — chaque etat de meteo fait quelque chose',()=>{
+  /* Dix etats, et le seul qui changeait quelque chose etait la temperature
+     ressentie. Une tempete valait un ciel clair, un blizzard aussi, et les
+     trois extremes annonces la veille par les PNJ n'annoncaient rien. */
+  const c=nouveau();
+  /* on force le ciel : meteo() est une fonction pure, on la remplace le
+     temps de la mesure — c'est le seul moyen d'eprouver dix etats sans
+     attendre qu'ils tombent */
+  R(c,`globalThis.__ciel=(k)=>{meteo=()=>k;};
+    globalThis.__bande=(b)=>{for(let i=-2;i<=9;i++){const cc=cell(S.pos[0]+i,S.pos[1]);cc.b=b;cc.seen=true;}
+      here().b=b;return here();};
+    globalThis.__voyage=(dx)=>{const j=S.day,p=S.pos.slice();
+      travel(p[0]+dx,p[1]);const d=S.day-j;S.pos=p;S.day=j;S.hp=maxHp();return d;};
+    __bande('plaine');S.vehicule=null;S.eq={};salirUtil();`);
+
+  /* --- CHAQUE etat declare doit avoir une entree d'effets, sinon il est
+     muet par oubli et non par choix --- */
+  const muets=G(c,'Object.keys(METEO).filter(k=>!METEOFX[k])');
+  eq(muets.length,0,'chaque état de météo a sa table d\'effets','sans effets : '+muets.join(', '));
+
+  /* --- le temps d'un trajet suit le ciel --- */
+  R(c,'__ciel("clair");');
+  const clair=G(c,'__voyage(3)');
+  R(c,'__ciel("neige");');
+  gt(G(c,'__voyage(3)'),clair*1.08,'la neige tient aux jambes');
+  R(c,'__ciel("tempete");');
+  gt(G(c,'__voyage(3)'),clair*1.18,'une tempête allonge nettement le trajet');
+  R(c,'__ciel("blizzard");');
+  gt(G(c,'__voyage(3)'),clair*1.35,'un blizzard, plus encore');
+
+  /* --- et le blizzard BLESSE qui n'a pas d'abri --- */
+  R(c,'__ciel("blizzard");here().plots=null;S.torche=0;S.hp=maxHp();'
+    +'globalThis.__hp0=S.hp;const p0=S.pos.slice();travel(p0[0]+3,p0[1]);S.pos=p0;');
+  ok(G(c,'S.hp')<G(c,'__hp0'),'voyager dans un blizzard sans abri coûte des points de vie');
+  /* un foyer ou une torche protege */
+  R(c,'S.hp=maxHp();__hp0=S.hp;S.torche=600;const p1=S.pos.slice();travel(p1[0]+3,p1[1]);S.pos=p1;');
+  eq(G(c,'S.hp'),G(c,'__hp0'),'une torche suffit à s\'abriter — c\'est tout le propos');
+
+  /* --- l'orage cherche le métal qu'on porte --- */
+  R(c,`__ciel('orage');S.torche=0;S.eq={};salirUtil();
+    globalThis.__coups=(n)=>{let k=0;
+      for(let i=0;i<n;i++){S.hp=maxHp();const p=S.pos.slice(),j=S.day;
+        travel(p[0]+2,p[1]);if(S.hp<maxHp())k++;S.pos=p;S.day=j;}
+      return k;};`);
+  const nu=G(c,'__coups(300)');
+  R(c,`ZK.forEach(z=>{const sl=SLOTS.find(x=>x.zone===z).k;
+    S.eq[sl]={id:'m'+z,kind:'armure',slot:sl,q:1,dur:10,durBase:10,de:8,mana:0,ela:8,
+      vec:[.2,.2,.2,.2,.2],cons:'plaque',
+      parts:[{ct:'plaque',f:'lingot',mk:'fer'},{ct:'sangles',f:'lingot',mk:'fer'}]};});
+    salirUtil();`);
+  const enFer=G(c,'__coups(300)');
+  gt(enFer,nu,'la foudre trouve plus souvent qui porte du métal — '+nu+' contre '+enFer+' sur 300');
+
+  /* --- un voilier dans une tempête ne sert à rien --- */
+  R(c,'__bande("cote");S.vehicule={k:"voilier",pv:VEHICULE.voilier.pv,crie:0};__ciel("clair");');
+  eq(G(c,'vehUtile()'),true,'par temps clair, le voilier sert');
+  R(c,'__ciel("tempete");');
+  eq(G(c,'vehUtile()'),false,'dans une tempête il est ingouvernable — on ne prend pas la mer');
+  R(c,'__ciel("vent");');
+  eq(G(c,'vehUtile()'),true,'un vent fort le gêne sans l\'arrêter');
+  ok(G(c,'vehVitesse(1,0)')>G(c,'(()=>{__ciel("clair");const v=vehVitesse(1,0);__ciel("vent");return v;})()'),
+    'et lui coûte du temps');
+
+  /* --- les traits partent de travers dans le vent --- */
+  R(c,'__ciel("clair");');
+  eq(G(c,'meteoDist()'),1,'par temps calme, un trait vole droit');
+  R(c,'__ciel("vent");');
+  ok(G(c,'meteoDist()')<1,'dans le vent, non');
+  /* et cela doit se lire dans les DEGATS, pas seulement dans la fonction :
+     un multiplicateur que personne n'applique est une valeur juste et morte */
+  R(c,`S.eq={};S.items=[];S.stats.force=200;salirUtil();
+    const p=FUNC.arc.comp.map(ct=>partFor(ct,['if','cuir','fer']));
+    p.push(partFor('fixations',['fer']));
+    S.items.push(mkItem('arme','arc',p,1.2));equipItem(0);
+    S.occ='combat';spawn();
+    globalThis.__tir=(n)=>{let s=0;
+      for(let i=0;i<n;i++){EE.forEach(e=>{e.hp=1e9;e.max=1e9;e.st=[];});
+        const h=EE[0].hp;S.end=100;attack(false);s+=h-EE[0].hp;}
+      return s/n;};`);
+  R(c,'__ciel("clair");');
+  const droit=G(c,'__tir(400)');
+  R(c,'__ciel("vent");');
+  const devie=G(c,'__tir(400)');
+  ok(devie<droit,'un trait dans le vent fait moins mal — '+droit.toFixed(1)+' contre '+devie.toFixed(1));
+});
+
+test('saisons — la faune suit l annee',()=>{
+  /* Les saisons modulaient la pousse et la temperature, rien d'autre. Une
+     toundra en plein ete peuplait comme en hiver, et un ours n'avait jamais
+     dormi. */
+  const c=nouveau();
+  const compte=(si,esp)=>G(c,`(()=>{let n=0;
+    for(let i=0;i<3000;i++)if(creaturePool({x:0,y:0,b:'foret',corr:0,depth:0,poi:null},false,false,6)==='${esp}')n++;
+    return n;})()`.replace('creaturePool(',`(S.day=${si*30}+5,creaturePool)(`));
+
+  /* Les ecarts sont CALIBRES et non choisis : un premier jeu de valeurs
+     (ours a 12 % en hiver, vermine a 25 %) coutait quatre-vingt-douze pour
+     cent du rythme de jeu sur soixante jours. Supprimer le gibier FACILE
+     supprime toute l'economie, parce qu'un personnage a bout de souffle tue
+     des cerfs, pas des loups. La saison doit se sentir, pas vider la case.
+     143 mises a mort contre 153 sans saisons : c'est la bonne dose. */
+  /* --- l'ours dort en hiver --- */
+  const oursEte=compte(1,'oursbrun'),oursHiver=compte(3,'oursbrun');
+  ok(oursHiver<oursEte*.6,'un ours brun hiberne — '+oursEte+' rencontres en été contre '+oursHiver+' en hiver');
+  const oursPrintemps=compte(0,'oursbrun');
+  gt(oursPrintemps,oursHiver*2,'et ressort au printemps');
+
+  /* --- la vermine vit de chaleur --- */
+  const abEte=compte(1,'abeilles'),abHiver=compte(3,'abeilles');
+  ok(abHiver<abEte*.65,'les essaims se raréfient au froid — '+abEte+' contre '+abHiver);
+
+  /* --- le gibier de passage passe --- */
+  const cerfPrintemps=compte(0,'cerf'),cerfEte=compte(1,'cerf');
+  gt(cerfPrintemps,cerfEte,'le cerf passe au printemps — '+cerfPrintemps+' contre '+cerfEte+' en été');
+
+  /* --- mais une espece ordinaire ne bouge pas --- */
+  const loupEte=compte(1,'loup'),loupHiver=compte(3,'loup');
+  ok(Math.abs(loupEte-loupHiver)<Math.max(loupEte,loupHiver)*.45,
+    'le loup, lui, chasse toute l\'année — '+loupEte+' contre '+loupHiver);
+
+  /* --- et l'hiver ne vide pas une case au point qu'il n'y ait plus rien --- */
+  const rien=G(c,`(()=>{S.day=95;let n=0;
+    for(let i=0;i<600;i++){const k=creaturePool({x:0,y:0,b:'toundra',corr:0,depth:0,poi:null},false,false,6);
+      if(!k||!CREATURE[k])n++;}
+    return n;})()`);
+  eq(rien,0,'et il reste toujours quelque chose à chasser, même en hiver');
+});
+
 test('consommables — quatre objets que le catalogue promettait',()=>{
   /* Ce ne sont pas des potions : on n'en distille pas, on les FAIT. Chacun
      repond a un manque precis que rien d'autre ne couvre. */

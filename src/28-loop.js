@@ -57,7 +57,8 @@ function step(dt){
     if(S.occ==='recolte')harvestTick(dt);
     else if(S.occ==='atelier')craftTick(dt);
     else if(S.occ==='percer')pierce(dt);
-    else if(S.occ==='explore'){expT+=dt;if(expT>=3){expT=0;explorePulse();}}
+    /* on ne fouille pas une lande sous le brouillard comme par temps clair */
+    else if(S.occ==='explore'){expT+=dt;if(expT>=3/meteoExplore()){expT=0;explorePulse();}}
   }
   /* les consignes decident de ce que le personnage fait de sa journee */
   planTick(dt);
@@ -195,11 +196,38 @@ function travel(x,y){
      ne sert a rien sur l'eau, une barque a rien sur terre, et un char a
      voile face au vent vaut a peine mieux que ses jambes (E.24). */
   const mv=vehVitesse(x-S.pos[0],y-S.pos[1],c);
-  S.day+=d/24*(1-util().marche)*mv;S.pos=[x,y];c.seen=true;S.target=null;
+  /* Le ciel de la case d'arrivee decide : la neige tient aux jambes, la
+     tempete double le trajet, le blizzard le triple presque. */
+  const mm=meteoMarche(c);
+  S.day+=d/24*(1-util().marche)*mv*mm;S.pos=[x,y];c.seen=true;S.target=null;
+  /* Et un blizzard mord celui qui n'a pas d'abri. C'est la seule meteo qui
+     BLESSE : « voyager devient dangereux, s'abriter devient le gameplay ». */
+  if(fx(c).gel&&!eclaireIci()&&!foyerIci()){
+    const iso=armorIso();
+    const dg=Math.round(maxHp()*.03*d*Math.max(.25,1-iso/18));
+    if(dg>0){
+      S.hp=Math.max(1,S.hp-dg);
+      addStatus(S,'ralenti',6,1);
+      cutIn('吹','Le blizzard te prend','−'+dg+' PV · '+(iso>10?'ta fourrure encaisse':'sans abri ni isolation'));
+    }
+  }
   vehUser(d);
   /* une prime ne suit pas la cellule, elle suit le ROYAUME : fuir la ville
      ne suffit pas, il faut quitter le pays — ou payer (E.26 / 14.4) */
   primePatrouille(d);
+  /* « ciblage pondere par la conductivite du bloc sommital » (E.28) : sans
+     blocs, c'est le METAL QU'ON PORTE qui fait le paratonnerre. Une armure
+     de plaques traversant un orage est une idee qu'on ne prend qu'une fois. */
+  if(fx(c).foudre&&!eclaireIci()){
+    const metal=ZK.reduce((a,z)=>{const it=eqOf(SLOTS.find(x=>x.zone===z).k);
+      return a+(it?it.parts.reduce((b,p)=>b+(MAT[p.mk]&&MAT[p.mk].c==='metal'?1:0),0):0);},0);
+    if(Math.random()<(.012+metal*.010)*d){
+      const dg=Math.round(maxHp()*(.10+metal*.02));
+      S.hp=Math.max(1,S.hp-dg);
+      addStatus(S,'etourdi',1.5,1);
+      cutIn('雷','La foudre te trouve','−'+dg+' PV'+(metal?' · '+metal+' pièces de métal sur le dos':''));
+    }
+  }
   if(mv<1)gainXp('navigation',6*d);
   if(S.occ!=='repos')S.occ='repos';
   gainXp('athletisme',5*d);

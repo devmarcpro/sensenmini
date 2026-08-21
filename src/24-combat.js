@@ -51,6 +51,28 @@ const AFF=[
   {f:'DÉCLENCHEUR',id:'venin',r:()=>({n:ri(2,4),d:ri(4,7)}),t:p=>'au coup : empoisonne '+p.n+'/s pendant '+p.d+' s'},
   {f:'MÉCANIQUE',id:'souffle',r:()=>({p:ri(10,22)}),t:p=>'coûte '+p.p+'% d\'endurance en moins'},
   {f:'WU XING',id:'harmonie',r:()=>({p:ri(15,35)}),t:p=>'sur une chaîne résolue : +'+p.p+'% de plus'},
+  /* ================================================================
+     DOUZE DE PLUS. Dix-neuf affixes, c'est dix-neuf phrases qu'on
+     finit par connaitre par coeur : au bout de trois cents trouvailles,
+     une arme rare ne surprend plus. Aucun de ceux-ci n'invente de
+     regle — tous se branchent la ou le combat decide deja quelque
+     chose : le ciel, la saison, la strate, la garde, la chaine, le
+     statut de la cible, le nombre de coups portes.
+     Plusieurs sont CONDITIONNELS a une situation qu'on peut chercher :
+     c'est ce qui fait qu'on garde deux armes au lieu d'une.
+     ================================================================ */
+  {f:'CONDITIONNEL',id:'orage',r:()=>({p:ri(20,40)}),t:p=>'sous un ciel d\'orage ou de tempête : +'+p.p+'%'},
+  {f:'CONDITIONNEL',id:'hiver',r:()=>({p:ri(18,34)}),t:p=>'en hiver : +'+p.p+'%'},
+  {f:'CONDITIONNEL',id:'fond',r:()=>({p:ri(8,18)}),t:p=>'+'+p.p+'% par strate sous tes pieds'},
+  {f:'CONDITIONNEL',id:'entier',r:()=>({s:ri(70,95),p:ri(15,32)}),t:p=>'au-dessus de '+p.s+'% PV : +'+p.p+'%'},
+  {f:'CONDITIONNEL',id:'blesse',r:()=>({p:ri(16,34)}),t:p=>'contre une cible qui saigne, brûle ou s\'empoisonne : +'+p.p+'%'},
+  {f:'RYTHMIQUE',id:'premier',r:()=>({p:ri(40,90)}),t:p=>'le premier coup d\'un combat : +'+p.p+'%'},
+  {f:'RYTHMIQUE',id:'montee',r:()=>({p:ri(3,7),m:ri(20,45)}),t:p=>'+'+p.p+'% par coup porté, jusqu\'à +'+p.m+'%'},
+  {f:'DÉCLENCHEUR',id:'eclat',r:()=>({n:ri(4,8),d:ri(2,4)}),t:p=>'un coup sur '+p.n+' : aveugle '+p.d+' s'},
+  {f:'DÉCLENCHEUR',id:'sangsue',r:()=>({n:ri(5,9),p:ri(10,22)}),t:p=>'un coup sur '+p.n+' : rend '+p.p+'% des dégâts en endurance'},
+  {f:'MÉCANIQUE',id:'garde',r:()=>({p:ri(15,30)}),t:p=>'garde levée : +'+p.p+'% de réduction'},
+  {f:'MÉCANIQUE',id:'lourdeur',r:()=>({p:ri(20,45)}),t:p=>'la frappe lourde coûte '+p.p+'% d\'endurance en moins'},
+  {f:'WU XING',id:'cycle',r:()=>({p:ri(10,24)}),t:p=>'+'+p.p+'% par segment déjà posé dans la chaîne'},
 ];
 const RARITY=[{n:'commun',c:'#7E9187',a:0},{n:'inhabituel',c:'#6FBFA0',a:1},
               {n:'rare',c:'#3E7CB1',a:2},{n:'exceptionnel',c:'#D9A441',a:3}];
@@ -262,7 +284,12 @@ function attack(heavy){
   const F=FUNC[w.fn],sd=stanceNow();
   const PA=passives();
   let cost=(heavy?18:sd.end)*(1+PA.endcost);
-  (w.aff||[]).forEach(a=>{if(a.id==='souffle')cost*=1-a.p.p/100;});
+  (w.aff||[]).forEach(a=>{
+    if(a.id==='souffle')cost*=1-a.p.p/100;
+    /* et celui qui ne rabat que la LOURDE : il ne change pas les degats, il
+       change le rythme — on la place deux fois plus souvent */
+    if(a.id==='lourdeur'&&heavy)cost*=1-a.p.p/100;
+  });
   if(heavy&&S.end<cost)return;
   const gasping=S.end<cost;
   S.end=Math.max(0,S.end-cost);endLock=1.5;
@@ -294,6 +321,27 @@ function attack(heavy){
   (w.aff||[]).forEach(a=>{
     if(a.id==='des'&&hitN%a.p.n===0)extra+=a.p.k;
     if(a.id==='bas'&&S.hp/maxHp()<a.p.s/100)extra+=a.p.k;});
+  /* Les douze affixes de situation. Chacun lit une chose que le combat sait
+     deja — le ciel, la saison, la strate, la garde, la chaine, l'etat de la
+     cible — et rien ici n'invente de regle nouvelle. */
+  let mulAff=1;
+  (w.aff||[]).forEach(a=>{
+    const P2=a.p||{};
+    switch(a.id){
+      case 'orage':{const m=METEO[meteo(here())];if(m&&(m.extreme||meteo(here())==='orage'))mulAff*=1+P2.p/100;break;}
+      case 'hiver':if(seasonIdx()===3)mulAff*=1+P2.p/100;break;
+      case 'fond':mulAff*=1+(here().depth||0)*P2.p/100;break;
+      case 'entier':if(S.hp/maxHp()*100>=P2.s)mulAff*=1+P2.p/100;break;
+      /* la cible regardee, et non `e` : dans cette fonction `e` est un
+         INDICE D'ELEMENT quelques lignes plus bas, ce qui rendait l'affixe
+         silencieusement inerte */
+      case 'blesse':if(E&&(hasStatus(E,'saignement')||hasStatus(E,'brulure')||hasStatus(E,'poison')))mulAff*=1+P2.p/100;break;
+      case 'premier':if(hitN<=1)mulAff*=1+P2.p/100;break;
+      case 'montee':mulAff*=1+Math.min(P2.m,hitN*P2.p)/100;break;
+      case 'garde':if(S.guard)mulAff*=1+P2.p/100;break;
+      case 'cycle':mulAff*=1+S.seg.length*P2.p/100;break;
+    }
+  });
   /* dégâts = dés × (dureté base / 20) × qualité × compétence × éléments × domination.
      Sur une arme de jet, c'est l'ÉLASTICITÉ qui remplace la dureté : un arc d'if
      porte loin, un arc d'ébène ne porte pas — le bois fait l'arme (A.4.1 / F.1). */
@@ -310,6 +358,7 @@ function attack(heavy){
   if(gasping)base*=.6;
   base*=v.reduce((a,p,i)=>a+p*(1+lv('el_'+EL[i].k)/100),0);
   base*=1+.05*S.seg.length;
+  base*=mulAff;
   const enFace=engaged().length;
   (w.aff||[]).forEach(a=>{
     if(a.id==='corr'&&here().corr>=a.p.s)base*=1+a.p.p/100;
@@ -361,6 +410,10 @@ function attack(heavy){
     /* le poison de lame (F.9) : il ne vient pas de l arme mais de ce qu on a
        etale dessus, et il vaut ce qu on n arrive pas a tuer autrement */
     if(S.lame>0)addStatus(tgt,'poison',6,Math.max(1,maxHp()*.010));
+    (w.aff||[]).forEach(a=>{
+      if(a.id==='eclat'&&hitN%a.p.n===0)addStatus(tgt,'confusion',a.p.d,1);
+      if(a.id==='sangsue'&&hitN%a.p.n===0)S.end=Math.min(100,S.end+Math.max(1,applied*a.p.p/100));
+    });
     /* « Huile d arme : prochain combat, +1d4 feu par coup » (F.5). Elle ne
        change ni l arme ni son vecteur : elle AJOUTE du feu a des coups qui
        n en portaient pas, ce qu aucune gemme ne fait sans serti. */

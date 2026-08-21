@@ -2784,10 +2784,67 @@ test('affixes — chacun fait ce que sa fiche annonce',()=>{
     const src=readFileSync(join(root,'src','24-combat.js'),'utf8')
       +readFileSync(join(root,'src','25-modules.js'),'utf8')
       +readFileSync(join(root,'src','15-companions.js'),'utf8');
-    /* la déclaration elle-même ne compte pas : on cherche un usage */
-    const usages=src.split("id==='"+id+"'").length-1;
-    return usages===0;
+    /* La declaration elle-meme ne compte pas : on cherche un USAGE, sous
+       n'importe quelle forme. Un premier jet n'acceptait que `id==='x'` et
+       declarait donc morts neuf affixes lus par un `switch` — il mesurait un
+       style d'ecriture, pas un effet. On compte les occurrences citees : la
+       table en pose une, tout usage en ajoute une autre. */
+    const cites=(src.match(new RegExp("'"+id+"'","g"))||[]).length;
+    return cites<2;
   });
+  /* ETRE LU NE SUFFIT PAS : il faut que cela CHANGE quelque chose. On pose
+     chaque affixe seul sur une arme, on met le monde dans l'etat qu'il
+     reclame, et l'on exige que les degats moyens bougent. Un affixe cite
+     dans un `switch` qui ne multiplie rien passerait le test precedent. */
+  R(c,`S.eq={};S.items=[];S.postures=[];S.modules=[];S.stats.force=80;
+    globalThis.__armeAff=(aff)=>{
+      const p=FUNC.epee.comp.map(ct=>partFor(ct,['fer','chene','cuir']));
+      p.push(partFor('fixations',['fer']));
+      const it=mkItem('arme','epee',p,1.2);it.aff=aff;
+      S.eq={};S.items=[it];equipItem(0);salirUtil();
+    };
+    /* le rappel « avant » : ce qu'il faut refaire A CHAQUE coup. La remise a zero des
+       statuts entre deux mesures effacait le saignement qu'on venait de
+       poser, et l'affixe « contre une cible blessee » paraissait inerte. */
+    globalThis.__degMoy=(n,avant)=>{let s=0;
+      for(let i=0;i<(n||300);i++){
+        EE.forEach(e=>{e.hp=1e9;e.max=1e9;e.st=[];});
+        if(avant)avant();
+        S.end=100;hitN=0;const h=EE[0].hp;attack(false);s+=h-EE[0].hp;
+      }
+      return s/(n||300);};
+    S.occ='combat';spawn();`);
+  /* chaque affixe avec la situation qui le reveille, et la meme sans */
+  const situations={
+    orage:['meteo=()=>"orage";','meteo=()=>"clair";'],
+    hiver:['S.day=95;','S.day=45;'],
+    fond:['here().depth=4;','here().depth=0;'],
+    entier:['S.hp=maxHp();','S.hp=maxHp();'],
+    blesse:['globalThis.__av=()=>EE.forEach(e=>addStatus(e,"saignement",99,1));','globalThis.__av=null;'],
+    premier:['hitN=0;','hitN=0;'],
+    montee:['hitN=0;','hitN=0;'],
+    garde:['S.guard=true;','S.guard=false;'],
+    cycle:['S.seg=[0,1,2];','S.seg=[];'],
+  };
+  const inertes=Object.keys(situations).filter(id=>{
+    const [avec,sans]=situations[id];
+    R(c,'__armeAff([]);'+avec);
+    const nu=G(c,'__degMoy(250,globalThis.__av)');
+    R(c,'__armeAff([{id:"'+id+'",p:AFF.find(a=>a.id==="'+id+'").r()}]);'+avec);
+    const arme=G(c,'__degMoy(250,globalThis.__av)');
+    return !(arme>nu*1.03);
+  });
+  ok(inertes.length===0,'chacun des affixes de situation change vraiment les dégâts',
+    'sans effet : '+inertes.join(', '));
+  /* et les deux qui touchent au rythme plutot qu'aux degats */
+  R(c,'__armeAff([]);S.end=100;attack(true);globalThis.__c1=100-S.end;');
+  R(c,'__armeAff([{id:"lourdeur",p:{p:40}}]);S.end=100;attack(true);globalThis.__c2=100-S.end;');
+  ok(G(c,'__c2')<G(c,'__c1'),'« lourdeur » rabat le coût de la frappe lourde — '
+    +G(c,'__c1').toFixed(1)+' puis '+G(c,'__c2').toFixed(1));
+  R(c,`__armeAff([{id:'sangsue',p:{n:1,p:50}}]);EE.forEach(e=>{e.hp=1e9;});
+    S.end=10;hitN=0;attack(false);globalThis.__e2=S.end;`);
+  gt(G(c,'__e2'),0,'« sangsue » rend de l\'endurance au lieu d\'en prendre — '+G(c,'__e2').toFixed(1));
+
   eq(morts.length,0,'aucun affixe déclaré n\'est lettre morte',
     'jamais appliqués : '+morts.join(', '));
   /* et « porte » change vraiment l'élément du coup */

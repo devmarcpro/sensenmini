@@ -63,6 +63,7 @@ function brulerCombustible(n){
 /* La recette se connaît, comme celle d'un composant exotique (learnRecipe). */
 const alliageConnu=k=>!!(S.recipes&&S.recipes['alliage:'+k]);
 function apprendreAlliage(k){
+  if(typeof collecte==='function')collecte('alliage',k);
   if(!ALLIAGE[k]||alliageConnu(k))return false;
   S.recipes=S.recipes||{};S.recipes['alliage:'+k]=1;
   cutIn('鋳','Recette : '+ALLIAGE[k].n,ALLIAGE[k].d);

@@ -78,7 +78,7 @@ function step(dt){
     if(gros.length)sellMat(gros[0]);}
   if(auto('veilleur')&&isNight()&&S.occ!=='dormir'&&S.occ!=='donjon'&&litIci())dormir(false);
   uiT+=dt;
-  if(uiT>1){uiT=0;tickTips();if(!ptrDown&&['recolte','sac','skills','cell','atelier','equip','pnj','royaume','guilde','table','comps','batir','autos','ville','combat'].includes(tab))paint();}
+  if(uiT>1){uiT=0;tickTips();if(!ptrDown&&['recolte','sac','skills','cell','atelier','equip','pnj','royaume','guilde','table','comps','batir','autos','ville','combat','collection'].includes(tab))paint();}
 }
 
 function combatTick(dt){

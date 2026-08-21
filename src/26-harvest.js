@@ -28,7 +28,7 @@ function harvestTick(dt){
       log('<span class="bd">'+m.n+' : le gisement est épuisé ici — il se reconstitue la semaine prochaine.</span>');
       S.occ='repos';S.target=null;S.resume=null;return;}
     const qte=takeStock(c,mk,1+Math.floor(lv(CAT[m.c].sk)/10));
-    S.mat[mk]=(S.mat[mk]||0)+qte;
+    S.mat[mk]=(S.mat[mk]||0)+qte;collecte('mat',mk);
     if(PLANTE[mk])addFood(mk,qte);
     gainXp(CAT[m.c].sk,m.d);questTick('harvest',qte,mk);noteRate('harv');
     S.end=Math.max(0,S.end-1.4);

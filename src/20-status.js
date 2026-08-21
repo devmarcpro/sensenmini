@@ -53,6 +53,7 @@ function addStatus(tgt,k,dur,val){
     if(tgt.cdStun&&tgt.cdStun>0)return;
     dur=Math.min(2,dur);tgt.cdStun=dur+5;
   }
+  if(tgt===S&&typeof collecte==='function')collecte('statut',k);
   const ex=tgt.st.find(x=>x.k===k);
   if(ex){ex.t=Math.max(ex.t,dur);ex.v=Math.max(ex.v,val);}
   else tgt.st.push({k,t:dur,v:val});

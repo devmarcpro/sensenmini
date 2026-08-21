@@ -160,6 +160,7 @@ function readBook(i){
       const cands=MK.filter(id=>MODULE[id].d.includes(b.dom));
       const id=pick(cands);
       const ex=S.modules.find(m=>m.id===id&&m.dom===b.dom);
+      collecte('module',id);
       if(ex){ex.lv++;log('<span class="in">'+MODULE[id].n+' approfondi — niveau '+ex.lv+'</span>');}
       else{S.modules.push({id,dom:b.dom,lv:1,xp:0});
         log('<span class="gd">Module appris : '+MODULE[id].n+' ('+DOMAIN[b.dom].n+')</span>');}

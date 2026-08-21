@@ -370,6 +370,23 @@ bilan('postures de combat',G('STANCE.map(s=>s.k||s.n)'),
   new Set(G('STANCE.map(s=>s.k||s.n)')),
   'les trois postures se choisissent au meme endroit');
 
+/* DEUX ENTREES DE MEME NOM SE CONFONDENT. Trois gabarits de quete
+   partageaient un identifiant avec un plus ancien : dans la collection elles
+   ne comptaient que pour une, et rien ne le disait. On verifie donc l'unicite
+   des cles de toutes les tables ou une cle sert d'identite. */
+[['gabarits de quete','QTPL.map(t=>t.id)'],
+ ['affixes d arme','AFF.map(a=>a.id)'],
+ ['effets de parure','AFFUK'],
+ ['creatures','CK'],
+ ['modules','MK'],
+ ['pieces nommees','ARTK']].forEach(([titre,expr])=>{
+  const l=G(expr);
+  const uniq=[...new Set(l)];
+  bilan('identifiants uniques : '+titre,l.map((k,i)=>k+'#'+i),
+    new Set(uniq.map(k=>k+'#'+l.indexOf(k))),
+    'deux entrees de meme nom se confondent partout ou la cle sert d identite');
+});
+
 /* Les gardiens nommes et leurs pieces : chaque theme de donjon doit en
    poser un, chaque gardien doit garder une piece qui existe, et chaque
    effet cite doit etre un vrai affixe. Une piece nommee est ECRITE — si

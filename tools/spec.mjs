@@ -624,7 +624,8 @@ test('panneaux — chaque onglet se rend, replié ou déplié',()=>{
     const ko=G(c,`(()=>{const ko=[];
       const P={monde:pMonde,cell:pCell,recolte:pRecolte,atelier:pAtelier,equip:pEquip,magie:pMagie,
         table:pTable,ville:pVille,pnj:pPnj,comps:pComps,batir:pBatir,royaume:pRoyaume,
-        guilde:pGuilde,sac:pSac,combat:pCombat,autos:pAuto,skills:pSkills,param:pParam};
+        guilde:pGuilde,sac:pSac,combat:pCombat,autos:pAuto,skills:pSkills,
+      collection:pCollection,param:pParam};
       for(const k in P){try{const s=P[k]();if(typeof s!=='string'||!s.length)ko.push(k+': vide');}
         catch(e){ko.push(k+': '+e.message);}}
       return ko;})()`);
@@ -632,7 +633,8 @@ test('panneaux — chaque onglet se rend, replié ou déplié',()=>{
        absent : il se clique et ne rend rien. On compare donc la barre au
        tableau des panneaux, dans les deux sens. */
     const rendus=G(c,`Object.keys({monde:1,cell:1,recolte:1,atelier:1,equip:1,magie:1,table:1,ville:1,
-      pnj:1,comps:1,batir:1,royaume:1,guilde:1,sac:1,combat:1,autos:1,skills:1,param:1})`);
+      pnj:1,comps:1,batir:1,royaume:1,guilde:1,sac:1,combat:1,autos:1,skills:1,
+      collection:1,param:1})`);
     const orphelins=onglets.filter(t=>!rendus.includes(t));
     eq(orphelins.length,0,'chaque bouton de la barre a son panneau','sans panneau : '+orphelins.join(', '));
     const invisibles=rendus.filter(t=>!onglets.includes(t));
@@ -784,6 +786,76 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
     +'globalThis.__max=0;for(let i=0;i<3000;i++){combatTick(.05);if(S.seg.length>__max)__max=S.seg.length;}');
   ok(G(c,'__max')>0,'confus, on frappe encore');
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
+});
+
+test('collection — tout ce que le monde contient, et ce qui manque',()=>{
+  /* Cent quatre-vingt-sept matieres, soixante-trois creatures, vingt biomes,
+     et aucune facon pour le joueur de savoir ce qu'il n'avait pas vu. Un
+     monde dont on ne peut pas mesurer sa propre ignorance ne donne aucune
+     raison d'y retourner. */
+  const c=nouveau();
+
+  /* --- chaque famille est complete et lisible --- */
+  const bancales=G(c,`COLK.filter(k=>{const D=COLLECTION[k];
+    if(!D.n||!D.g||typeof D.tout!=='function'||typeof D.nom!=='function')return true;
+    let t=[];try{t=D.tout();}catch(e){return true;}
+    if(!Array.isArray(t)||!t.length)return true;
+    /* chaque entree doit savoir se nommer, sinon la case vide est illisible */
+    return t.some(x=>{try{const n=D.nom(x);return !n||typeof n!=='string';}catch(e){return true;}});
+  })`);
+  eq(bancales.length,0,'les '+G(c,'COLK.length')+' familles sont complètes et savent se nommer',
+    'bancales : '+bancales.join(', '));
+
+  /* --- une partie neuve n'est pas deja pleine, et pas vide non plus --- */
+  R(c,'colBalayer();');
+  const T0=G(c,'colTotal()');
+  gt(T0.t,400,'le jeu compte '+T0.t+' choses à rencontrer');
+  ok(T0.pct<.35,'une partie neuve en a vu moins d\'un tiers — '+Math.round(T0.pct*100)+' %');
+  gt(T0.a,0,'mais pas zéro : ce qu\'on porte au départ compte déjà');
+
+  /* --- inscrire fonctionne, et ne compte jamais deux fois --- */
+  R(c,'S.col={};collecte("fiole","soin");collecte("fiole","soin");');
+  eq(G(c,'colAvoir("fiole").length'),1,'une même chose ne se compte qu\'une fois');
+  R(c,'collecte("fiole","remede");');
+  eq(G(c,'colAvoir("fiole").length'),2,'et deux choses différentes comptent deux fois');
+  /* une cle inconnue ne salit pas la collection */
+  R(c,'collecte("fiole","xyz_inconnu");collecte("famille_inconnue","x");');
+  eq(G(c,'colAvoir("fiole").length'),2,'une clé inconnue n\'entre pas dans le compte');
+
+  /* --- CHAQUE FAMILLE DOIT POUVOIR SE REMPLIR : une famille qu'aucun geste
+     du jeu n'inscrit est une liste de choses inatteignables, et le
+     pourcentage ne montera jamais a cent. --- */
+  const jamais=G(c,`(()=>{
+    const ko=[];
+    /* on inscrit tout ce qui existe, famille par famille, et l'on verifie
+       que le compte atteint bien le total */
+    COLK.forEach(k=>{
+      const D=COLLECTION[k];
+      D.tout().forEach(x=>collecte(k,x));
+      if(colAvoir(k).length!==D.tout().length)ko.push(k);
+    });
+    return ko;})()`);
+  ok(jamais.length===0,'chaque famille peut atteindre son total','bloquées : '+jamais.join(', '));
+  eq(Math.round(G(c,'colTotal().pct')*100),100,'et la collection entière peut atteindre 100 %');
+
+  /* --- LE POINT QUI COMPTE : chaque famille est-elle reliee au JEU ?
+     Une famille que colBalayer ne deduit pas et qu'aucun appel a collecte()
+     ne remplit serait une liste morte. On cherche donc, pour chacune, soit
+     une deduction, soit un appel dans le code du jeu. --- */
+  const orphelines=G(c,'COLK').filter(k=>{
+    const deduite=G(c,'!!COLLECTION['+JSON.stringify(k)+'].vus');
+    const balaye=code.indexOf("collecte('"+k+"'")>=0;
+    return !deduite&&!balaye;
+  });
+  eq(orphelines.length,0,'chaque famille est reliée à un geste du jeu',
+    'orphelines : '+orphelines.join(', '));
+
+  /* --- et le panneau se rend sans casser, vide comme plein --- */
+  R(c,'S.col={};');
+  ok(G(c,'pCollection().length')>500,'le panneau se rend sur une collection vide');
+  R(c,'COLK.forEach(k=>COLLECTION[k].tout().forEach(x=>collecte(k,x)));');
+  ok(G(c,'pCollection().length')>500,'et sur une collection pleine');
+  ok(G(c,'pCollection().indexOf("100")')>=0,'et il annonce alors cent pour cent');
 });
 
 test('symetrie — les creatures se battent avec nos regles',()=>{

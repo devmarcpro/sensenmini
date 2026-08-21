@@ -101,6 +101,7 @@ function pecheTick(dt){
     if(PLANTE[k])addFood(k,n);
     float('+'+n,EL[domi(matVec(k))].c);
   }
+  collecte('prise',k);
   gainXp('peche',6+(MAT[k]?MAT[k].d:2));
   gainStat('dex',8);
   S.end=Math.max(0,S.end-.8);

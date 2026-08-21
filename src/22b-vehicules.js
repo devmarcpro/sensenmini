@@ -149,7 +149,7 @@ function vehConstruire(k){
   if(b)return toast(b);
   const D=VEHICULE[k];
   if(!payCost(D.cout))return toast('Il manque : '+costTxt(D.cout));
-  S.vehicule={k,pv:D.pv,crie:0};
+  S.vehicule={k,pv:D.pv,crie:0};collecte('vehicule',k);
   gainXp('menuiserie',260+D.lv*20);
   gainXp('assemblage',120);
   cutIn(D.g,D.n,'construit — '+D.d);

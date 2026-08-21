@@ -203,6 +203,7 @@ function drink(i){
   if(p.e){
     const E2=POTEFF[p.e];
     if(!E2)return;
+    collecte('fiole',p.e);
     const dit=E2.fait(p.v);
     cutIn(E2.g,p.n,dit);
     gainXp('alchimie',20);

@@ -595,6 +595,7 @@ function kill(who){
   if(!K||K.dead)return;
   K.dead=1;
   if(K.cre)noteBestiaire(K.cre,'t');
+  if(K.gard)collecte('gardien',K.gard==='__majeur'?'majeur':K.gard);
   const c=here();
   /* les bêtes ne portent pas de bourse : quelques pièces au mieux — les humains, si (7.6) */
   const g=Math.round((1+c.corr*.08+c.depth*1.5)*(K.rare?4:1)*(K.boss?6:1)*(1+(K.or||0)));

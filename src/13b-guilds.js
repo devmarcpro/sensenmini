@@ -110,17 +110,17 @@ const QTPL=[
    txt:q=>'Visiter '+q.need+' points d\'intérêt'},
   {id:'expedition',g:'aventuriers',r:4,t:'donjon',n:[6,14],or:60,xp:120,
    txt:q=>'Nettoyer '+q.need+' salles de donjon'},
-  {id:'cabotage',g:'navigateurs',r:0,t:'peche',n:[8,20],or:8,xp:14,
+  {id:'ligne',g:'navigateurs',r:0,t:'peche',n:[8,20],or:8,xp:14,
    txt:q=>'Ramener '+q.need+' prises de la ligne'},
   {id:'hauturier',g:'navigateurs',r:2,t:'explore',n:[10,22],or:16,xp:30,
    txt:q=>'Ouvrir '+q.need+' cellules à la navigation'},
   {id:'peche_rare',g:'navigateurs',r:4,t:'peche',n:[40,80],or:6,xp:110,
    txt:q=>'Remplir les cales : '+q.need+' prises'},
-  {id:'pillage',g:'tresors',r:1,t:'loot',n:[3,7],rar:2,or:70,xp:28,
+  {id:'recel',g:'tresors',r:1,t:'loot',n:[3,7],rar:2,or:70,xp:28,
    txt:q=>'Rapporter '+q.need+' pièces rares ou mieux'},
   {id:'catacombes',g:'tresors',r:3,t:'donjon',n:[8,16],or:40,xp:60,
    txt:q=>'Descendre '+q.need+' salles'},
-  {id:'relique',g:'tresors',r:4,t:'lieu',n:[3,6],or:180,xp:130,
+  {id:'pelerinage',g:'tresors',r:4,t:'lieu',n:[3,6],or:180,xp:130,
    txt:q=>'Fouiller '+q.need+' lieux oubliés'},
   /* --- prospecteurs, artisans, batisseurs : la matiere --- */
   {id:'veine',g:'prospecteurs',r:1,t:'harvest',n:[25,60],or:4,xp:22,
@@ -217,6 +217,8 @@ function questTick(type,n,extra){
 }
 function completeQuest(){
   const q=S.quest;if(!q)return;
+  /* le gabarit s'appelle `tpl` dans la quete active, pas `id` */
+  if(q.cur>=q.need&&q.tpl)collecte('quete',q.tpl);
   if(q.cur<q.need)return toast('Pas encore : '+q.cur+'/'+q.need);
   if(q.type==='deliver'){
     if((S.mat[q.mat]||0)<q.need)return toast('Il te faut '+q.need+' × '+matName(q.mat)+' en sac');

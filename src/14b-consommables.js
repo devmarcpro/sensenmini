@@ -77,6 +77,7 @@ function consoUser(k){
   if(!consoDe(k))return toast('Tu n\'en as plus');
   S.conso[k]--;
   if(!S.conso[k])delete S.conso[k];
+  collecte('conso',k);
   const dit=D.fais();
   cutIn(D.g,D.n,dit+' · reste '+consoDe(k));
 }

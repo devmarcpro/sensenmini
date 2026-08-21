@@ -77,6 +77,8 @@ const CONDS={
   potiondispo:{n:'on a une fiole de',u:'',liste:1,def:'soin',
     d:'la fiole choisie est en réserve',
     test:v=>(S.potions||[]).some(p=>p.e===v)},
+  aubordeleau:{n:'il y a de l\'eau ici',d:'de quoi pêcher, si le gel ne la prend pas',
+    test:()=>!pecheBlocage()},
   froid:{n:'on souffre du froid ou du chaud',d:'le climat mord — un abri, un foyer, une fiole',
     test:()=>!!tempStress()},
 };
@@ -98,6 +100,9 @@ const ACTES={
     fais:()=>{const l=cellMats(here()).filter(m=>canHarvest(m)&&stockOf(here(),m)>0)
         .sort((a,b)=>MAT[b].d-MAT[a].d);
       if(l.length){S.target=l[0];S.occ='recolte';harvT=0;}}},
+  pecher:{n:'pêcher',g:'漁',d:'l\'eau nourrit sans combat et sans territoire',
+    peut:()=>!pecheBlocage()&&S.occ!=='peche',
+    fais:()=>{S.occ='peche';E=null;pechT=0;}},
   explorer:{n:'explorer',g:'歩',d:'lever le voile autour de soi',
     peut:()=>S.occ!=='explore',
     fais:()=>{S.occ='explore';E=null;}},

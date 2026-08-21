@@ -55,6 +55,7 @@ function step(dt){
        pouvait le remettre d'aplomb. Rien ne le disait. */
     if(S.faim>25)S.hp=Math.min(maxHp(),S.hp+maxHp()*.004*dt*(S.thermal||1)*(1+util().soin));
     if(S.occ==='recolte')harvestTick(dt);
+    else if(S.occ==='peche')pecheTick(dt);
     else if(S.occ==='atelier')craftTick(dt);
     else if(S.occ==='percer')pierce(dt);
     /* on ne fouille pas une lande sous le brouillard comme par temps clair */

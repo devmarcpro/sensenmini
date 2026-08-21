@@ -21,7 +21,7 @@ function handle(e){
   if(b=t.closest('[data-go]')){const p=b.dataset.go.split(',');travel(+p[0],+p[1]);return;}
   if(b=t.closest('[data-flee]')){disengage();paint();return;}
   if(b=t.closest('[data-foc]')){refocus(+b.dataset.foc);sceneMode='';return;}
-  if(b=t.closest('[data-occ]')){S.occ=b.dataset.occ;if(S.occ==='percer')harvT=0;sceneMode='';paint();return;}
+  if(b=t.closest('[data-occ]')){S.occ=b.dataset.occ;if(S.occ==='percer')harvT=0;if(S.occ==='peche')pechT=0;sceneMode='';paint();return;}
   if(b=t.closest('[data-harv]')){S.target=b.dataset.harv;S.occ='recolte';harvT=0;sceneMode='';paint();return;}
   if(b=t.closest('[data-eat]')){eat(b.dataset.eat);return;}
   if(b=t.closest('[data-eatfood]')){eatFood(b.dataset.eatfood);paint();return;}

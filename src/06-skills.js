@@ -27,6 +27,10 @@ addSk('perception_sk','Perception','Vie');
    Un char a voile face au vent perd les trois quarts de son avantage ; elle
    en reprend une part, jusqu'a la moitie du malus a haut niveau (E.24). */
 addSk('navigation','Navigation','Vie');
+/* La peche : une troisieme voie de subsistance, a cote de la chasse et de
+   l'agriculture. Elle ne demande ni combat ni territoire — elle nourrit un
+   blesse et un vagabond, ce qu'aucune des deux autres ne fait. */
+addSk('peche','Pêche','Récolte');
 const SK=Object.keys(SKILLS);
 const xpNext=N=>100*Math.pow(N+1,1.6);
 const sf=N=>1+N*0.02;

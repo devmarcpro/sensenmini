@@ -62,6 +62,8 @@ const MUT=[
     '  if(refuseVole(it))return toast(','  if(false)return toast(']]],
   ['loi : marque du vol','hors-la-loi',[['src/21b-horslaloi.js',
     "    if(off.t==='item')marquerVole(off.it);",'']]],
+  ['peche : la barque au large','peche',[['src/26b-peche.js',"const bateau=vehUtile()&&vehDef().eau?.55:1;",'const bateau=1;']]],
+  ['peche : le gel ferme l eau','peche',[['src/26b-peche.js','  if(eauGelee())return','  if(false)return']]],
   /* le ciel et l annee */
   ['ciel : temps de trajet','ciel',[['src/28-loop.js','*mv*mm;','*mv;']]],
   ['ciel : blizzard qui mord','ciel',[['src/28-loop.js','if(fx(c).gel&&!eclaireIci()&&!foyerIci()){','if(false){']]],

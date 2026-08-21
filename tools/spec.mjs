@@ -737,6 +737,59 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('peche — une troisieme voie de subsistance',()=>{
+  /* Un tiers des biomes touche l'eau, et l'on n'y faisait rien que la meme
+     chose qu'ailleurs. La peche ne ressemble ni a la chasse ni a
+     l'agriculture : aucun combat, aucun territoire — elle nourrit un blesse
+     et un vagabond. */
+  const c=nouveau();
+  R(c,`globalThis.__eau=()=>{here().b='cote';globalThis.__tc0=globalThis.__tc0||tempC;tempC=()=>18;meteo=()=>'clair';};
+    globalThis.__terre=()=>{here().b='montagne';here().stock=null;};`);
+
+  /* --- il faut de l'eau --- */
+  R(c,'__terre();');
+  const surTerre=G(c,'pecheBlocage()');
+  R(c,'__eau();');
+  eq(G(c,'pecheBlocage()'),null,'au bord de l\'eau, la pêche est ouverte');
+  ok(!!surTerre,'sur une montagne sèche, non — '+surTerre);
+
+  /* --- le gel la ferme, la tempête aussi --- */
+  R(c,'__eau();tempC=()=>-12;');
+  ok(!!G(c,'pecheBlocage()'),'l\'eau prise par le gel ferme la pêche');
+  R(c,'tempC=()=>18;meteo=()=>"tempete";');
+  ok(!!G(c,'pecheBlocage()'),'et l\'on ne pêche pas dans une tempête');
+  R(c,'meteo=()=>"clair";');
+
+  /* --- elle donne vraiment quelque chose, et sans combat --- */
+  R(c,'S.food={};S.mat={};S.end=100;S.occ="peche";pechT=0;'
+    +'for(let i=0;i<600;i++)pecheTick(1);');
+  const prises=G(c,'Object.values(S.food).reduce((a,b)=>a+b,0)');
+  gt(prises,0,'dix minutes de ligne donnent de quoi manger — '+prises+' prises');
+  gt(G(c,'lv("peche")'),0,'et la compétence monte à l\'usage');
+
+  /* --- une barque double la prise --- */
+  R(c,'S.vehicule=null;S.sk.peche.lv=0;');
+  const aPied=G(c,'pecheDelai()');
+  R(c,'S.vehicule={k:"barque",pv:VEHICULE.barque.pv,crie:0};');
+  ok(G(c,'pecheDelai()')<aPied*.7,'depuis une barque, on pêche au large et bien plus vite — '
+    +aPied.toFixed(1)+' s puis '+G(c,'pecheDelai()').toFixed(1)+' s');
+
+  /* --- chaque biome donne quelque chose, et rien d'inconnu --- */
+  const fausses=G(c,`Object.keys(PECHE).flatMap(b=>Object.keys(PECHE[b]))
+    .filter((k,i,l)=>l.indexOf(k)===i)
+    .filter(k=>!PECHE_FOOD[k]&&!MAT[k])`);
+  eq(fausses.length,0,'chaque prise est une vraie matière ou une vraie nourriture',
+    'inconnues : '+fausses.join(', '));
+  const sansTable=G(c,'Object.keys(BIOME).filter(b=>!PECHE[b])');
+  eq(sansTable.length,0,'chaque biome a sa table de pêche','sans table : '+sansTable.join(', '));
+
+  /* --- et le poisson se mange cru sans fièvre : c'est son avantage franc --- */
+  R(c,'S.st=[];globalThis.__inf=0;'
+    +'for(let i=0;i<200;i++){S.food={};addFood(foodKey("poisson",4,"Vie"),1);'
+    +'S.faim=20;eatFood(foodKey("poisson",4,"Vie"));if(hasStatus(S,"infection"))__inf++;S.st=[];}');
+  eq(G(c,'__inf'),0,'deux cents poissons crus, aucune fièvre');
+});
+
 test('ciel — chaque etat de meteo fait quelque chose',()=>{
   /* Dix etats, et le seul qui changeait quelque chose etait la temperature
      ressentie. Une tempete valait un ciel clair, un blizzard aussi, et les
@@ -1064,7 +1117,7 @@ test('consignes — le plan apprend les verbes des nouveaux systemes',()=>{
      qui est exactement comment une ligne de plan morte finit par exister. */
   const etats=G(c,'CONDK.filter(k=>k!=="toujours"&&(CONDS[k].def===undefined||CONDS[k].liste))');
   const eprouvees=['nuit','jour','gibierrare','caseepuisee','ennemidur','enville','aucampement',
-    'malade','empoisonne','vehiculeuse','potiondispo','froid'];
+    'malade','empoisonne','vehiculeuse','potiondispo','froid','aubordeleau'];
   const bascules=G(c,`(()=>{
     const poses={
       nuit:[()=>{S.day=Math.floor(S.day)+23/24;},()=>{S.day=Math.floor(S.day)+12/24;}],
@@ -1080,6 +1133,9 @@ test('consignes — le plan apprend les verbes des nouveaux systemes',()=>{
       vehiculeuse:[()=>{S.vehicule={k:'charrette',pv:1,crie:0};},()=>{S.vehicule=null;}],
       potiondispo:[()=>{S.potions=[{e:'soin',v:1,n:'x'}];},()=>{S.potions=[];}],
       froid:[()=>{globalThis.__ft3=feltTemp;feltTemp=()=>-30;},()=>{if(globalThis.__ft3)feltTemp=__ft3;}],
+      /* l'eau : on la pose sur la case, et le gel la reprend */
+      aubordeleau:[()=>{here().b='cote';globalThis.__tc=tempC;tempC=()=>18;meteo=()=>'clair';},
+                   ()=>{here().b='plaine';if(globalThis.__tc)tempC=__tc;}],
     };
     const ko=[];
     Object.keys(poses).forEach(k=>{

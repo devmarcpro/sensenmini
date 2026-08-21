@@ -11,6 +11,23 @@ function pRecolte(){
      +'<small>'+t.n+'</small>'
      +'<small style="color:'+(t.dur>1?'var(--jade)':'var(--zhu)')+'">mord jusqu\'à dureté '+Math.floor(t.dur*t.q*2)+'</small></div>';
   }).join('')+'</div>';
+  /* LA PECHE. Elle vit ici parce que c'est une recolte : la meme main, un
+     autre milieu. On dit toujours POURQUOI elle est fermee — le gel, la
+     tempete, l'absence d'eau — plutot que de griser un bouton en silence. */
+  {
+    const bl=pecheBlocage();
+    h+=grp('漁','PÊCHE',bl?'fermée ici':'ouverte');
+    h+='<div class="card"><div class="meta">'
+      +(bl?'<span style="color:var(--zhu)">'+bl+'</span>'
+         :'Une prise toutes les '+pecheDelai().toFixed(1)+' s'
+          +(vehUtile()&&vehDef().eau?' — <b>depuis ta '+vehDef().n.toLowerCase()+'</b>, on pêche au large':'')
+          +'. Ni combat ni territoire : elle nourrit un blessé comme un vagabond.')
+      +'</div>'
+      +'<div class="row"><button class="btn'+(S.occ==='peche'?' pri':'')+'" data-occ="peche" '+(bl?'disabled':'')+'>漁 Pêcher</button></div>'
+      +'<div class="meta">Pêche niv '+lv('peche')
+      +(PECHE[c.b]?' · ici : '+Object.keys(PECHE[c.b]).map(k=>MAT[k]?matName(k):k).join(', '):'')+'</div>'
+      +'</div>';
+  }
   h+=grp('掘','SUR PLACE',BIOME[c.b].n+' · strate '+c.depth);
   h+='<div class="matlist">'+cellMats(c).map(mk=>{
     const m=MAT[mk],ok=canHarvest(mk),t=harvestTime(mk),st2=stockOf(c,mk),sm=stockMax(c,mk);

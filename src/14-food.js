@@ -21,6 +21,14 @@ const PARTS=[
   {k:'dent',n:'Dent',nutr:3,grp:'Armes',alch:'dmg',el:1},
   {k:'peau',n:'Peau',nutr:6,grp:'Défense',alch:'def',el:2},
   {k:'glande',n:'Glande',nutr:4,grp:'Magie',alch:'vol',el:0},
+  /* ce qui sort de l'eau (26b) : quatre prises, avec leurs vertus propres.
+     Aucune ne porte le risque d'infection de la chair crue — un poisson se
+     mange cru sans fievre, et c'est le seul avantage franc de la peche sur
+     la chasse quand on n'a pas de cuisine. */
+  {k:'poisson',n:'Poisson',nutr:18,grp:'Vie',alch:'endu',el:4},
+  {k:'anguille',n:'Anguille',nutr:14,grp:'Éléments',alch:'per',el:4},
+  {k:'algue',n:'Algue',nutr:6,grp:'Magie',alch:'vol',el:4},
+  {k:'sangsue',n:'Sangsue',nutr:4,grp:'Défense',alch:'def',el:4},
 ];
 /* la viande d'une créature porte le groupe lié à son élément dominant (A.9.1) */
 const MEATGRP=['Vie','Armes','Défense','Artisanat','Magie'];

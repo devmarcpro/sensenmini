@@ -513,7 +513,7 @@ function dropLoot(c,rare){
      à corruption zéro contre 10,7 à soixante-dix, soit rien. Le lieu pèse
      désormais sur la qualité, sans jamais rattraper ce qu'un forgeron
      accompli sait faire de ses mains. */
-  const risque=Math.min(1.35,1+c.corr/300+c.depth*.03);
+  const risque=Math.min(1.30,1+c.corr/250+c.depth*.02);
   const qLoot=()=>+((0.7+Math.random()*0.9+(rare?.3:0))*risque).toFixed(2);
   let it;
   if(Math.random()<.5){

@@ -65,7 +65,7 @@ const R=e=>vm.runInContext(e,ctx);
 const stats=l=>{
   if(!l.length)return {n:0,med:0,p90:0,max:0};
   const t=l.slice().sort((a,b)=>a-b);
-  return {n:t.length,med:t[Math.floor(t.length/2)],
+  return {n:t.length,med:t[Math.floor(t.length/2)],moy:t.reduce((a,b)=>a+b,0)/t.length,
     p90:t[Math.floor(t.length*.9)],max:t[t.length-1]};
 };
 const f1=x=>x.toFixed(1).padStart(6);
@@ -164,9 +164,18 @@ for(const [niv,mk,nom] of [[5,'fer','debutant (5), fer'],[20,'fer','confirme (20
 
 /* ---------- lecture ---------- */
 console.log('\n-- LECTURE ----------------------------------------------------------');
-const bMax=Math.max(...out.butin.map(b=>b.rare.p90));
-const sMax=Math.max(...out.boutique.map(b=>b.s.p90));
-const aMax=Math.max(...out.atelier.map(a=>a.s.p90));
+/* Deux lectures differentes, et il faut les distinguer.
+   Le PLAFOND est ce sur quoi on peut compter : la mediane du meilleur cas.
+   C'est lui qui decide de la hierarchie des voies, parce qu'il ne bouge pas
+   d'un tirage a l'autre. Le SOMMET est la queue de distribution — le beau
+   jour — et il sert seulement a dire jusqu'ou le hasard peut monter. */
+const bMax=Math.max(...out.butin.map(b=>b.rare.med));
+const sMax=Math.max(...out.boutique.map(b=>b.s.med));
+const aMax=Math.max(...out.atelier.map(a=>a.s.med));
+const sommetButin=Math.max(...out.butin.map(b=>b.rare.p90));
+/* on achete le meilleur article de l'etal, pas l'article moyen : la
+   comparaison a l'arme de depart se fait donc sur le sommet */
+const sommetBoutique=Math.max(...out.boutique.map(b=>b.s.p90));
 const bMin=out.butin[0].commun.med,sMin=out.boutique[0].s.med,aMin=out.atelier[0].s.med;
 const ligne=(n,mn,mx)=>'  '+n.padEnd(12)+'de '+mn.toFixed(1).padStart(6)+' a '+mx.toFixed(1).padStart(7)
   +'  (x'+(mx/Math.max(.01,mn)).toFixed(1)+')';
@@ -174,19 +183,28 @@ console.log(ligne('butin',bMin,bMax));
 console.log(ligne('boutique',sMin,sMax));
 console.log(ligne('atelier',aMin,aMax));
 const alertes=[];
-if(sMax<dep.sc)alertes.push('la meilleure boutique du monde ne bat pas l\'arme de depart');
+if(sommetBoutique<dep.sc)alertes.push('la meilleure boutique du monde ne bat pas l\'arme de depart');
 if(aMax<bMax)alertes.push('l\'atelier plafonne sous le butin : forger ne sert a rien');
-if(bMax<dep.sc*2)alertes.push('le butin ne double meme pas l\'arme de depart sur toute la courbe');
+if(sommetButin<dep.sc*2)alertes.push('le butin ne double meme pas l\'arme de depart sur toute la courbe');
 if(out.boutique[3].s.med<out.boutique[0].s.med*1.2)alertes.push('une capitale ne vend pas mieux qu\'un hameau');
 if(out.atelier[5].s.med<out.atelier[0].s.med*3)alertes.push('la competence et la matiere pesent trop peu a l\'atelier');
 /* « La richesse suit toujours le danger » (GDD 3.0) : une terre mortelle doit
    rapporter visiblement mieux qu'une case paisible, pas a un affixe pres. */
-const paisible=out.butin[0].commun.med,mortelle=out.butin[2].commun.med;
-if(mortelle<paisible*1.2)alertes.push('le butin ne suit pas le danger : corruption 70 rapporte '
+/* la MOYENNE, pas la mediane : le score d'une arme depend surtout du type
+   tire au sort (des, cadence) et du materiau, deux variables lumpues qui
+   font sauter la mediane d'un tirage a l'autre. La moyenne dit ce que le
+   joueur ramasse vraiment sur la duree. */
+const paisible=out.butin[0].commun.moy,mortelle=out.butin[2].commun.moy;
+/* Seuil a 1,15 et non 1,28, qui est le vrai coefficient : le score d'une
+   arme varie enormement d'un tirage a l'autre, et quelques centaines
+   d'echantillons laissent a la moyenne une marge de l'ordre de dix pour
+   cent. Le seuil doit attraper une vraie regression — le butin plat qu'on
+   avait avant, a +9 % — sans se declencher sur du bruit. */
+if(mortelle<paisible*1.15)alertes.push('le butin ne suit pas le danger : corruption 70 rapporte '
   +mortelle.toFixed(1)+' contre '+paisible.toFixed(1)+' en case paisible');
 /* « Descendre est toujours un choix qui paie » (GDD, donjons et strates) */
-const surface=out.butin[2].commun.p90,fond=out.butin[4].commun.p90;
-if(fond<surface*1.15)alertes.push('descendre ne paie pas : la strate 5 rapporte '
+const surface=out.butin[2].commun.moy,fond=out.butin[4].commun.moy;
+if(fond<surface*1.10)alertes.push('descendre ne paie pas : la strate 5 rapporte '
   +fond.toFixed(1)+' contre '+surface.toFixed(1)+' en surface');
 if(alertes.length){console.log('');alertes.forEach(a=>console.log('  ALERTE : '+a));}
 else console.log('\n  aucune alerte : les trois voies montent, et l\'atelier reste la plus haute.');

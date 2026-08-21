@@ -38,9 +38,14 @@ jobs:
       - name: Une partie de huit heures tourne sans exception
         run: npm run sim -- --hours 8
 
-      # Les trois voies d equipement doivent monter, et l atelier rester la plus haute
-      - name: La courbe d equipement ne signale rien
-        run: npm run courbe
+      # Les trois voies d equipement doivent monter, et l atelier rester la plus haute.
+      # Trois mondes, pas un : la richesse des strates varie avec la graine, et
+      # un desequilibre peut ne se voir que sur certains mondes.
+      - name: La courbe d equipement ne signale rien (trois mondes)
+        run: |
+          npm run courbe -- --seed 42
+          npm run courbe -- --seed 99
+          npm run courbe -- --seed 1234
 
       - name: Captures d'écran
         if: always()

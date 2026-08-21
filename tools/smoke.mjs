@@ -218,14 +218,14 @@ async function runScenario(scen){
   else{
     const g=await center('#guardBtn');
     await press(g);await sleep(300);
-    const held=await evalJs('S.guard===true||(typeof E!=="undefined"&&E&&wind>=0)');
+    const held=await evalJs('S.guard===true||(typeof E!=="undefined"&&!!E&&E.w>=0)');
     if(!held)report(scen.name,'combat','GARDE maintenue ne leve pas la garde');
     await release(g);await sleep(80);
     const rel=await evalJs('S.guard===false');
     if(!rel)report(scen.name,'combat','la garde ne retombe pas au relachement');
     if(!scen.touch){
       await cdp('Input.dispatchKeyEvent',{type:'keyDown',code:'Space',key:' '});await sleep(150);
-      const kh=await evalJs('S.guard===true||(typeof E!=="undefined"&&E&&wind>=0)');
+      const kh=await evalJs('S.guard===true||(typeof E!=="undefined"&&!!E&&E.w>=0)');
       if(!kh)report(scen.name,'combat','Espace ne leve pas la garde');
       await cdp('Input.dispatchKeyEvent',{type:'keyUp',code:'Space',key:' '});
     }

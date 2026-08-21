@@ -737,6 +737,65 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('bestiaire — le haut de la courbe existe et reste hors de portee',()=>{
+  /* Quarante-quatre especes, et DEUX au-dela du niveau vingt-six : passe un
+     certain point, on ne rencontrait plus rien de nouveau — les memes loups
+     avec des points de vie multiplies. Un monde qui ne montre plus rien de
+     neuf cesse d'etre un monde et devient un compteur. */
+  const c=nouveau();
+  const paliers=G(c,`(()=>{
+    const p={};
+    CK.forEach(k=>{const L=CREATURE[k].lv;
+      const t=L<6?'1-5':L<14?'6-13':L<26?'14-25':L<36?'26-35':'36+';
+      p[t]=(p[t]||0)+1;});
+    return p;})()`);
+  gte(paliers['26-35']||0,8,'huit espèces au moins entre 26 et 35 — '+(paliers['26-35']||0));
+  gte(paliers['36+']||0,3,'et trois au moins au-delà de 36 — '+(paliers['36+']||0));
+
+  /* --- une bête de haut niveau ne doit PAS pouvoir tomber sur un debutant --- */
+  const fautes=G(c,`(()=>{
+    const ko=[];
+    /* on peuple mille fois une case paisible, au plus bas de la puissance */
+    for(const b of Object.keys(BIOME))for(let i=0;i<200;i++){
+      const k=creaturePool({x:0,y:0,b,corr:0,depth:0,poi:null},false,false,1);
+      if(CREATURE[k]&&CREATURE[k].lv>=20&&ko.indexOf(k)<0)ko.push(k);
+    }
+    return ko;})()`);
+  eq(fautes.length,0,'aucune bête de niveau 20 ou plus ne sort dans une terre paisible',
+    'sorties à tort : '+fautes.join(', '));
+
+  /* --- mais elles sortent la ou le lieu est assez dur --- */
+  const hautes=G(c,'CK.filter(k=>CREATURE[k].lv>=26)');
+  const vues=G(c,`(()=>{
+    const s=new Set();
+    for(const b of Object.keys(BIOME))for(const corr of [40,70,90])for(const nuit of [0,1])
+      for(const p of [6,8,10])for(let i=0;i<120;i++)
+        s.add(creaturePool({x:0,y:0,b,corr,depth:4,poi:null},false,!!nuit,p));
+    for(const th of Object.keys(DJTHEME))for(let i=0;i<400;i++)
+      s.add(creaturePool({x:0,y:0,b:'cendres',corr:80,depth:5,dj:{theme:th}},true,false,9));
+    return [...s];})()`);
+  const jamais=hautes.filter(k=>!vues.includes(k));
+  eq(jamais.length,0,'et chacune des '+hautes.length+' espèces de haut niveau sort quelque part',
+    'jamais vues : '+jamais.join(', '));
+
+  /* --- chacune a une silhouette a elle, et des matieres qui existent --- */
+  const sansForme=G(c,'CK.filter(k=>!ARCH[k])');
+  eq(sansForme.length,0,'chaque espèce a sa silhouette déclarée','sans forme : '+sansForme.join(', '));
+  const matsFausses=G(c,'CK.filter(k=>(CREATURE[k].mats||[]).some(m=>!MAT[m]))');
+  eq(matsFausses.length,0,'et ne laisse que des matières qui existent',
+    'matières inconnues : '+matsFausses.join(', '));
+
+  /* --- la difficulte suit le niveau : une bete de 40 tape plus fort qu'une
+     de 20, sinon le palier n'est qu'une etiquette --- */
+  const moy=G(c,`(()=>{
+    const bas=CK.filter(k=>CREATURE[k].lv>=6&&CREATURE[k].lv<14);
+    const haut=CK.filter(k=>CREATURE[k].lv>=26);
+    const m=l=>l.reduce((a,k)=>a+CREATURE[k].hp*CREATURE[k].dmg,0)/Math.max(1,l.length);
+    return [m(bas),m(haut)];})()`);
+  gt(moy[1],moy[0]*2,'une espèce du haut pèse plus du double d\'une du milieu — '
+    +moy[0].toFixed(2)+' contre '+moy[1].toFixed(2));
+});
+
 test('consignes — le plan apprend les verbes des nouveaux systemes',()=>{
   /* Ce que le plan pouvait faire s'arretait a la boucle d'origine : se
      battre, recolter, manger, dormir. Tout ce qui a ete bati depuis —

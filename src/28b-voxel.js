@@ -193,6 +193,18 @@ const ARCH={
   glouton:['quadrupede',.8],salamandre:['reptile',.7],sangsues:['nuee',.9],
   naufrageur:['humanoide',1],mercenaire:['humanoide',1.1],colosse:['humanoide',1.5],
   cauchemar:['amorphe',1.35],
+  /* le haut du bestiaire : dix-huit especes de plus, aucune forme nouvelle —
+     un squelette existant a la bonne taille suffit a les distinguer, et la
+     couleur vient de leur element dominant */
+  auroch:['ursin',1.35],cerfblanc:['cornu',1.35],ourse:['ursin',1.25],
+  meutemaudite:['quadrupede',1.05],
+  scarabee:['arthropode',1.15],vipereroi:['serpentin',1.25],
+  djinn:['nuee',1.3],forgeronmort:['humanoide',1.25],
+  tigredesneiges:['quadrupede',1.15],troll:['humanoide',1.45],
+  aigleroyal:['volant',1.2],golemgivre:['humanoide',1.35],
+  serpentmer:['serpentin',1.6],noyeur:['encapuchonne',1.15],
+  hydre:['serpentin',1.5],veinevivante:['cristal',1.3],
+  archonte:['encapuchonne',1.4],gardienpuits:['cristal',1.6],
 };
 /* filet de sécurité : une créature sans entrée retombe sur sa catégorie */
 const ARCHCAT={bete:'quadrupede',vermine:'nuee',humain:'humanoide',corrompu:'amorphe'};

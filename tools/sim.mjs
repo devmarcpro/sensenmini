@@ -49,7 +49,12 @@ function makeContext(seed){
   ctx.Math.random=()=>{s+=0x6D2B79F5;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};
   return ctx;
 }
-const files=readdirSync(join(root,'src')).filter(f=>/^(0[1-9]|[1-3][0-9]|4[0-9]|51|10b|12b|13b|23b|23c|29b)-.*\.js$/.test(f)&&f.endsWith('.js')).sort();
+/* Tout src/ sauf le démarrage, comme spec.mjs et courbe.mjs. La liste blanche
+   de préfixes qui tenait ici a silencieusement laissé tomber chaque nouveau
+   module — 11b, 19b, 28b, 28c — jusqu'à ce que step() appelle une fonction
+   absente et que la simulation tourne à vide sans le dire. Une règle qu'il
+   faut penser à mettre à jour finit toujours par ne plus l'être. */
+const files=readdirSync(join(root,'src')).filter(f=>f.endsWith('.js')&&!/^52-/.test(f)).sort();
 const code=files.map(f=>readFileSync(join(root,'src',f),'utf8')).join('\n');
 
 function newGame(seed,classe,race){
@@ -65,6 +70,11 @@ function newGame(seed,classe,race){
     float=function(){};knock=function(){};toast=function(t){__count('toast');__ev.__lastToast=t;};
     paint=function(){};render=function(){};buildScene=function(){};renderCombat=function(){};
     log=function(h){S.log.unshift(String(h).replace(/<[^>]+>/g,''));if(S.log.length>7)S.log.pop();};
+    /* quelles competences bougent vraiment ? Une competence declaree qui ne
+       gagne jamais d'XP est du contenu mort : on ne peut pas le voir en
+       lisant le code, parce que gainXp est souvent appele par variable. */
+    var __skv={};
+    (function(){var g0=gainXp;gainXp=function(k,n){if(k&&n>0)__skv[k]=(__skv[k]||0)+n;return g0.apply(this,arguments);};})();
   `,ctx);
   vm.runInContext(`S.seed=${seed};cr.race='${race}';cr.classe='${classe}';cr.el=1;cr.an=2;
     cr.pts=30+(CLASSE['${classe}'].pts||0);STATS.forEach(([k])=>cr.st[k]=5);
@@ -391,7 +401,7 @@ function run(botName,classe,race,hours,seed){
       items:S.items.length,top:top.join(' · ')};})()`);
   const extra=G(ctx,`JSON.stringify({claims:S.claims.length,plots:S.claims.reduce((a,k)=>a+((S.world[k].plots||[]).filter(Boolean).length),0),
     rec:S.npcs.filter(n=>n.rec).length,assign:S.npcs.filter(n=>n.rec&&n.assign).length,tresor:Math.round(S.tresor),dette:Math.round(S.dette),
-    vivres:S.vivres||0,plats:S.plats||0,recettes:Object.keys(S.recipes||{}).length,livres:S.books.length,stations:[...stationsHere()].join('/'),log:S.log.slice(0,4)})`);
+    vivres:S.vivres||0,plats:S.plats||0,recettes:Object.keys(S.recipes||{}).length,livres:S.books.length,stations:[...stationsHere()].join('/'),log:S.log.slice(0,4),skv:__skv})`);
   return {bot:botName,classe,race,seed,hours,ms:Date.now()-t0,snaps,errors,events:JSON.parse(ev),trace:JSON.parse(trace),extra:JSON.parse(extra),poids};
 }
 
@@ -425,6 +435,9 @@ for(const r of results){
   const p=r.poids;
   console.log('  sauvegarde : '+p.ko+' ko (état brut '+p.brut+' ko) · '+p.cells+' cellules · '+p.npcs+' PNJ · '+p.items+' objets — '+p.top);
   if(r.trace.length){console.log('  trace :');r.trace.slice(0,30).forEach(l=>console.log('    '+l));}
+  const sv=r.extra.skv||{};
+  const top=Object.entries(sv).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k,v])=>k+' '+Math.round(v));
+  console.log('  competences : '+Object.keys(sv).length+' exercees · '+top.join(' · '));
   if(r.errors.length){console.log('  ERREURS :');r.errors.slice(0,8).forEach(e=>console.log('    h'+e.h+' '+e.msg));}
 }
 process.exit(results.some(r=>r.errors.length)?1:0);

@@ -34,7 +34,12 @@ function pAuto(){
        +(r.on?'✓':'—')+'</button>'
        +'<select data-plancond="'+i+'" style="flex:1">'+CONDK.map(k=>'<option value="'+k+'"'
          +(k===r.c?' selected':'')+'>'+(/^i/.test(CONDS[k].n)?'s\'':'si ')+CONDS[k].n+'</option>').join('')+'</select>'
-       +(C&&C.def!==undefined?'<input type="number" data-planval="'+i+'" value="'+r.v+'" min="'+C.min+'" max="'+C.max+'" '
+       /* Une condition qui porte sur un CHOIX — laquelle des huit fioles —
+          ne se regle pas avec un compteur : elle se choisit dans une liste. */
+       +(C&&C.liste?'<select data-planval="'+i+'" style="flex:none;width:120px">'
+         +Object.keys(POTEFF).map(k=>'<option value="'+k+'"'+(k===r.v?' selected':'')+'>'+POTEFF[k].n+'</option>').join('')
+         +'</select>'
+       :C&&C.def!==undefined?'<input type="number" data-planval="'+i+'" value="'+r.v+'" min="'+C.min+'" max="'+C.max+'" '
          +'style="width:66px;flex:none;background:var(--sumi);color:var(--bone);border:1px solid var(--line2);'
          +'font-family:var(--px);font-size:11px;padding:5px">':'')
        +'</div>'

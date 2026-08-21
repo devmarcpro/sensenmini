@@ -737,6 +737,178 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('consignes — le plan apprend les verbes des nouveaux systemes',()=>{
+  /* Ce que le plan pouvait faire s'arretait a la boucle d'origine : se
+     battre, recolter, manger, dormir. Tout ce qui a ete bati depuis —
+     l'alchimie, l'attelage, la part d'ombre — restait hors de sa portee,
+     donc hors de portee d'un jeu qui se joue seul. */
+  const c=nouveau();
+
+  /* --- CHAQUE condition doit pouvoir etre vraie ET fausse : une condition
+     toujours fausse est une ligne de plan qui ne servira jamais, et une
+     condition toujours vraie est un « toujours » deguise. --- */
+  /* Le balayage ne peut juger une condition que si l'etat qu'elle observe
+     EXISTE : « l'attelage est use » ne peut pas devenir vraie sans attelage.
+     On se donne donc d'abord un personnage riche de tout ce que le jeu sait
+     porter, puis on balaie. */
+  R(c,'S.carry=Object.keys(STATION);S.sk.alchimie.lv=30;'
+    +'S.vehicule={k:"charrette",pv:1,crie:0};S.potions=[{e:"soin",v:1,n:"x"}];');
+  const jamais=G(c,`(()=>{
+    const ko=[];
+    CONDK.forEach(k=>{
+      const C=CONDS[k];
+      if(k==='toujours')return;
+      /* on cherche une valeur qui rende la condition vraie, et une qui la
+         rende fausse, en balayant sa propre fourchette */
+      const vals=C.liste?Object.keys(POTEFF)
+        :C.def!==undefined?[C.min,C.def,C.max,0,50,100,1e9]:[0];
+      let vrai=false,faux=false;
+      vals.forEach(v=>{try{const r=!!C.test(v);if(r)vrai=true;else faux=true;}catch(e){}});
+      if(!vrai||!faux)ko.push(k+(vrai?' (toujours vraie)':' (jamais vraie)'));
+    });
+    return ko;})()`);
+  /* Le balayage ci-dessus ne vaut que pour les conditions a SEUIL : une
+     condition d'etat — « il fait nuit », « on est infecte » — ne depend pas
+     de sa valeur, et la declarer morte parce que sa valeur ne change rien
+     serait une accusation fausse. On les separe, et l'on eprouve les
+     secondes en posant l'etat qu'elles observent. */
+  const seuils=G(c,'CONDK.filter(k=>CONDS[k].def!==undefined&&!CONDS[k].liste)');
+  const seuilsMorts=jamais.filter(x=>seuils.includes(x.split(' ')[0]));
+  ok(seuilsMorts.length===0,'chacune des '+seuils.length+' conditions à seuil peut être vraie et fausse',
+    'douteuses : '+seuilsMorts.join(', '));
+  /* certaines dependent de l'etat du monde, pas de leur valeur : on les
+     eprouve en posant l'etat qu'elles observent */
+  R(c,`globalThis.__bascule=(k,poser,defaire)=>{
+    defaire();const a=CONDS[k].test(CONDS[k].def);
+    poser();const b=CONDS[k].test(CONDS[k].def);
+    defaire();return a!==b;};`);
+  eq(G(c,`__bascule('malade',()=>addStatus(S,'infection',5,1),()=>{S.st=[];})`),true,
+    'la condition « on est infecté » bascule avec la fièvre');
+  eq(G(c,`__bascule('empoisonne',()=>addStatus(S,'poison',5,1),()=>{S.st=[];})`),true,
+    'celle du poison bascule avec la plaie');
+  eq(G(c,`__bascule('vehiculeuse',()=>{S.vehicule={k:'charrette',pv:1,crie:0};},()=>{S.vehicule=null;})`),true,
+    'celle de l\'attelage usé bascule avec l\'usure');
+  eq(G(c,`__bascule('potiondispo',()=>{S.potions=[{e:'soin',v:1,n:'x'}];},()=>{S.potions=[];})`),true,
+    'celle de la fiole bascule avec la réserve');
+  eq(G(c,`__bascule('froid',()=>{globalThis.__ft=feltTemp;feltTemp=()=>-30;},()=>{if(globalThis.__ft)feltTemp=__ft;})`),true,
+    'celle du climat bascule avec le froid');
+  /* Et l'on exige qu'AUCUNE condition d'etat n'echappe a cette epreuve :
+     sans cela, la prochaine qu'on ajoutera passera sans etre eprouvee — ce
+     qui est exactement comment une ligne de plan morte finit par exister. */
+  const etats=G(c,'CONDK.filter(k=>k!=="toujours"&&(CONDS[k].def===undefined||CONDS[k].liste))');
+  const eprouvees=['nuit','jour','gibierrare','caseepuisee','ennemidur','enville','aucampement',
+    'malade','empoisonne','vehiculeuse','potiondispo','froid'];
+  const bascules=G(c,`(()=>{
+    const poses={
+      nuit:[()=>{S.day=Math.floor(S.day)+23/24;},()=>{S.day=Math.floor(S.day)+12/24;}],
+      jour:[()=>{S.day=Math.floor(S.day)+12/24;},()=>{S.day=Math.floor(S.day)+23/24;}],
+      gibierrare:[()=>{here().vide=200;},()=>{here().vide=0;}],
+      caseepuisee:[()=>{here().stock={};cellMats(here()).forEach(m=>{here().stock[m]=0;});},
+                   ()=>{here().stock=null;}],
+      ennemidur:[()=>{S.occ='combat';spawn();if(EE[0]){EE[0].rare=1;E=EE[0];}},()=>{E=null;EE=[];S.occ='repos';}],
+      enville:[()=>{here().town='Essai';},()=>{here().town=null;}],
+      aucampement:[()=>{here().claim=1;},()=>{here().claim=0;}],
+      malade:[()=>addStatus(S,'infection',5,1),()=>{S.st=[];}],
+      empoisonne:[()=>addStatus(S,'poison',5,1),()=>{S.st=[];}],
+      vehiculeuse:[()=>{S.vehicule={k:'charrette',pv:1,crie:0};},()=>{S.vehicule=null;}],
+      potiondispo:[()=>{S.potions=[{e:'soin',v:1,n:'x'}];},()=>{S.potions=[];}],
+      froid:[()=>{globalThis.__ft3=feltTemp;feltTemp=()=>-30;},()=>{if(globalThis.__ft3)feltTemp=__ft3;}],
+    };
+    const ko=[];
+    Object.keys(poses).forEach(k=>{
+      if(!CONDS[k]){ko.push(k+' (disparue)');return;}
+      const [p,d]=poses[k];
+      try{if(!__bascule(k,p,d))ko.push(k);}catch(e){ko.push(k+' ('+e.message+')');}
+    });
+    return ko;})()`);
+  ok(bascules.length===0,'chacune des '+eprouvees.length+' conditions d\'état bascule avec ce qu\'elle observe',
+    'inertes : '+bascules.join(', '));
+  const oubliees=etats.filter(k=>!eprouvees.includes(k));
+  ok(oubliees.length===0,'et aucune condition d\'état n\'échappe à cette épreuve',
+    'non éprouvées : '+oubliees.join(', '));
+
+  /* --- une fiole ne se boit que si elle répare quelque chose --- */
+  R(c,'S.st=[];S.hp=maxHp();S.mana=maxMana();S.end=100;S.potions=[{e:"remede",v:1,n:"x"}];');
+  eq(G(c,'ACTES.boire.peut()'),false,'on ne boit pas un remède quand on n\'a pas la fièvre');
+  R(c,'addStatus(S,"infection",5,1);');
+  eq(G(c,'ACTES.boire.peut()'),true,'on le boit quand on l\'a');
+  R(c,'ACTES.soigner.fais();');
+  eq(G(c,'hasStatus(S,"infection")'),false,'et la fièvre tombe');
+  eq(G(c,'S.potions.length'),0,'la fiole a bien été consommée');
+  /* l'antipoison ne soigne pas la fievre, et le remede pas le poison */
+  R(c,'S.st=[];addStatus(S,"poison",5,1);S.potions=[{e:"remede",v:1,n:"x"}];');
+  eq(G(c,'consigneRemede()'),-1,'un remède ne répond pas à un poison');
+  R(c,'S.potions=[{e:"antipoison",v:1,n:"x"}];');
+  eq(G(c,'consigneRemede()'),0,'l\'antipoison, si');
+
+  /* --- chaque ACTION doit pouvoir devenir possible : une action dont
+     `peut` est toujours faux est une ligne morte dans chaque plan --- */
+  R(c,`globalThis.__prep=()=>{
+    S.carry=Object.keys(STATION);S.sk.alchimie.lv=30;S.sk.menuiserie.lv=40;
+    S.potions=[{e:'soin',v:1,n:'x'}];S.hp=1;
+    S.food={achillee:2,herbes:2};S.mat={fer:80,or:3};S.vivres=5;
+    S.items=[mkParure('anneau',null,1.2)];S.items[0].vole=1;
+    S.vehicule={k:'charrette',pv:1,crie:0};
+    S.st=[];addStatus(S,'infection',4,1);addStatus(S,'poison',4,1);
+    S.potions.push({e:'remede',v:1,n:'y'},{e:'antipoison',v:1,n:'z'});
+    S.or=100000;S.faim=30;S.end=20;S.mana=0;
+    const cc=here();cc.claim=1;
+    cc.plots=[{t:'batiment',slots:[{t:'meuble',k:'lit'},{t:'meuble',k:'coffre'},{t:'meuble',k:'foyer'}]}];
+    /* une base AILLEURS : « rentrer chez soi » et « se mettre a l abri »
+       n ont de sens que si l on n y est pas deja */
+    const ba=cell(cc.x+5,cc.y+5);ba.claim=1;ba.seen=true;
+    ba.plots=[{t:'batiment',slots:[{t:'meuble',k:'lit'},{t:'meuble',k:'foyer'}]}];
+    S.claims=[key(ba.x,ba.y),key(cc.x,cc.y)];
+    /* une ville connue ailleurs, pour « aller au village » */
+    const kk=kingdomsNear()[0];
+    if(kk){const tv=kTowns(kk).find(t=>t.x!==S.pos[0]||t.y!==S.pos[1]);
+      if(tv){const wc=cell(tv.x,tv.y);wc.seen=true;wc.town=tv.nom;}}
+    /* une prime a solder */
+    const ki=kingdomHere();if(ki!==null){S.prime={};S.prime[ki]=50;}
+    /* une voisine qui vaut mieux qu ici : on vide la case courante */
+    here().vide=4;
+  };__prep();`);
+  const mortes=G(c,`(()=>{
+    const ko=[];
+    ACTK.forEach(k=>{
+      let possible=false;
+      /* on eprouve l'action dans plusieurs situations : chez soi, en ville,
+         en pleine nature, en combat, de jour comme de nuit */
+      const scenes=[
+        ()=>{S.occ='repos';},
+        ()=>{S.occ='combat';spawn();},
+        ()=>{S.day=Math.floor(S.day)+23/24;S.occ='repos';},
+        ()=>{S.day=Math.floor(S.day)+12/24;S.occ='explore';},
+        /* dans une ville d un royaume, avec une prime a solder */
+        ()=>{S.day=Math.floor(S.day)+12/24;S.rep={g:60,race:{},king:{}};
+             const t=(kingdomsNear()[0]?kTowns(kingdomsNear()[0])[0]:null);
+             if(t){S.pos=[t.x,t.y];here().seen=true;here().town=t.nom;}
+             const ki=kingdomHere();if(ki!==null){S.prime={};S.prime[ki]=50;}
+             S.occ='repos';},
+        /* loin d une ville CONNUE, pour « aller au village » */
+        ()=>{const t=(kingdomsNear()[0]?kTowns(kingdomsNear()[0])[0]:null);
+             if(t){const wc=cell(t.x,t.y);wc.seen=true;wc.town=t.nom;
+                   S.pos=[t.x+4,t.y+4];here().seen=true;}
+             S.occ='repos';},
+        /* le climat mord : « se mettre a l abri » n a de sens que la */
+        ()=>{globalThis.__ft2=feltTemp;feltTemp=()=>-30;S.occ='repos';},
+        ()=>{here().poi='camp';S.occ='repos';},
+      ];
+      const p0=S.pos.slice(),j0=S.day;
+      scenes.forEach(s=>{
+        if(possible)return;
+        S.pos=p0.slice();S.day=j0;__prep();
+        try{s();if(ACTES[k].peut())possible=true;}catch(e){}
+      });
+      S.pos=p0;S.day=j0;
+      if(globalThis.__ft2){feltTemp=__ft2;globalThis.__ft2=null;}
+      if(!possible)ko.push(k);
+    });
+    return ko;})()`);
+  ok(mortes.length===0,'chacune des '+G(c,'ACTK.length')+' actions du plan peut devenir possible',
+    'jamais possibles : '+mortes.join(', '));
+});
+
 test('hors-la-loi — voler, etre recherche, blanchir',()=>{
   /* On pouvait enfreindre la loi, jamais la CHOISIR : on ne la croisait que
      par accident, en passant une frontiere avec la mauvaise marchandise.

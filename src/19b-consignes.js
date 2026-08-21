@@ -59,6 +59,26 @@ const CONDS={
     test:()=>!!here().town},
   aucampement:{n:'on est chez soi',d:'sur une cellule revendiquée',
     test:()=>!!here().claim},
+  /* Un plan ne vaut que par ce qu'il peut OBSERVER. Ces six-la sont nees
+     des systemes des derniers jours : sans elles, la fievre, la prime et
+     l'attelage restaient des choses qu'on devait surveiller a la main —
+     c'est-a-dire des choses qui, dans un jeu qui tourne seul, ne seraient
+     jamais surveillees. */
+  malade:{n:'on est infecté',d:'la fièvre ronge l\'endurance chaque jour jusqu\'au soin',
+    test:()=>hasStatus(S,'infection')},
+  empoisonne:{n:'on est empoisonné ou en sang',d:'une plaie qui court hors combat',
+    test:()=>hasStatus(S,'poison')||hasStatus(S,'saignement')},
+  recherche:{n:'la prime ici dépasse',u:' or',def:150,min:0,max:20000,
+    d:'au-delà de cent vingt, des patrouilles te cherchent sur les routes',
+    test:v=>primeIci()>=v},
+  vehiculeuse:{n:'l\'attelage est usé sous',u:'%',def:35,min:5,max:100,
+    d:'un essieu fendu ne va pas vite — et une épave ne va nulle part',
+    test:v=>{const veh=vehicule();return !!veh&&veh.pv/vehDef().pv*100<v;}},
+  potiondispo:{n:'on a une fiole de',u:'',liste:1,def:'soin',
+    d:'la fiole choisie est en réserve',
+    test:v=>(S.potions||[]).some(p=>p.e===v)},
+  froid:{n:'on souffre du froid ou du chaud',d:'le climat mord — un abri, un foyer, une fiole',
+    test:()=>!!tempStress()},
 };
 const CONDK=Object.keys(CONDS);
 
@@ -117,10 +137,64 @@ const ACTES={
   ailleurs:{n:'changer de case',g:'発',d:'une voisine où il reste du gibier ou de la matière',
     peut:()=>!!consigneVoisine(),
     fais:()=>{const n=consigneVoisine();if(n){n.seen=true;travel(n.x,n.y);}}},
+  /* Ce que le plan pouvait faire s'arretait a la boucle de 2024 : se battre,
+     recolter, manger, dormir. Tout ce qui a ete bati depuis — l'alchimie,
+     l'attelage, la part d'ombre — restait hors de sa portee, donc hors de
+     portee d'un jeu qui se joue seul. */
+  boire:{n:'boire une fiole',g:'薬',d:'la plus utile parmi celles qu\'on porte',
+    peut:()=>(S.potions||[]).some(p=>p.e&&potionUtile(p)),
+    fais:()=>{const i=(S.potions||[]).findIndex(p=>p.e&&potionUtile(p));
+      if(i>=0)drink(i);}},
+  soigner:{n:'se soigner',g:'癒',d:'remède contre la fièvre, antipoison contre le sang',
+    peut:()=>!!consigneRemede(),
+    fais:()=>{const i=consigneRemede();if(i>=0)drink(i);}},
+  distiller:{n:'distiller',g:'蒸',d:'une plante d\'alchimie, s\'il y a un alambic',
+    peut:()=>hasStation('alambic')&&Object.keys(S.food||{}).some(k=>ALCHPLANTE[k]&&S.food[k]>0),
+    fais:()=>{const k=Object.keys(S.food).find(x=>ALCHPLANTE[x]&&S.food[x]>0);
+      if(k)distill([k]);}},
+  reparer:{n:'réparer l\'attelage',g:'車',d:'il faut la station et le quart des matières',
+    peut:()=>{const veh=vehicule();return !!veh&&veh.pv<vehDef().pv&&hasStation(vehDef().st);},
+    fais:()=>{vehReparer();}},
+  solder:{n:'solder sa prime',g:'赦',d:'le double de la prime, dans une ville du royaume',
+    peut:()=>primeIci()>0&&!!townAt(S.pos[0],S.pos[1])&&S.or>=primeIci()*2,
+    fais:()=>{primePayer();}},
+  receler:{n:'écouler la marchandise',g:'闇',d:'ce qui est marqué, à moitié prix',
+    peut:()=>receleurIci()&&objetsVoles().length>0,
+    fais:()=>{recelerTout();}},
+  vendre:{n:'vendre les matières',g:'市',d:'ce qui abonde, dans une ville ouverte',
+    peut:()=>{const t=townAt(S.pos[0],S.pos[1]);
+      return !!t&&shopsOpen(t)&&Object.keys(S.mat).some(m=>S.mat[m]>=40&&MAT[m].v<=40);},
+    fais:()=>{const m=Object.keys(S.mat).filter(x=>S.mat[x]>=40&&MAT[x].v<=40)
+        .sort((a,b)=>S.mat[b]-S.mat[a])[0];
+      if(m)sellMat(m);}},
+  sabri:{n:'se mettre à l\'abri',g:'庇',d:'rentrer là où un foyer tient le froid',
+    peut:()=>{const h=consigneBase();return !!tempStress()&&!!h&&!(h.x===S.pos[0]&&h.y===S.pos[1]);},
+    fais:()=>{const h=consigneBase();if(h)travel(h.x,h.y);}},
 };
 const ACTK=Object.keys(ACTES);
 
 /* ---------- ce que les actions ont besoin de savoir ---------- */
+/* Une fiole n'est utile que si ce qu'elle repare est casse : boire un remede
+   quand on n'a pas la fievre, c'est jeter la fiole. Le plan ne gaspille pas. */
+function potionUtile(p){
+  if(!p||!p.e)return false;
+  if(p.e==='soin')return S.hp<maxHp()*.6;
+  if(p.e==='remede')return hasStatus(S,'infection');
+  if(p.e==='antipoison')return hasStatus(S,'poison');
+  if(p.e==='mana')return S.mana<maxMana()*.4;
+  if(p.e==='sommeil')return S.end<40||S.mana<maxMana()*.4;
+  if(p.e==='fraicheur'){const t=tempStress();return !!t&&!t.froid;}
+  if(p.e==='resistance'){const t=tempStress();return !!t&&!!t.froid;}
+  if(p.e==='poisonlame')return !S.lame&&(S.occ==='combat'||S.occ==='donjon');
+  return false;
+}
+/* la fiole qui repare precisement ce qui est casse, sinon rien */
+function consigneRemede(){
+  const l=S.potions||[];
+  if(hasStatus(S,'infection')){const i=l.findIndex(p=>p.e==='remede');if(i>=0)return i;}
+  if(hasStatus(S,'poison')){const i=l.findIndex(p=>p.e==='antipoison');if(i>=0)return i;}
+  return -1;
+}
 const consigneBase=()=>(S.claims&&S.claims.length)?S.world[S.claims[0]]:null;
 function consigneVillage(){
   let best=null,bd=99;
@@ -160,6 +234,11 @@ function consigneVoisine(){
    s'appliquait. « Explorer » ferme donc le plan. */
 function planDefaut(){
   return [
+    /* Une fievre ou un poison passent AVANT la faim : ils courent hors
+       combat, ils ne s'arretent pas d'eux-memes, et une fiole ne sert a
+       rien dans un sac. C'est la premiere chose qu'un plan doit regarder. */
+    {c:'malade',v:0,a:'soigner',on:true},
+    {c:'empoisonne',v:0,a:'soigner',on:true},
     {c:'faimbasse',v:45,a:'manger',on:true},
     {c:'pvbas',v:40,a:'reposer',on:true},
     {c:'nuit',v:0,a:'dormir',on:true},
@@ -238,6 +317,9 @@ function planRegler(i,champ,val){
   if(champ==='c'){r.c=val;const C=CONDS[val];r.v=C&&C.def!==undefined?C.def:0;}
   else if(champ==='a')r.a=val;
   else if(champ==='v'){const C=CONDS[r.c];
+    /* une condition qui porte sur un choix garde une CHAINE : l arrondir a
+       zero effacerait le choix a la premiere edition */
+    if(C&&C.liste){r.v=String(val);return;}
     let n=Math.round(+val||0);
     if(C&&C.min!==undefined)n=Math.max(C.min,Math.min(C.max,n));
     r.v=n;}

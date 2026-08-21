@@ -1136,6 +1136,50 @@ test('anatomie — le coup vaut ce qu il touche, et la visee remplace le de',()=
   ok(torse>pieds&&torse<tete,'et le torse est entre les deux');
 });
 
+test('proies — ce qui fuit ne riposte pas, et se rattrape',()=>{
+  /* E.3.6 : « fuit — herbivores et proies qui s'ecartent et NE RIPOSTENT
+     JAMAIS, meme provoques ». Le drapeau existait et ne servait qu'a un repli
+     sous 40 % de PV : entre le premier coup et celui-la, un cerf se battait
+     comme un loup. Une proie n'etait qu'un ennemi faible. */
+  const c=nouveau();
+  R(c,`S.occ='combat';E=null;EE=[];
+    globalThis.__subi=(ck)=>{E=mkEnemy(ck,6,false,false);EE=[E];foc=0;
+      E.hp=1e9;E.max=1e9;S.hp=maxHp()*999;S.guard=false;
+      const h=S.hp;for(let i=0;i<600;i++){combatTick(.1);if(!E)break;}
+      return h-S.hp;};`);
+  eq(G(c,'CREATURE.cerf.fuit'),1,'le cerf porte le profil');
+  eq(G(c,'!!CREATURE.loup.fuit'),false,'le loup, non');
+  const proie=G(c,'__subi("cerf")'),pred=G(c,'__subi("loup")');
+  eq(proie,0,'une proie ne fait aucun dégât, même longuement provoquée');
+  gt(pred,0,'un prédateur, oui — ' +Math.round(pred));
+
+  /* --- elle occupe son tour a chercher une sortie --- */
+  R(c,`E=mkEnemy('cerf',6,false,false);EE=[E];foc=0;E.hp=1e9;E.max=1e9;`);
+  ok(G(c,'fuiteChance(E)')>0,'sans entrave, elle a une sortie');
+  R(c,"addStatus(E,'enracine',9,1);");
+  eq(G(c,'fuiteChance(E)'),0,'enracinée, elle n en a plus — c est l emploi de la chaîne résolue');
+  R(c,"E.st=[];addStatus(E,'ralenti',9,1);globalThis.__r=fuiteChance(E);E.st=[];");
+  ok(G(c,'__r')<G(c,'fuiteChance(E)'),'ralentie, elle a moins de chances de partir');
+  /* la perception rattrape la bête qu on a laissée filer */
+  R(c,"globalThis.__n=fuiteChance(E);S.sk.perception_sk={xp:0,lv:40};");
+  ok(G(c,'fuiteChance(E)')<G(c,'__n'),'un chasseur aguerri la laisse moins souvent partir');
+
+  /* --- et elle finit par disparaître si on ne la tient pas --- */
+  R(c,`S.sk.perception_sk={xp:0,lv:0};
+    globalThis.__parties=(n)=>{let p=0;
+      for(let i=0;i<n;i++){E=mkEnemy('cerf',6,false,false);EE=[E];foc=0;E.hp=1e9;E.max=1e9;
+        for(let t=0;t<300;t++){combatTick(.1);if(!E){p++;break;}}}
+      return p/n;};`);
+  const partie=G(c,'__parties(40)');
+  ok(partie>.5,'laissée seule, elle finit par s écarter — '+Math.round(partie*100)+' %');
+
+  /* --- un gibier rare garde ses crocs --- */
+  R(c,`globalThis.__subiRare=()=>{E=mkEnemy('cerf',6,true,false);EE=[E];foc=0;
+      E.hp=1e9;E.max=1e9;S.hp=maxHp()*999;const h=S.hp;
+      for(let i=0;i<600;i++){combatTick(.1);if(!E)break;}return h-S.hp;};`);
+  gt(G(c,'__subiRare()'),0,'une bête rare, elle, se défend — le drapeau ne la désarme pas');
+});
+
 test('symetrie — les creatures se battent avec nos regles',()=>{
   /* « Supprimer le plus possible l'asymetrie : les PNJ doivent etre construits
      comme le joueur » (E.3.5). Le joueur depensait de l'endurance a chaque

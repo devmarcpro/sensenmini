@@ -96,6 +96,11 @@ const MUT=[
   ['symetrie : le souffle des creatures','symetrie',[['src/28-loop.js',"    if(e.w<0&&!crePeutFrapper(e))continue;",'']]],
   ['symetrie : la depense','symetrie',[['src/28-loop.js','{creDepense(e);resolveHit(S.guard?1:0,e);}','resolveHit(S.guard?1:0,e);']]],
   ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,zk):tgt.arm)",'tgt.arm']]],
+  /* les proies */
+  ['proie : elle ne riposte pas','proies',[['src/28-loop.js',"    if(typeof creFuirTick==='function'&&creFuirTick(e,dt)){e.w=-1;e.tt=0;continue;}",'']]],
+  ['proie : enracinee, plus de sortie','proies',[['src/24-combat.js',"  if(hasStatus(e,'enracine'))return 0;",'']]],
+  ['proie : la perception la retient','proies',[['src/24-combat.js',"  p*=Math.max(.35,1-(lv('perception_sk')*.012+lv('discretion')*.008));",'']]],
+  ['proie : le gibier rare se defend','proies',[['src/24-combat.js','  if(!e||!e.fuit||e.boss||e.rare)return false;\n  e.fui=(e.fui||0)+dt;','  if(!e||!e.fuit)return false;\n  e.fui=(e.fui||0)+dt;']]],
   /* l anatomie */
   ['anatomie : la zone multiplie','anatomie',[['src/24-combat.js','    d*=Z.mult;','']]],
   ['anatomie : la visee penche le tirage','anatomie',[['src/24-combat.js',"  const w=k=>ZONE[k].w*(k==='tete'?1+v*6:1);","  const w=k=>ZONE[k].w;"]]],

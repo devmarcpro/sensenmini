@@ -83,7 +83,9 @@ function bestiaireSection(){
          +(b2.a?' · '+b2.a+' apprivoisée'+(b2.a>1?'s':''):(C.tame?' · s\'apprivoise':' · ne s\'apprivoise pas'))+'</div>'
          +'<div class="meta">'+(C.bio.length?C.bio.map(x=>BIOME[x]?BIOME[x].n:x).join(', '):'donjons et camps')
          +(C.corr?' · corruption ≥ '+C.corr:'')+(C.minp?' · lieux puissants seulement':'')+'</div>'
-         +'<div class="meta">gestes : '+(C.pat||['simple']).map(p=>PATTERN[p]?PATTERN[p].g+' '+PATTERN[p].n:p).join(' · ')+'</div>'
+         +(C.fuit?'<div class="meta">gibier — elle ne riposte jamais : elle cherche une sortie. '
+             +'Enracinée, elle n\'en a plus ; la perception la retient.</div>'
+           :'<div class="meta">gestes : '+(C.pat||['simple']).map(p=>PATTERN[p]?PATTERN[p].g+' '+PATTERN[p].n:p).join(' · ')+'</div>')
          +(C.mats&&C.mats.length?'<div class="meta">laisse : '+C.mats.map(matName).join(', ')+'</div>':'')
          +'</div></div>';
       }

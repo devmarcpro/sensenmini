@@ -141,6 +141,10 @@ function combatTick(dt){
        c'est le frein qui manquait — jusqu'ici le joueur seul s'essoufflait,
        et un long combat etait une course qu'il perdait toujours. */
     creEndTick(e,dt);
+    /* E.3.6 : une proie s'ecarte au lieu de riposter. Elle occupe son tour
+       entierement — pas de telegraphe, pas de coup, seulement une sortie
+       qu'elle cherche. */
+    if(typeof creFuirTick==='function'&&creFuirTick(e,dt)){e.w=-1;e.tt=0;continue;}
     if(e.w<0&&!crePeutFrapper(e))continue;
     /* à distance, on tient la créature à l'écart : elle met plus de temps à revenir au
        contact — sauf si son geste porte lui aussi à distance */

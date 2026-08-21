@@ -241,6 +241,46 @@ function spawn(){
   if(inDj&&room)room.mobs=Math.max(0,room.mobs-n);
   if(n>1)log('<span class="bd">'+n+' '+CREATURE[ck].n.toLowerCase()+'s t\'encerclent.</span>');
 }
+/* ==================================================================
+   LE PROFIL « FUIT » (E.3.6) : « herbivores et proies qui s'ecartent et NE
+   RIPOSTENT JAMAIS, meme provoques ».
+
+   Chez nous le drapeau existait et ne servait qu'a un repli sous 40 % de PV :
+   entre le premier coup et celui-la, un cerf se battait exactement comme un
+   loup, avec un geste lourd et tout. Une proie n'etait qu'un ennemi faible,
+   et la chasse n'etait qu'un combat facile.
+
+   Une proie ne frappe plus. A la place, chaque fenetre ou elle aurait frappe
+   devient une TENTATIVE DE FUITE. Ce que cela change, c'est la nature de la
+   perte : chasser mal ne coute pas des points de vie, cela coute la bete.
+   D'ou trois choses qui n'avaient pas d'emploi et en ont un :
+     — l'arc, qui tue avant qu'elle ne parte ;
+     — la chaine resolue, dont l'enracinement FERME la sortie ;
+     — la perception, qui rattrape la bete qu'on a laissee filer.
+   Un gibier rare ou un boss garde ses crocs : le drapeau ne le desarme pas. */
+function fuiteChance(e){
+  /* enracine : il n'y a plus de sortie. C'est l'emploi que le resolveur
+     n'avait pas hors des combats ranges. */
+  if(hasStatus(e,'enracine'))return 0;
+  let p=.16+(e.hp<e.max*.4?.20:0);
+  if(hasStatus(e,'ralenti'))p*=.5;
+  if(hasStatus(e,'etourdi'))p*=.3;
+  /* ce qu'un chasseur sait faire : rester dessus */
+  p*=Math.max(.35,1-(lv('perception_sk')*.012+lv('discretion')*.008));
+  return Math.max(.02,Math.min(.6,p));
+}
+/* rend vrai si la bete a occupe son tour : dans tous les cas, elle ne frappe pas */
+function creFuirTick(e,dt){
+  if(!e||!e.fuit||e.boss||e.rare)return false;
+  e.fui=(e.fui||0)+dt;
+  if(e.fui<(e.delay||2.5))return true;
+  e.fui=0;
+  if(Math.random()<fuiteChance(e)){
+    log(e.nom+' s\'écarte et disparaît.');gainXp('perception_sk',Math.max(2,e.lvC||2));  /* on apprend peu d'une bete qu'on laisse filer */
+    removeEnemy(e);
+  }
+  return true;
+}
 /* une bête acculée peut fuir : pas de butin, un peu d'XP de perception */
 function fuite(e){
   e=e||E;

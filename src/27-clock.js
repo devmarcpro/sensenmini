@@ -48,6 +48,8 @@ function weekly(){
   if(calm)r.push(calm+' cases s\'apaisent');
   S.kingdoms=kingdomsNear();
   S.kingdoms.forEach(k=>{k.or=Math.min(15000,k.or+2000);
+    /* le tribut se paie chaque semaine ; ce qu'il achete — la paix — se lit
+       dans weeklyKingdom, ou il compte comme un pacte de non-agression */
     if(k.diplo==='tribut')S.or=Math.max(0,S.or-40);});
   S.comps.forEach(c=>{
     if(c.dead)return;                    /* un mort ne guérit pas tout seul */

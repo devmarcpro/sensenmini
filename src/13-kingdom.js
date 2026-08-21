@@ -146,10 +146,20 @@ function weeklyKingdom(r){
   } else if(S.detteW){S.detteW=0;r.push('<span class="gd">dette réglée — le territoire respire</span>');}
   /* raid (E.7) : jet hebdomadaire, force ∝ valeur du territoire, jamais scalée sur le joueur */
   const corrMoy=S.claims.reduce((a,k2)=>a+(S.world[k2]?S.world[k2].corr:0),0)/S.claims.length;
-  if(Math.random()<Math.min(.45,corrMoy/300+S.claims.length*.018)){
+  /* Diplomatie et raids (14.4 / E.7). Un pacte de NON-AGRESSION avec le
+     royaume qui tient la région écarte la menace ; une ALLIANCE DÉFENSIVE
+     n'écarte rien mais envoie des renforts. Sans cela, signer un traité ne
+     changeait rien à la semaine qui suivait. */
+  const pactes=S.kingdoms.filter(x=>x.diplo==='nonagression'||x.diplo==='tribut').length;
+  const allies=S.kingdoms.filter(x=>x.diplo==='alliance').length;
+  const menace=Math.min(.45,corrMoy/300+S.claims.length*.018)*(pactes?Math.pow(.55,pactes):1);
+  if(Math.random()<menace){
     const valeur=S.claims.length*22+nStruct()*16;
     const force=valeur*.28*(0.8+Math.random()*0.4)*(S.gov?1/GOV[S.gov].def:1);
-    const def=defense();
+    /* les renforts alliés arrivent avec la milice, pas avant */
+    const renfort=allies?Math.round(valeur*.22*allies):0;
+    const def=defense()+renfort;
+    if(renfort)r.push('renforts alliés : +'+renfort+' de défense');
     if(def>=force)r.push('<span class="gd">raid repoussé — défense '+Math.round(def)+' contre '+Math.round(force)+'</span>');
     else{
       const perte=Math.round((force-def)*1.5);
@@ -164,6 +174,13 @@ function weeklyKingdom(r){
     r.push('<span class="hi">ton territoire est reconnu comme royaume — choisis une gouvernance</span>');
 }
 /* --- diplomatie (14.4) --- */
+/* Ce que chaque accord change, en clair — le panneau s'en sert pour le dire. */
+const DIPLOEFFET={
+  commerce:'tarifs douaniers de moitié sur ses terres',
+  nonagression:'les raids se raréfient fortement',
+  alliance:'des renforts viennent défendre ton territoire',
+  tribut:'40 or par semaine, et la paix avec lui',
+};
 function diplo(i,type){
   const k=S.kingdoms[i];
   if(!S.gov)return toast('Ton territoire n\'est pas encore un royaume');
@@ -172,7 +189,7 @@ function diplo(i,type){
   const jet=d20()+lv('negociation')/2+st('cha')/4;
   gainXp('negociation',60);
   if(jet>=dd){k.diplo=type;k.rep=Math.min(100,k.rep+10);
-    cutIn('盟',DIPLO[type],'signé avec '+k.nom);}
+    cutIn('盟',DIPLO[type],'signé avec '+k.nom+' — '+DIPLOEFFET[type]);}
   else{k.rep-=5;log('<span class="bd">'+k.nom+' refuse : '+DIPLO[type]+' (jet '+jet.toFixed(1)+' contre DD '+dd+')</span>');}
 }
 /* trésor : dépôts et retraits libres (7.6 / 14.6) — constituer une réserve est encouragé */

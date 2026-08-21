@@ -193,7 +193,11 @@ function douane(k,mk){
   k.tarifs=k.tarifs||{};
   if(k.tarifs[cat]===undefined)
     k.tarifs[cat]=hcell(k.cap[0]+cat.length,k.cap[1],62)<.25?.15+hcell(k.cap[1],k.cap[0],63)*.25:0;
-  return 1-k.tarifs[cat];
+  /* Accord commercial (14.4) : tarifs de moitié, réciproques. Trois des quatre
+     accords ne faisaient rien — on négociait, on payait son jet, et le monde
+     restait identique. */
+  const t=k.diplo==='commerce'?k.tarifs[cat]*.5:k.tarifs[cat];
+  return 1-t;
 }
 /* ===== POPULATION (E.25) ===== */
 function weeklyTowns(r){

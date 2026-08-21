@@ -683,6 +683,39 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('diplomatie — les quatre accords changent quelque chose',()=>{
+  const c=nouveau();
+  /* Trois des quatre ne faisaient rien : on négociait, on payait son jet, et
+     le monde restait identique. Un traité décoratif est pire qu'aucun traité. */
+  eq(G(c,'Object.keys(DIPLO).length'),4,'quatre accords existent');
+  eq(G(c,'Object.keys(DIPLOEFFET).length'),4,'et chacun sait dire ce qu\'il change');
+  eq(G(c,'Object.keys(DIPLO).every(k=>!!DIPLOEFFET[k])'),true,'sans en oublier un');
+  /* accord commercial : la douane de moitié */
+  R(c,'S.kingdoms=kingdomsNear();globalThis.__k=S.kingdoms[0];'
+    +'__k.tarifs={metal:.30};__k.diplo=null;globalThis.__d0=douane(__k,"fer");'
+    +'__k.diplo="commerce";globalThis.__d1=douane(__k,"fer");');
+  gt(G(c,'__d1'),G(c,'__d0'),'un accord commercial allège la douane — '
+    +G(c,'__d1').toFixed(2)+' contre '+G(c,'__d0').toFixed(2));
+  /* non-agression : les raids se raréfient */
+  R(c,'S.or=99999;claimCell();S.tresor=99999;'
+    +'globalThis.__raids=(diplo)=>{S.kingdoms.forEach(k=>k.diplo=diplo);'
+    +'let n=0;for(let i=0;i<400;i++){const r=[];weeklyKingdom(r);'
+    +'if(r.some(x=>/raid/.test(x)))n++;S.tresor=99999;S.dette=0;}return n;};');
+  const sans=G(c,'__raids(null)'),avec=G(c,'__raids("nonagression")');
+  gt(sans,0,'sans pacte, les raids arrivent — '+sans+' sur 400 semaines');
+  ok(avec<sans*.75,'avec un pacte, ils se raréfient — '+avec+' contre '+sans);
+  /* le tribut achète la même paix : c'est ce qu'on paie */
+  const tribut=G(c,'__raids("tribut")');
+  ok(tribut<sans*.75,'le tribut aussi — '+tribut+' contre '+sans);
+  /* alliance : des renforts à la défense */
+  R(c,'S.kingdoms.forEach(k=>k.diplo=null);globalThis.__rap=[];'
+    +'for(let i=0;i<200;i++){const r=[];weeklyKingdom(r);__rap=__rap.concat(r);S.tresor=99999;S.dette=0;}');
+  eq(G(c,'__rap.some(x=>/renforts/.test(x))'),false,'sans alliance, aucun renfort');
+  R(c,'S.kingdoms.forEach(k=>k.diplo="alliance");globalThis.__rap2=[];'
+    +'for(let i=0;i<200;i++){const r=[];weeklyKingdom(r);__rap2=__rap2.concat(r);S.tresor=99999;S.dette=0;}');
+  eq(G(c,'__rap2.some(x=>/renforts/.test(x))'),true,'avec une alliance, des renforts arrivent');
+});
+
 test('consignes — l\'ordre décide, et rien ne s\'interrompt en route',()=>{
   const c=nouveau();
   /* à l'arrêt, le plan ne touche à rien */

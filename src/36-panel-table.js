@@ -30,11 +30,17 @@ function pTable(){
    +'<button class="btn" data-distill="1" '+(selFood.length&&hasStation('alambic')?'':'disabled')+'>'
    +(hasStation('alambic')?'Distiller':'alambic manquant')+'</button>'
    +'<button class="btn" data-clearfood="1">Vider la sélection</button></div>'
-   +'<div class="meta">Distiller demande une partie de créature ; chaque plante ajoutée allonge et renforce l\'effet.</div></div>';
+   +'<div class="meta">'+(selFood.find(k=>ALCHPLANTE[k])
+     ? 'Distiller donnera : <b>'+POTEFF[ALCHPLANTE[selFood.find(k=>ALCHPLANTE[k])]].n+'</b> — '
+       +POTEFF[ALCHPLANTE[selFood.find(k=>ALCHPLANTE[k])]].sub(quality(lv('alchimie'))*(1+(selFood.length-1)*.22))
+       +'. Chaque ingrédient de plus la renforce.'
+     : 'Une PLANTE alchimique donne une potion d’effet — achillée, herbes, racines, camomille, menthe, ortie, sauge, belladone, amanite. '
+       +'Une PARTIE DE CRÉATURE donne une potion de statistique.')+'</div></div>';
   /* potions */
   h+=grp('薬','POTIONS',S.potions.length+'');
   h+=S.potions.length?'<div class="matlist">'+S.potions.map((p,i)=>
-    '<button class="mat" data-drink="'+i+'"><b>薬</b>'+p.n+'<small>+'+p.v+' '+BUFFN[p.k]+' · '+p.dur+' s</small>'
+    '<button class="mat" data-drink="'+i+'"><b>'+(p.e?POTEFF[p.e].g:'薬')+'</b>'+p.n
+    +'<small>'+(p.e?POTEFF[p.e].sub(p.v):'+'+p.v+' '+BUFFN[p.k]+' · '+p.dur+' s')+'</small>'
     +'<small style="color:var(--jade)">boire</small></button>').join('')+'</div>'
    :'<p class="hint">Aucune potion.</p>';
   if(S.buffs&&S.buffs.length){

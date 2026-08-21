@@ -325,6 +325,9 @@ function attack(heavy){
       if(a.id==='assomme'&&hitN%a.p.n===0)addStatus(tgt,'etourdi',a.p.d,1);
       if(a.id==='gel')addStatus(tgt,'ralenti',a.p.d,1);
       if(a.id==='venin')addStatus(tgt,'poison',a.p.d,a.p.n);});
+    /* le poison de lame (F.9) : il ne vient pas de l arme mais de ce qu on a
+       etale dessus, et il vaut ce qu on n arrive pas a tuer autrement */
+    if(S.lame>0)addStatus(tgt,'poison',6,Math.max(1,maxHp()*.010));
     /* la frappe lourde chancelle, le résolveur enracine */
     if(heavy)addStatus(tgt,'etourdi',1+PA.staggerE,1);
     if(resolver){addStatus(tgt,'enracine',2.5,1);if(PA.weaken)addStatus(tgt,'affaibli',4,1);}

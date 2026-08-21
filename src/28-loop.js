@@ -8,6 +8,7 @@ function step(dt){
   tickClock(dt);
   S.faim=Math.max(0,S.faim-dt/90*(S.race==='sylvide'?.5:1));
   tickBuffs(dt);
+  tickLame(dt);
   if(buffOf('regenhp'))S.hp=Math.min(maxHp(),S.hp+buffOf('regenhp')*dt);
   /* stress thermique : malus progressifs, puis dégâts (E.28) */
   const ts=tempStress();

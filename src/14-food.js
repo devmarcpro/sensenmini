@@ -113,12 +113,58 @@ function cook(sel2){
 }
 /* ===== ALCHIMIE ===== */
 const BUFFN={force:'Force',per:'Perception',vol:'Volonté',dmg:'Dégâts',def:'Réduction',regen:'Régénération'};
+/* ==================================================================
+   L'ALCHIMIE DES PLANTES (F.8 / F.9)
+   Une potion de statistique se distille depuis une PARTIE DE CREATURE :
+   l'oeil donne la Perception, la griffe la Force. C'etait tout, et cela
+   faisait de l'alchimie un doublon de la cuisine — un multiplicateur de
+   plus, sans decision.
+   Une potion d'EFFET se distille depuis une PLANTE, et chaque plante a la
+   sienne. Elles ne montent aucune statistique : elles font quelque chose,
+   maintenant, et souvent quelque chose qu'aucune autre voie ne fait. Une
+   fiole de remede vaut trois jours d'endurance rongee ; du poison de lame
+   vaut ce qu'on n'arrive pas a tuer autrement — et il est illegal a peu
+   pres partout, ce qui est le propre d'une bonne solution.
+   ================================================================== */
+const ALCHPLANTE={
+  achillee:'soin',herbes:'remede',racines:'antipoison',camomille:'sommeil',
+  menthe:'fraicheur',ortie:'resistance',sauge:'mana',
+  belladone:'poisonlame',amanite:'poisonlame',
+};
+const POTEFF={
+  soin:{n:'Soin',g:'癒',sub:v=>'rend '+Math.round(18*v)+' PV sur-le-champ',
+    fait(v){const h=Math.round(18*v);S.hp=Math.min(maxHp(),S.hp+h);
+      return '+'+h+' PV';}},
+  remede:{n:'Remède',g:'薬',sub:()=>'guérit une infection',
+    fait(){return soigner('infection','le remède opère')?'la fièvre tombe':'rien à guérir';}},
+  antipoison:{n:'Antipoison',g:'解',sub:()=>'purge le poison',
+    fait(){return soigner('poison','le poison se dilue')?'le sang se nettoie':'rien à purger';}},
+  sommeil:{n:'Calme',g:'眠',sub:v=>'rend souffle et mana · reposé '+Math.round(v*3)+' h',
+    fait(v){S.end=100;S.mana=maxMana();S.repose=S.day+v*3/24;
+      soigner('terreur','le calme revient');soigner('confusion','les idées se remettent en place');
+      return 'souffle et mana pleins';}},
+  fraicheur:{n:'Fraîcheur',g:'涼',sub:v=>'+'+Math.round(40*v)+' contre la chaleur, 10 min',
+    fait(v){poserBuff('isochaud',Math.round(40*v),600,'Fraîcheur');return 'la chaleur glisse';}},
+  resistance:{n:'Résistance',g:'耐',sub:v=>'+'+Math.round(40*v)+' contre le froid, 10 min',
+    fait(v){poserBuff('isofroid',Math.round(40*v),600,'Résistance');return 'le froid glisse';}},
+  mana:{n:'Essence',g:'泉',sub:()=>'rend tout le mana',
+    fait(){S.mana=maxMana();return 'mana plein';}},
+  poisonlame:{n:'Poison de lame',g:'塗',sub:v=>'tes coups empoisonnent '+Math.round(180*v)+' s',
+    fait(v){S.lame=Math.round(180*v);return 'la lame luit';}},
+};
+const poserBuff=(k,v,t,n)=>{S.buffs=(S.buffs||[]).filter(b=>b.k!==k);S.buffs.push({k,v,t,n});};
 function distill(sel2){
   if(!hasStation('alambic'))return toast('Il faut un alambic');
   const infos=sel2.map(foodInfo);
-  const base=infos.find(i=>i.alch);
-  if(!base)return toast('Il faut une partie de créature (œil, griffe, dent, peau, glande)');
   if(!sel2.every(k=>(S.food[k]||0)>0))return toast('Ingrédient manquant');
+  /* La plante decide. Si la selection en contient une qui porte un effet,
+     c'est cet effet qu'on distille — le reste de la selection ne sert qu'a
+     le renforcer. Sans plante d'alchimie, on retombe sur la potion de
+     statistique, qui demande une partie de creature. */
+  const pl=sel2.find(k=>ALCHPLANTE[k]);
+  if(pl)return distillEffet(sel2,pl);
+  const base=infos.find(i=>i.alch);
+  if(!base)return toast('Il faut une partie de créature (œil, griffe, dent, peau, glande) ou une plante alchimique');
   sel2.forEach(k=>useFood(k,1));
   const q=quality(lv('alchimie'));
   const plantes=infos.filter(i=>i.plante).length;
@@ -128,12 +174,39 @@ function distill(sel2){
   gainXp('alchimie',60+plantes*30);
   log('Distillé : potion '+pot.n+' — +'+pot.v+' pendant '+pot.dur+' s');
 }
+/* une potion d'effet : la plante donne la nature, le reste donne la force */
+function distillEffet(sel2,pl){
+  const e=ALCHPLANTE[pl],E2=POTEFF[e];
+  const autres=sel2.filter(k=>k!==pl).length;
+  const q=quality(lv('alchimie'));
+  const v=+(q*(1+autres*.22)).toFixed(2);
+  sel2.forEach(k=>useFood(k,1));
+  const pot={e,v,n:QNAME(q)+' — '+E2.n};
+  S.potions.push(pot);
+  gainXp('alchimie',90+autres*25);
+  log('Distillé : '+pot.n+' — '+E2.sub(v));
+  return pot;
+}
 function drink(i){
   const p=S.potions[i];if(!p)return;
   S.potions.splice(i,1);
+  if(p.e){
+    const E2=POTEFF[p.e];
+    if(!E2)return;
+    const dit=E2.fait(p.v);
+    cutIn(E2.g,p.n,dit);
+    gainXp('alchimie',20);
+    return;
+  }
   S.buffs=S.buffs.filter(b=>b.k!==p.k);
   S.buffs.push({k:p.k,v:p.v,t:p.dur,n:p.n});
   cutIn('薬',p.n,'+'+p.v+' pendant '+p.dur+' s');
+}
+/* le poison de lame s'use au temps, pas aux coups */
+function tickLame(dt){
+  if(!S.lame)return;
+  S.lame-=dt;
+  if(S.lame<=0){S.lame=0;log('Le poison de lame est épuisé.');}
 }
 const buffOf=k=>(S.buffs||[]).reduce((a,b)=>a+(b.k===k?b.v:0),0);
 function tickBuffs(dt){

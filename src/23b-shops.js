@@ -72,6 +72,13 @@ function offBook(t){
   return {t:'book',b,label:(g?'Grimoire':'Manuel')+' de '+DOMAIN[dm].n,sub:'difficulté '+b.diff+' · DD '+readDD(b),
     p:Math.round((50+b.diff*14)*buyMul(t))};
 }
+/* une fiole d effet a l etal : le prix suit ce qu elle epargne */
+function offEffet(t,e){
+  const q=+quality(ri(8,30)).toFixed(2);
+  const pot={e,v:q,n:QNAME(q)+' — '+POTEFF[e].n};
+  return {t:'potion',pot,label:'Fiole : '+POTEFF[e].n,sub:POTEFF[e].sub(q),
+    p:Math.round((45+q*55+(e==='poisonlame'?70:0))*buyMul(t))};
+}
 function offPotion(t,k){
   const q=+quality(ri(5,30)).toFixed(2),plantes=ri(0,2);
   const pot={k,v:+(q*(1+plantes*.35)).toFixed(2),dur:Math.round(60*q*(1+plantes*.5)),n:QNAME(q)+' de '+BUFFN[k]};
@@ -108,6 +115,8 @@ const SHOPGEN={
     return o;},
   alchimiste(t){const o=[];
     for(let i=0;i<ri(2,3);i++)o.push(offPotion(t,pick(Object.keys(BUFFN))));
+    /* deux fioles d effet : c est la seule facon d en avoir sans alambic */
+    for(let i=0;i<ri(1,2);i++)o.push(offEffet(t,pick(Object.keys(POTEFF))));
     for(let i=0;i<ri(1,2);i++){const d=pick(PARTS.slice(1));o.push(offFood(t,foodKey(d.k,d.el,d.grp),ri(1,3)));}
     return o;},
   libraire(t){const o=[];for(let i=0;i<ri(2,3)+(t.prosp>1.1?1:0);i++)o.push(offBook(t));return o;},
@@ -132,6 +141,9 @@ const SHOPGEN={
     return o;},
   herboriste(t){const o=[];
     o.push(offMat(t,'herbes',ri(4,10)));o.push(offMat(t,'champignons',ri(3,8)));
+    /* l herboriste tient les plantes qui se distillent, et le remede tout pret */
+    o.push(offMat(t,pick(['achillee','camomille','menthe','ortie','sauge','racines']),ri(2,5)));
+    if(Math.random()<.6)o.push(offEffet(t,pick(['remede','antipoison','soin'])));
     o.push(offPotion(t,'regen'));if(Math.random()<.5)o.push(offMat(t,'baies',ri(4,8)));
     return o;},
 };

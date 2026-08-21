@@ -210,6 +210,28 @@ bilan('statuts que quelque chose pose',Object.keys(G('STATUS')),new Set([
   ...G('Object.keys(PATTERN).map(k=>PATTERN[k].st).filter(Boolean)'),
 ]),'lu dans le code : appels a addStatus, statuts de sorts et de patterns');
 
+/* Une potion d'effet s'obtient de deux facons : on la distille depuis une
+   plante, ou on l'achete. Une fiole qu'aucune plante ne donne et qu'aucun
+   etal ne tient serait une entree de catalogue et rien d'autre. */
+const effetsPlante=new Set(Object.values(G('ALCHPLANTE')));
+const effetsEtal=partout(`(()=>{
+  const vus=[];const villes=[];
+  kingdomsNear().forEach(k=>kTowns(k).forEach(t=>villes.push(t)));
+  for(let w=0;w<26;w++){
+    S.week=w;
+    villes.forEach(t=>{const st=shopStock(t);
+      Object.keys(st).forEach(sk=>(st[sk]||[]).forEach(o=>{
+        if(o.t==='potion'&&o.pot&&o.pot.e)vus.push(o.pot.e);}));});
+  }
+  S.week=0;return vus;
+})()`);
+bilan('fioles d effet obtenables',Object.keys(G('POTEFF')),
+  new Set([...effetsPlante,...effetsEtal]),
+  'distillees depuis une plante, ou achetees a l alchimiste et a l herboriste');
+/* Et les plantes qui les portent doivent elles-memes pousser quelque part. */
+bilan('plantes alchimiques recoltables',Object.keys(G('ALCHPLANTE')),matsOk,
+  'une recette dont l ingredient n existe pas est une recette morte');
+
 /* Un meuble dont le cout demande une matiere introuvable ne se pose pas.
    Le cout se lit par CATEGORIE ('bois', 'roche') ou par forme travaillee. */
 const meubles=G('Object.keys(MEUBLE)'),couts=G('Object.keys(MEUBLE).map(k=>MEUBLE[k].cost)');

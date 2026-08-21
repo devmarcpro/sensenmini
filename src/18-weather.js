@@ -85,9 +85,17 @@ const COMFORT=[5,30];
 const SEUIL_CENDREUX=10;
 function tempStress(){
   const T=feltTemp();
-  if(T<COMFORT[0])return {froid:1,e:COMFORT[0]-T};
+  /* Les potions de resistance (F.9) : quarante points d isolation contre un
+     seul des deux extremes. Elles ne rechauffent pas, elles ISOLENT — un
+     Cendreux sous fraicheur traverse une canicule sans rien sentir. */
+  const froidOff=buffOf('isofroid'),chaudOff=buffOf('isochaud');
+  if(T<COMFORT[0]){
+    const e=COMFORT[0]-T-froidOff*.25;
+    return e>0?{froid:1,e}:null;
+  }
   if(T>COMFORT[1]){
-    let e=T-COMFORT[1];
+    let e=T-COMFORT[1]-chaudOff*.25;
+    if(e<=0)return null;
     if(S.race==='cendreux'){e-=SEUIL_CENDREUX;if(e<=0)return null;}
     return {froid:0,e};
   }

@@ -737,6 +737,49 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('alchimie — une plante donne un effet, pas un multiplicateur',()=>{
+  /* L'alchimie ne distillait que des potions de STATISTIQUE : +3 en Force
+     pendant une minute. C'etait un doublon de la cuisine — un multiplicateur
+     de plus, sans decision. Une potion d'EFFET ne monte rien : elle fait
+     quelque chose, maintenant, et souvent ce qu'aucune autre voie ne fait. */
+  const c=nouveau();
+  R(c,'S.sk.alchimie.lv=30;S.carry=Object.keys(STATION);');
+  /* chaque plante alchimique donne bien SA fiole */
+  const plantes=G(c,'Object.keys(ALCHPLANTE)');
+  ok(plantes.length>=8,'neuf plantes portent un effet — '+plantes.length);
+  let toutes=true;
+  plantes.forEach(pl=>{
+    R(c,'S.potions=[];S.food={};S.food["'+pl+'"]=1;distill(["'+pl+'"]);');
+    if(G(c,'S.potions.length')!==1||G(c,'S.potions[0].e')!==G(c,'ALCHPLANTE["'+pl+'"]'))toutes=false;
+  });
+  ok(toutes,'chaque plante distille exactement l\'effet qu\'elle annonce');
+
+  /* --- le soin rend des PV --- */
+  R(c,'S.potions=[];S.food={achillee:1};distill(["achillee"]);S.hp=5;drink(0);');
+  gt(G(c,'S.hp'),5,'la fiole de soin rend des points de vie');
+
+  /* --- le remede lave une infection, et rien d'autre ne le fait vite --- */
+  R(c,'S.st=[];addStatus(S,"infection",6,1);S.potions=[];S.food={herbes:1};distill(["herbes"]);drink(0);');
+  eq(G(c,'hasStatus(S,"infection")'),false,'le remède lave la fièvre sur-le-champ');
+
+  /* --- le poison de lame : les coups empoisonnent, et cela s'use --- */
+  R(c,'S.st=[];S.potions=[];S.food={belladone:1};distill(["belladone"]);drink(0);');
+  gt(G(c,'S.lame'),0,'le poison de lame tient un temps');
+  R(c,'spawn();S.stats.force=200;globalThis.__e=EE[0];__e.hp=1e9;attack(false);');
+  eq(G(c,'hasStatus(__e,"poison")'),true,'et il passe dans la plaie');
+  R(c,'for(let i=0;i<400;i++)tickLame(1);');
+  eq(G(c,'S.lame'),0,'il s\'épuise avec le temps, pas avec les coups');
+
+  /* --- les resistances isolent d'UN seul extreme --- */
+  R(c,'S.buffs=[];S.st=[];globalThis.__chaud=()=>{feltTemp=()=>45;return tempStress();};'
+    +'globalThis.__froid=()=>{feltTemp=()=>-25;return tempStress();};');
+  ok(!!G(c,'__chaud()'),'une canicule pèse');
+  R(c,'S.potions=[];S.food={menthe:1};distill(["menthe"]);drink(0);');
+  const apresChaud=G(c,'__chaud()');
+  ok(!apresChaud||apresChaud.e<9,'la fraîcheur allège la canicule');
+  ok(!!G(c,'__froid()'),'mais elle ne fait rien contre le froid — on isole d\'un seul côté');
+});
+
 test('races — chaque bonus annoncé se retrouve dans le jeu',()=>{
   /* Une fiche de race est une promesse en prose. Elles se vérifient une par
      une, sinon l'une d'elles reste décorative — c'était le cas du Cendreux,

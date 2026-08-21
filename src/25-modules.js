@@ -5,7 +5,11 @@
 /* ==================================================================
    MODULES, MANA ET LIVRES (5.1 / A.5 / A.6 / A.7)
    ================================================================== */
-const st=k=>((S.stats&&S.stats[k])||5)+Math.round(buffOf(k));
+/* Une infection ronge l'endurance jour apres jour (F.4) : elle ne fait pas
+   mal tout de suite, elle rend tout plus lourd — moins de souffle, donc
+   moins de coups avant de manquer d'air. */
+const st=k=>((S.stats&&S.stats[k])||5)+Math.round(buffOf(k))
+  -(k==='endu'&&typeof malusInfection==='function'?malusInfection():0);
 const maxMana=()=>20+st('vol')*3+lv('meditation')*2+Math.round(gemMana());
 /* slots : la progression d'arme débloque de la complexité de build */
 const spellSlots=()=>{const w=weapon();return Math.min(6,2+Math.floor(lv(w?w.fn:'epee')/20));};
@@ -49,7 +53,11 @@ function compileSpell(list){
       count:Math.round(pend.count*(def.count||1)),echo:pend.echo,hp:pend.hp,
       status:status?{k:status.k,dur:status.dur*pend.statusDur*sf(m.lv),v:status.v,m:status.m}:null,
       buff:def.buff?{k:def.buff.k,v:def.buff.v*sf(m.lv),t:def.buff.t*pend.statusDur}:null,
-      purge:!!def.purge,dodge:!!def.dodge,drain:def.drain||0,summon:def.summon?{dps:def.summon.dps*sf(m.lv)*pend.pow,t:def.summon.t}:null});
+      purge:!!def.purge,dodge:!!def.dodge,drain:def.drain||0,summon:def.summon?{dps:def.summon.dps*sf(m.lv)*pend.pow,t:def.summon.t}:null,
+      /* un statut pose sur SOI, et une guerison : le niveau du module allonge
+         la premiere comme il allonge tout le reste */
+      soi:def.soi?{k:def.soi.k,dur:def.soi.dur*pend.statusDur*sf(m.lv)}:null,
+      guerit:def.guerit||null});
     const cd=pend.cd;pend=fresh();pend.cd=cd;
   });
   const cd=Math.max(.8,3.0*pend.cd);
@@ -73,6 +81,11 @@ function castSpell(si){
   sp.casts.forEach(c=>{
     if(c.hp)S.hp-=maxHp()*c.hp;
     /* effets sur soi : ils ne posent pas de segment, mais apprennent le domaine */
+    /* un statut pose sur soi, et non sur la cible : hate, benediction */
+    if(c.soi){addStatus(S,c.soi.k,c.soi.dur,1);float(MODULE[c.id].n,STATUS[c.soi.k].c);
+      gainXp('m_'+c.dom,40);}
+    if(c.guerit){if(soigner(c.guerit,'le remède opère'))gainXp('m_'+c.dom,80);
+      else log('Rien à guérir.');}
     if(c.buff){S.buffs=S.buffs.filter(b=>b.k!==c.buff.k);S.buffs.push({k:c.buff.k,v:c.buff.v,t:c.buff.t,n:MODULE[c.id].n});
       float(MODULE[c.id].n,'#6FBFA0');gainXp('m_'+c.dom,c.buff.v*4);}
     if(c.purge&&S.st&&S.st.length){S.st=[];float('浄','#6FBFA0');gainXp('m_'+c.dom,12);}

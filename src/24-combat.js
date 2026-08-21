@@ -13,7 +13,10 @@ function vmult(va,vd,f){let m=0;
   for(let a=0;a<5;a++){if(!va[a])continue;for(let d=0;d<5;d++){if(!vd[d])continue;m+=va[a]*vd[d]*f(a,d);}}
   return m;}
 const roll=(n,f)=>{let s2=0;for(let i=0;i<n;i++)s2+=1+Math.floor(Math.random()*f);return s2;};
-const d20=()=>ri(1,20);
+/* « Beni : +1 a tous les jets » (F.4). Un seul point, mais sur CHAQUE jet —
+   pieges, lecture, discretion, critiques. C'est la benediction d'un autel,
+   et elle vaut le detour par la salle. */
+const d20=()=>ri(1,20)+(typeof hasStatus==='function'&&hasStatus(S,'beni')?1:0);
 /* coups contextuels : c'est le déplacement qui choisit la frappe */
 const STANCE=[
   {g:'止',n:'Standard',dmg:1.00,spd:1.00,end:8, t:null,       win:1.0, d:'à l\'arrêt — le coup de référence'},
@@ -87,7 +90,8 @@ const stanceNow=()=>STANCE[S.stance||0];
 function wSpeed(){
   const w=weapon();if(!w)return 1.2;
   const F=FUNC[w.fn];
-  return F.spd*Math.pow(20/Math.max(5,w.de),0.75/2)*stanceNow().spd*(1+(st('dex')-5)*.015)*(1+passives().spd);
+  return F.spd*Math.pow(20/Math.max(5,w.de),0.75/2)*stanceNow().spd*(1+(st('dex')-5)*.015)*(1+passives().spd)
+    *(hasStatus(S,'hate')?1.25:1)*(hasStatus(S,'ralenti')?.75:1);
 }
 /* la fenêtre de parade : l'esquive l'ouvre, le bouclier la double presque,
    et l'arc la ferme — on ne pare pas une massue avec une corde (5.1) */
@@ -251,6 +255,13 @@ function attack(heavy){
   if(auto('rotation')&&S.seg.length&&S.mana>=4){
     const want=gen(S.seg[S.seg.length-1]);
     if(want!==e){S.mana-=4;e=want;v=V({[want]:1});}
+  }
+  /* Confus, on frappe quand meme — mais le geste ne s'inscrit pas dans la
+     suite : la chaine se brise, et c'est bien pire que de perdre un coup.
+     Un tiers du temps, comme le catalogue le demande (F.4). */
+  if(hasStatus(S,'confusion')&&Math.random()<.3){
+    S.seg=[];S.bonus=0;
+    float('confus','#C08BC0');
   }
   /* UN COUP = UN SEGMENT, même si le balayage touche quatre créatures */
   const resolver=pushSeg(e);

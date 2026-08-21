@@ -11,6 +11,12 @@ function tickClock(dt){
     if(S.occ==='donjon'){S.occ='repos';E=null;sceneMode='';}
     cutIn('野','La faille s\'est refermée','la cellule est redevenue ordinaire — et revendicable');
   }
+  /* Le jour est la seule horloge du temps long. Les maladies s'y accrochent :
+     elles traversent le sommeil, les voyages et les combats sans rien devoir
+     au tick de combat. */
+  const j=Math.floor(S.day);
+  if(S.jour===undefined)S.jour=j;
+  else if(j>S.jour){tickJour(j-S.jour);S.jour=j;}
   const w=Math.floor(S.day/WEEK);
   if(w>S.week){S.week=w;weekly();}
   const si=seasonIdx();

@@ -42,6 +42,12 @@ const MODULE={
   givre:{n:'Trait de givre',t:'effet',mana:8,pow:9,status:{k:'ralenti',dur:3.5,v:1},d:['eau'],x:'ralentit'},
   prison:{n:'Prison de glace',t:'effet',mana:16,pow:4,status:{k:'enracine',dur:3,v:1},d:['eau'],x:'immobilise 3 s'},
   mur:{n:'Mur de glace',t:'effet',mana:14,shield:18,d:['eau'],x:'rend 18 endurance'},
+  /* Le controle dur de l ecole d eau : plus cher que la prison de glace, et
+     total — la bete ne fait plus rien. On s en libere a la Force. */
+  gel:{n:'Gel profond',t:'effet',mana:22,pow:6,status:{k:'gel',dur:2,v:1},d:['eau'],x:'fige entierement 2 s'},
+  /* Le controle dur de l'ecole d'eau : plus cher que la prison de glace, et
+     total — la bete ne fait plus rien. On s'en libere a la Force. */
+  gel:{n:'Gel profond',t:'effet',mana:22,pow:6,status:{k:'gel',dur:2,v:1},d:['eau'],x:'fige entierement 2 s'},
   soineaux:{n:'Soin des eaux',t:'effet',mana:12,heal:15,d:['eau','vie']},
   brume:{n:'Brume',t:'effet',mana:10,pow:3,aoe:1,status:{k:'affaibli',dur:5,v:1},d:['eau','espace'],x:'affaiblit 5 s'},
   eclair:{n:'Éclair',t:'effet',mana:10,pow:18,d:['foudre']},
@@ -53,9 +59,17 @@ const MODULE={
   regen:{n:'Régénération',t:'effet',mana:14,buff:{k:'regenhp',v:1.5,t:20},d:['vie'],x:'+1,5 PV/s pendant 20 s'},
   purge:{n:'Purge',t:'effet',mana:10,purge:1,heal:3,d:['vie'],x:'retire les statuts'},
   vigueur:{n:'Vigueur',t:'effet',mana:9,shield:10,heal:6,d:['vie']},
+  /* Deux benedictions sur soi : l une accelere la main, l autre corrige la
+     chance. Elles ne font aucun degat et changent tout un combat. */
+  hate:{n:'Hâte',t:'effet',mana:16,soi:{k:'hate',dur:14},d:['espace','foudre'],x:'+25 % de vitesse d\'arme, 14 s'},
+  benediction:{n:'Bénédiction',t:'effet',mana:15,soi:{k:'beni',dur:40},d:['vie','arcane'],x:'+1 a tous les jets, 40 s'},
+  remede:{n:'Remède',t:'effet',mana:18,guerit:'infection',heal:8,d:['vie'],x:'guerit une infection'},
   eclipse:{n:'Pas éclipsé',t:'effet',mana:10,dodge:1,d:['espace'],x:'le prochain coup te manque'},
   drain:{n:'Drain',t:'effet',mana:12,pow:10,drain:.5,d:['corruption'],x:'rend la moitié en PV'},
   terreur:{n:'Terreur',t:'effet',mana:14,pow:2,status:{k:'terreur',dur:3,v:1},d:['corruption'],x:'la cible n\'attaque plus 3 s'},
+  /* La terreur neutralise ; la confusion rend infiable. Moins fort, moins
+     cher, et cela dure bien plus longtemps — deux facons de tenir une bete. */
+  confusion:{n:'Confusion',t:'effet',mana:11,pow:3,status:{k:'confusion',dur:8,v:1},d:['corruption','arcane'],x:'un geste sur trois part en pure perte'},
   appel:{n:'Appel corrompu',t:'effet',mana:28,summon:{dps:6,t:12},d:['corruption'],x:'une créature frappe 12 s'},
   eclats:{n:'Éclats de fer',t:'effet',mana:9,pow:7,count:3,aoe:1,d:['metal'],x:'trois éclats'},
   armurefer:{n:'Armure de fer',t:'effet',mana:13,buff:{k:'def',v:3,t:20},d:['metal']},

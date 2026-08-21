@@ -683,6 +683,60 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('statuts — les cinq qui manquaient au catalogue',()=>{
+  /* Le catalogue F.4 en declare quatorze. Huit etaient poses ; deux autres
+     existaient sous forme de buffs. Ces cinq-la n'existaient nulle part, et
+     chacun doit FAIRE quelque chose de mesurable — sinon c'est une icone. */
+  const c=nouveau();
+
+  /* --- HATE : la main va plus vite, et le ralentissement la freine --- */
+  R(c,'S.st=[];');
+  const vNorm=G(c,'wSpeed()');
+  R(c,'addStatus(S,"hate",10,1);');
+  gt(G(c,'wSpeed()'),vNorm*1.2,'la hâte accélère vraiment la main');
+  R(c,'S.st=[];addStatus(S,"ralenti",10,1);');
+  ok(G(c,'wSpeed()')<vNorm*.8,'et le ralentissement la freine — il ne faisait rien sur le joueur');
+
+  /* --- BENI : +1 a tous les jets, donc la moyenne monte d'exactement un --- */
+  R(c,'S.st=[];globalThis.__moy=n=>{let s=0;for(let i=0;i<20000;i++)s+=d20();return s/20000;};');
+  const sans=G(c,'__moy()');
+  R(c,'addStatus(S,"beni",100,1);');
+  const avec=G(c,'__moy()');
+  near(avec-sans,1,.1,'béni ajoute un point à chaque jet — '+sans.toFixed(2)+' puis '+avec.toFixed(2));
+
+  /* --- INFECTION : elle se compte en jours, pas en secondes --- */
+  R(c,'S.st=[];addStatus(S,"infection",4,1);for(let i=0;i<600;i++)tickStatus(S,1,true);');
+  eq(G(c,'hasStatus(S,"infection")'),true,'une maladie ne se dissipe pas en dix minutes de combat');
+  eq(G(c,'S.st.find(x=>x.k==="infection").t'),4,'son compte reste en jours');
+  /* et elle coute de l'endurance, jour apres jour */
+  R(c,'S.st=[];S.stats.endu=20;');
+  const enduSain=G(c,'st("endu")');
+  R(c,'addStatus(S,"infection",4,1);');
+  ok(G(c,'st("endu")')<enduSain,'une infection ronge l\'endurance — '+enduSain+' puis '+G(c,'st("endu")'));
+  /* le temps la fait passer */
+  R(c,'tickJour(4);');
+  eq(G(c,'hasStatus(S,"infection")'),false,'quatre jours plus tard, elle est passée');
+  eq(G(c,'st("endu")'),enduSain,'et l\'endurance revient entière');
+  /* un remède la lave d'un coup */
+  R(c,'addStatus(S,"infection",6,1);soigner("infection","essai");');
+  eq(G(c,'hasStatus(S,"infection")'),false,'un remède la lave sans attendre');
+
+  /* --- GEL : on ne frappe plus, et la Force finit par rompre la glace --- */
+  R(c,'S.st=[];S.cdStun=0;addStatus(S,"gel",10,1);');
+  eq(G(c,'hasStatus(S,"gel")'),true,'le gel prend');
+  ok(G(c,'S.st.find(x=>x.k==="gel").t')<=2,'et reste un contrôle dur, donc plafonné');
+  R(c,'S.st=[];S.cdStun=0;S.stats.force=30;addStatus(S,"gel",2,1);'
+    +'globalThis.__t=0;for(let i=0;i<400&&hasStatus(S,"gel");i++){__t+=.05;combatTick(.05);}');
+  eq(G(c,'hasStatus(S,"gel")'),false,'un bras solide finit par briser la glace');
+
+  /* --- CONFUSION : le geste part, mais la chaîne se brise --- */
+  /* on mesure la regle sur un vrai combat : la chaine ne tient plus */
+  R(c,'S.st=[];addStatus(S,"confusion",900,1);S.stats.force=200;S.hp=maxHp();S.end=100;'
+    +'globalThis.__max=0;for(let i=0;i<3000;i++){combatTick(.05);if(S.seg.length>__max)__max=S.seg.length;}');
+  ok(G(c,'__max')>0,'confus, on frappe encore');
+  ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
+});
+
 test('races — chaque bonus annoncé se retrouve dans le jeu',()=>{
   /* Une fiche de race est une promesse en prose. Elles se vérifient une par
      une, sinon l'une d'elles reste décorative — c'était le cas du Cendreux,

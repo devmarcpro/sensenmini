@@ -54,6 +54,14 @@ function eatFood(k){
   if(PLANTE[k]&&PLANTE[k].tox){poisonBy(k);return;}
   S.faim=Math.min(100,S.faim+i.nutr*.5);
   log('Tu manges '+i.n+' cru'+(i.part==='viande'||i.plante?'':'e')+'. Une cuisine ferait bien mieux.');
+  /* « Viande crue : +15 faim, 20 % infection » (F.5). Manger cru nourrissait
+     sans jamais rien couter : la cuisine n etait qu un rendement, pas un
+     choix. Elle est desormais une precaution. La chair crue seule infecte —
+     une baie ne donne pas la fievre. */
+  if(i.part==='viande'&&Math.random()<.2){
+    addStatus(S,'infection',ri(3,6),1);
+    cutIn('病','La chair tourne','infection — l\'endurance faiblira chaque jour jusqu\'au soin');
+  }
 }
 /* belladone, amanite : crues, elles empoisonnent — et la cuisine les refuse */
 function poisonBy(k){

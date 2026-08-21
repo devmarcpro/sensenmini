@@ -88,6 +88,13 @@ function combatTick(dt){
   atkT+=dt;
   let guard=0;
   /* réserve de détonation : on garde le souffle pour placer la lourde en résolveur */
+  /* Gele, on ne frappe pas : on se debat. La Force decide de la duree — c'est
+     le « jet de Force par tour » du catalogue, joue en continu plutot qu'au
+     tour par tour, parce que le temps ici est reel (5.0). */
+  if(hasStatus(S,'gel')){
+    if(Math.random()<dt*(.35+st('force')*.03))soigner('gel','tu brises la glace');
+    tickStatus(S,dt,true);return;
+  }
   const reserve=(auto('deto')&&S.seg.length===capChain()-1&&S.end<S.thr+22)||hasStatus(S,'etourdi');
   while(atkT>=iv&&E&&guard++<8){atkT-=iv;if(S.end>=S.thr&&!reserve)attack(false);}
   /* décroissance de la chaîne : un segment toutes les 3 s sans acte qui touche */
@@ -107,7 +114,13 @@ function combatTick(dt){
     if(e.stg>0)e.stg-=dt;
     tickStatus(e,dt,false);
     if(e.hp<=0){kill(e);continue;}
-    if(hasStatus(e,'etourdi')||hasStatus(e,'terreur')){e.w=-1;e.tt=0;continue;}
+    /* Gele, la bete ne fait plus rien du tout — c'est le controle le plus
+       dur du jeu, et il coute le plus cher en mana. */
+    if(hasStatus(e,'etourdi')||hasStatus(e,'terreur')||hasStatus(e,'gel')){e.w=-1;e.tt=0;continue;}
+    /* Confuse, elle s'arme puis oublie ce qu'elle voulait faire : une chance
+       sur trois que son geste parte en pure perte. Elle n'est pas neutralisee,
+       elle est INFIABLE — ce qui n'est pas la meme chose, et se joue autrement. */
+    if(hasStatus(e,'confusion')&&e.w>=0&&Math.random()<dt*.9){e.w=-1;e.tt=0;continue;}
     if(e.stg>0)continue;
     /* à distance, on tient la créature à l'écart : elle met plus de temps à revenir au
        contact — sauf si son geste porte lui aussi à distance */

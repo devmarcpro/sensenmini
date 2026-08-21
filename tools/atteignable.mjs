@@ -206,6 +206,7 @@ bilan('statuts que quelque chose pose',Object.keys(G('STATUS')),new Set([
   ...[...code.matchAll(/addStatus\([^,]+,\s*'([a-z]+)'/g)].map(m=>m[1]),
   ...Object.values(G('DOMSTAT')),
   ...G('MK.map(id=>MODULE[id].status&&MODULE[id].status.k).filter(Boolean)'),
+  ...G('MK.map(id=>MODULE[id].soi&&MODULE[id].soi.k).filter(Boolean)'),
   ...G('Object.keys(PATTERN).map(k=>PATTERN[k].st).filter(Boolean)'),
 ]),'lu dans le code : appels a addStatus, statuts de sorts et de patterns');
 

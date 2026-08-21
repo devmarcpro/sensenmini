@@ -73,10 +73,19 @@ function djReward(room){
     gainXp('perception_sk',30+lvl*10);
     if(jet>=dd)cutIn('罠','Piège évité','jet '+jet.toFixed(1)+' contre DD '+dd);
     else{const dg=Math.round(maxHp()*(.12+lvl*.02));S.hp=Math.max(1,S.hp-dg);addStatus(S,'saignement',4,Math.max(1,dg*.08));
-      cutIn('罠','Piège !','−'+dg+' PV · jet '+jet.toFixed(1)+' contre DD '+dd);}
+      /* une lame rouillee au fond d un puits ne fait pas que saigner */
+      const inf=Math.random()<.18+lvl*.02;
+      if(inf)addStatus(S,'infection',ri(3,7),1);
+      cutIn('罠','Piège !','−'+dg+' PV'+(inf?' · la plaie s\'infecte':'')+' · jet '+jet.toFixed(1)+' contre DD '+dd);}
   }
   if(room.t==='autel'){S.hp=maxHp();S.buffs=S.buffs.filter(b=>b.k!=='regenhp');S.buffs.push({k:'regenhp',v:2,t:40,n:'Bénédiction'});
-    gainXp('meditation',40);cutIn('祭','Autel oublié','PV rendus · régénération 40 s');}
+    /* « Beni : +1 a tous les jets, sanctuaires » (F.4). L autel donnait des PV
+       et une regeneration ; il ne benissait rien. Il benit — et le sanctuaire
+       lave aussi ce qu on a rapporte des galeries. */
+    addStatus(S,'beni',180,1);
+    const lave=soigner('infection','l\'autel lave la fièvre');
+    gainXp('meditation',40);
+    cutIn('祭','Autel oublié','PV rendus · béni 3 min'+(lave?' · fièvre lavée':''));}
   if(room.t==='puits'){S.mana=maxMana();if(Math.random()<.4){S.mat.cristalmana=(S.mat.cristalmana||0)+1;}
     gainXp('mana',40);cutIn('泉','Puits de mana','mana rendu'+(S.mat.cristalmana?' · un cristal affleure':''));}
   if(room.t==='cellule'){

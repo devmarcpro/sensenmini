@@ -97,6 +97,8 @@ const MUT=[
   ['symetrie : la depense','symetrie',[['src/28-loop.js','{creDepense(e);resolveHit(S.guard?1:0,e);}','resolveHit(S.guard?1:0,e);']]],
   ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,pickZone()):tgt.arm)",'tgt.arm']]],
   ['symetrie : l equipement au niveau','symetrie',[['src/24c-symetrie.js','const q=Math.max(.5,Math.min(1.8,.5+lv/25));','const q=1;']]],
+  ['lecture : l echec est gradue','jet decide',[['src/25-modules.js','const grave=marge<=-10||brut===1;','const grave=false;']]],
+  ['lecture : la reussite large','jet decide',[['src/25-modules.js','+(large?2:0);','+0;']]],
   /* les cavernes */
   ['caverne : deux champs croises','cavernes',[['src/07d-cavernes.js',"  return (Math.abs(a-.5)<.085&&Math.abs(b-.5)<.085)?1:0;",'  return (Math.abs(a-.5)<.085)?1:0;']]],
   ['caverne : pas sous le ciel','cavernes',[['src/07d-cavernes.js','  if(d<2)return 0;','']]],

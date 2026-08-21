@@ -151,11 +151,19 @@ const readBonus=()=>lv('lecture')/2+st('per')/4
 function readBook(i){
   const b=S.books[i];if(!b)return;
   S.books.splice(i,1);
-  const jet=d20()+readBonus();
+  /* on garde le DE NATUREL a part : « 1 naturel » est une regle a lui seul,
+     et il se perd si l'on ne regarde que le total */
+  const brut=ri(1,20);
+  const jet=brut+(hasStatus(S,'beni')?1:0)+readBonus();
+  const marge=jet-readDD(b);
   gainXp('lecture',b.diff*40);
   gainStat('per',b.diff*22);                 /* déchiffrer aiguise l'œil */
   if(jet>=readDD(b)){
-    const n=1+Math.floor(lv('lecture')/12);
+    /* « Reussite de 10 et plus → tous les modules du livre et un bonus
+       d'XP » : la marge compte, pas seulement le franchissement. */
+    const large=marge>=10;
+    const n=1+Math.floor(lv('lecture')/12)+(large?2:0);
+    if(large)gainXp('lecture',b.diff*60);
     for(let k=0;k<n;k++){
       const cands=MK.filter(id=>MODULE[id].d.includes(b.dom));
       const id=pick(cands);
@@ -166,13 +174,25 @@ function readBook(i){
         log('<span class="gd">Module appris : '+MODULE[id].n+' ('+DOMAIN[b.dom].n+')</span>');}
     }
     questTick('book',1);
-    cutIn('読','Lecture réussie',n+' module(s) · jet '+jet.toFixed(1)+' contre DD '+readDD(b));
+    cutIn('読',large?'Lecture limpide':'Lecture réussie',
+      n+' module(s) · jet '+jet.toFixed(1)+' contre DD '+readDD(b)
+      +(large?' — tout le livre s\'ouvre':''));
   } else {
-    const eff=pick(READFAIL);
+    /* « Echec de 10 et plus, ou 1 naturel » : la severite suit le jet. */
+    const grave=marge<=-10||brut===1;
+    const eff=pick(grave?READFAIL_GRAVE:READFAIL);
     if(eff==='perte de mana')S.mana=0;
     if(eff==='étourdissement')endLock=5;
-    if(eff==='confusion')S.stance=ri(0,3);
-    if(eff==='invocation hostile'){S.occ='combat';E=null;respawnT=.4;sceneMode='';}
-    cutIn('失','Échec de lecture',eff+' · jet '+jet.toFixed(1)+' contre DD '+readDD(b));
+    if(eff==='confusion'){S.stance=ri(0,3);addStatus(S,'confusion',10,1);}
+    if(eff==='invocation hostile'){S.occ='combat';E=null;EE=[];respawnT=.4;sceneMode='';}
+    /* l'egarement : on se retrouve ailleurs, sans savoir comment. C'est la
+       teleportation de A.7, a l'echelle de la carte. */
+    if(eff==='égarement'){
+      const d=pick([[3,0],[-3,0],[0,3],[0,-3],[2,2],[-2,-2]]);
+      const t=cell(S.pos[0]+d[0],S.pos[1]+d[1]);
+      t.seen=true;S.pos=[t.x,t.y];S.target=null;S.occ='repos';E=null;EE=[];sceneMode='';
+    }
+    cutIn('失',grave?'Le livre se retourne contre toi':'Échec de lecture',
+      eff+' · jet '+jet.toFixed(1)+' contre DD '+readDD(b)+(brut===1?' — un naturel':''));
   }
 }

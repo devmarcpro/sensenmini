@@ -151,4 +151,11 @@ const PASSIF_TXT={dmg:'dégâts {p}%',pierce:'perforation {p}%',gardecost:'garde
   riposte:'riposte à la parade parfaite',multi:'second coup {p}%',reach:'allonge {v}',heavy:'frappe lourde {p}%',spd:'vitesse {p}%',execute:'{p}% sous 30 % PV',
   sweep:'balayage : {p}% sur les autres engagées',def:'réduction {v}',stagger:'chancellement {p}%',crit:'critique {v}',weaken:'la chaîne résolue affaiblit la cible',endcost:'coût d\'endurance {p}%',staggerE:'la lourde chancelle {v} s de plus'};
 const MK=Object.keys(MODULE);
-const READFAIL=['étourdissement','confusion','perte de mana','invocation hostile'];
+/* A.7 GRADUE L'ECHEC, et nous ne le faisions pas : « Echec → effet MINEUR
+   (etourdissement, perte de mana) · Echec de 10 et plus, ou 1 naturel →
+   effet GRAVE (confusion, teleportation, invocation hostile) ». On tirait
+   dans une seule liste : rater d'un point pouvait invoquer un monstre, et un
+   desastre pouvait ne couter qu'un peu de mana. Le jet ne decidait de rien
+   au-dela du seuil, ce qui est la moitie d'un systeme de des. */
+const READFAIL=['étourdissement','perte de mana'];
+const READFAIL_GRAVE=['confusion','invocation hostile','égarement'];

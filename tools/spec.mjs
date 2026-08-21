@@ -788,6 +788,82 @@ test('statuts — les cinq qui manquaient au catalogue',()=>{
   ok(G(c,'S.seg.length')<G(c,'capChain()'),'mais la chaîne ne tient plus jusqu\'au bout');
 });
 
+test('lecture — le jet decide de tout, pas seulement du seuil',()=>{
+  /* « Echec → effet mineur · Echec de 10 et plus, ou 1 naturel → effet grave »
+     (A.7). On tirait dans une seule liste : rater d'un point pouvait invoquer
+     un monstre, et un desastre pouvait ne couter qu'un peu de mana. Le jet ne
+     decidait de rien au-dela du franchissement, ce qui est la moitie d'un
+     systeme de des. */
+  const c=nouveau();
+  R(c,`globalThis.__livre=(diff)=>{S.books=[{id:'b'+S.nid++,dom:'feu',diff:diff||4}];};
+    /* on force le de : c'est la seule facon d'eprouver une regle qui parle de
+       marges et de naturels */
+    globalThis.__R=Math.random;
+    globalThis.__de=(v)=>{Math.random=()=>(v-1)/20+.001;};
+    globalThis.__libre=()=>{Math.random=__R;};`);
+
+  /* --- un echec LEGER ne donne qu'un effet mineur --- */
+  R(c,`S.sk.lecture.lv=0;S.stats.per=5;S.st=[];S.mana=maxMana();
+    globalThis.__mineurs=0,globalThis.__graves=0;
+    for(let i=0;i<200;i++){
+      __livre(30);                       /* DD 25 : on echoue de peu avec un 20 */
+      S.st=[];S.occ='repos';E=null;EE=[];
+      __de(20);readBook(0);__libre();
+      if(S.occ==='combat'||hasStatus(S,'confusion'))__graves++;else __mineurs++;
+    }`);
+  eq(G(c,'__graves'),0,'rater de peu ne déclenche jamais un effet grave');
+  gt(G(c,'__mineurs'),0,'mais bien un effet mineur');
+
+  /* --- un echec LOURD en donne un grave --- */
+  R(c,`globalThis.__g2=0;
+    for(let i=0;i<200;i++){
+      __livre(60);                       /* DD 40 : un 2 rate de trente-huit */
+      S.st=[];S.occ='repos';E=null;EE=[];
+      const p0=S.pos.slice();
+      __de(2);readBook(0);__libre();
+      if(S.occ==='combat'||hasStatus(S,'confusion')||S.pos[0]!==p0[0]||S.pos[1]!==p0[1])__g2++;
+      S.pos=p0;
+    }`);
+  gt(G(c,'__g2'),150,'rater de dix ou plus donne un effet grave — '+G(c,'__g2')+' fois sur 200');
+
+  /* --- un 1 naturel est grave meme quand la marge ne l'est pas --- */
+  /* Un 1 naturel n'est grave QUE s'il fait echouer : A.7 dit « echec de dix
+     et plus, OU 1 naturel », les deux dans la branche echec. Avec un lecteur
+     chevronne, un 1 passe quand meme — et c'est ce que le texte decrit. On
+     eprouve donc un debutant, ou le 1 rate de peu. */
+  R(c,`S.sk.lecture.lv=0;S.stats.per=5;
+    globalThis.__g3=0;
+    for(let i=0;i<200;i++){
+      __livre(4);
+      S.st=[];S.occ='repos';E=null;EE=[];
+      const p0=S.pos.slice();
+      __de(1);readBook(0);__libre();
+      if(S.occ==='combat'||hasStatus(S,'confusion')||S.pos[0]!==p0[0]||S.pos[1]!==p0[1])__g3++;
+      S.pos=p0;
+    }`);
+  ok(G(c,'__g3')>0,'et un 1 naturel qui échoue est grave, même de peu — '+G(c,'__g3')+' fois');
+
+  /* --- une reussite LARGE ouvre tout le livre --- */
+  R(c,`S.sk.lecture.lv=0;S.stats.per=5;S.modules=[];
+    __livre(2);S.st=[];__de(20);readBook(0);__libre();
+    /* on compte les NIVEAUX : quand le meme module ressort, il monte au lieu
+       de s'ajouter, et le nombre d'entrees ne bouge pas */
+    globalThis.__large=S.modules.reduce((a,m)=>a+m.lv,0);
+    S.modules=[];S.sk.lecture.lv=0;
+    __livre(2);S.st=[];`);
+  /* un franchissement tout juste : DD 11, un 11 passe d'un cheveu */
+  R(c,'__de(11);readBook(0);__libre();globalThis.__juste=S.modules.reduce((a,m)=>a+m.lv,0);');
+  gt(G(c,'__large'),G(c,'__juste'),
+    'une réussite de dix et plus rend davantage — '+G(c,'__large')+' niveaux contre '+G(c,'__juste'));
+
+  /* --- et les deux tables sont disjointes : sinon la graduation ne veut rien dire --- */
+  const commun=G(c,'READFAIL.filter(x=>READFAIL_GRAVE.includes(x))');
+  eq(commun.length,0,'les effets mineurs et graves ne se recouvrent pas',
+    'communs : '+commun.join(', '));
+  gt(G(c,'READFAIL.length'),1,'il y a de quoi varier le mineur');
+  gt(G(c,'READFAIL_GRAVE.length'),1,'et le grave');
+});
+
 test('cavernes — la profondeur a enfin quelque chose a montrer',()=>{
   /* Cinq strates, et la seule difference entre elles etait le nom de la roche
      et sa durete. On perce, on recolte, on perce plus bas : rien a TROUVER en

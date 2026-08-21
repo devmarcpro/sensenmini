@@ -607,6 +607,99 @@ test('statuts — plafonds et anti-enchaînement',()=>{
   gte(G(c,'S.hp'),1,'hors combat, un poison ronge sans tuer');
 });
 
+test('apprivoisement — ce qui se dompte, ce qui se dérobe, et les ordres',()=>{
+  const c=nouveau();
+  /* une créature qui ne s'apprivoise pas reste sauvage, quoi qu'on tente */
+  R(c,'S.occ="combat";S.comps=[];S.sk.dressage.lv=60;S.sx.cha.v=60;'
+    +'globalThis.__nt=CK.find(k=>!CREATURE[k].tame);'
+    +'E=mkEnemy(__nt,1,false,false);EE=[E];E.hp=1;__toast.length=0;tameBeast();');
+  eq(G(c,'S.comps.length'),0,'une créature non apprivoisable se refuse — '+G(c,'__nt'));
+  ok(G(c,'__toast.length')>0,'et on le dit');
+  /* une bête apprivoisable, affaiblie, face à un dresseur chevronné : ça finit par prendre */
+  R(c,'S.comps=[];globalThis.__ok=null;'
+    +'for(let i=0;i<60&&!S.comps.length;i++){E=mkEnemy("loup",1,false,false);EE=[E];E.hp=1;tameBeast();}');
+  eq(G(c,'S.comps.length'),1,'un loup affaibli finit par se laisser prendre');
+  const b=G(c,'(()=>{const x=S.comps[0];return {type:x.type,cre:x.cre,lv:x.lv,hp:x.hp,order:x.order};})()');
+  eq(b.type,'bete','c\'est bien une bête');
+  eq(b.cre,'loup','elle garde son espèce — de quoi lui rendre sa silhouette');
+  gt(b.hp,0,'elle arrive en vie');
+  /* les ordres changent ce qu'elle fait */
+  R(c,'S.occ="combat";E=mkEnemy("cerf",3,false,false);EE=[E];');
+  R(c,'S.comps[0].order="suivre";globalThis.__d0=compDmg(S.comps[0],E);');
+  R(c,'S.comps[0].order="attaquer";globalThis.__d1=compDmg(S.comps[0],E);');
+  R(c,'S.comps[0].order="tenir";globalThis.__d2=compDmg(S.comps[0],E);');
+  eq(G(c,'__d0'),0,'« suivre » ne frappe pas');
+  gt(G(c,'__d1'),0,'« attaquer » frappe');
+  ok(G(c,'__d2')<G(c,'__d1'),'« tenir » frappe moins fort — il encaisse à ta place');
+  /* le moral pèse : une bête maltraitée frappe moins */
+  R(c,'S.comps[0].order="attaquer";S.comps[0].mood=100;globalThis.__h=compDmg(S.comps[0],E);'
+    +'S.comps[0].mood=20;globalThis.__b=compDmg(S.comps[0],E);');
+  ok(G(c,'__b')<G(c,'__h'),'une bête au moral bas frappe moins fort');
+  /* l'escorte a un plafond, et il vient du Charisme et du Leadership (E.17) */
+  R(c,'S.sx.cha.v=5;S.sk.leadership.lv=0;globalThis.__m0=escortMax();'
+    +'S.sx.cha.v=40;S.sk.leadership.lv=40;globalThis.__m1=escortMax();');
+  gt(G(c,'__m1'),G(c,'__m0'),'charisme et commandement ouvrent des places');
+  /* et l'on ne collectionne pas les bêtes sans fin */
+  R(c,'S.comps=[];for(let i=0;i<12;i++)S.comps.push({id:"z"+i,type:"bete",cre:"loup",nom:"z",el:0,lv:1,hp:1,max:1,order:"suivre",esc:false,dead:0,mode:"permanent"});'
+    +'__toast.length=0;E=mkEnemy("loup",1,false,false);EE=[E];E.hp=1;tameBeast();');
+  ok(G(c,'S.comps.length')<=12,'douze bêtes suffisent — '+G(c,'S.comps.length'));
+});
+
+test('cuisine — nourrit, soigne, et l\'harmonie des cinq paie',()=>{
+  const c=nouveau();
+  R(c,'S.carry=Object.keys(STATION);S.sk.cuisine.lv=20;');
+  /* de quoi cuisiner : une viande par élément, ce que la chasse rapporte */
+  R(c,'S.food={};for(let e=0;e<5;e++)addFood(foodKey("viande",e,MEATGRP[e]),4);'
+    +'globalThis.__cinq=Object.keys(S.food).slice(0,5);');
+  eq(G(c,'__cinq.length'),5,'on tient cinq ingrédients, un par élément');
+  /* un plat à trois éléments */
+  R(c,'S.faim=20;S.hp=10;globalThis.__f0=S.faim;cook(__cinq.slice(0,3));');
+  gt(G(c,'S.faim'),G(c,'__f0'),'un plat nourrit');
+  gt(G(c,'S.hp'),10,'et remet d\'aplomb');
+  /* l'harmonie des cinq éléments rend davantage que trois */
+  R(c,'S.food={};for(let e=0;e<5;e++)addFood(foodKey("viande",e,MEATGRP[e]),4);'
+    +'S.faim=0;cook(Object.keys(S.food).slice(0,3));globalThis.__trois=S.faim;');
+  R(c,'S.food={};for(let e=0;e<5;e++)addFood(foodKey("viande",e,MEATGRP[e]),4);'
+    +'S.faim=0;cook(Object.keys(S.food).slice(0,5));globalThis.__cinqN=S.faim;');
+  gt(G(c,'__cinqN'),G(c,'__trois'),'cinq éléments valent mieux que trois — '
+    +Math.round(G(c,'__cinqN'))+' contre '+Math.round(G(c,'__trois')));
+  /* ce qui manque ne se cuisine pas, et le poison reste au poison */
+  R(c,'__toast.length=0;S.food={};cook(["viande:0:force"]);');
+  ok(G(c,'__toast.length')>0,'un ingrédient absent est refusé');
+  R(c,'__toast.length=0;globalThis.__tox=Object.keys(PLANTE).find(k=>PLANTE[k].tox);'
+    +'if(__tox){addFood(__tox,2);cook([__tox]);}');
+  ok(!G(c,'__tox')||G(c,'__toast.length')>0,'une plante toxique ne va pas dans la marmite');
+  /* la faim ne dépasse pas son plafond */
+  R(c,'S.food={};for(let e=0;e<5;e++)addFood(foodKey("viande",e,MEATGRP[e]),4);'
+    +'S.faim=98;cook(Object.keys(S.food).slice(0,5));');
+  ok(G(c,'S.faim')<=100,'la faim ne déborde pas — '+G(c,'S.faim'));
+});
+
+test('lecture — un livre s\'use, réussit ou rate, et enseigne son domaine',()=>{
+  const c=nouveau();
+  R(c,'S.books=[];S.modules=[];for(let i=0;i<40;i++)dropBook(4);');
+  gte(G(c,'S.books.length'),1,'des livres tombent');
+  const n0=G(c,'S.books.length');
+  R(c,'globalThis.__dom=S.books[0].dom;readBook(0);');
+  eq(G(c,'S.books.length'),n0-1,'lire consomme le livre, réussite ou non');
+  /* la lecture progresse toujours, même sur un échec */
+  gt(G(c,'S.sk.lecture.xp+S.sk.lecture.lv'),0,'déchiffrer fait progresser en lecture');
+  /* avec assez de tentatives, on finit par apprendre — et dans le bon domaine */
+  R(c,'S.sk.lecture.lv=40;S.sx.per.v=40;S.modules=[];'
+    +'S.books=[];for(let i=0;i<60;i++)S.books.push({id:"b"+i,dom:__dom,diff:3});'
+    +'while(S.books.length)readBook(0);');
+  gt(G(c,'S.modules.length'),0,'un lecteur exercé finit par apprendre');
+  eq(G(c,'S.modules.every(m=>MODULE[m.id].d.includes(m.dom))'),true,
+    'chaque module appris relève bien du domaine de son livre');
+  eq(G(c,'S.modules.every(m=>m.lv>=1)'),true,'et il est utilisable');
+  /* relire le même domaine approfondit au lieu d'empiler des doublons */
+  const distincts=G(c,'new Set(S.modules.map(m=>m.id+":"+m.dom)).size');
+  eq(distincts,G(c,'S.modules.length'),'aucun doublon : relire approfondit');
+  /* lire un index qui n'existe pas ne casse rien */
+  R(c,'readBook(99);');
+  ok(true,'lire un livre absent ne lève pas');
+});
+
 test('escorte — compagnons et bêtes ont une silhouette',()=>{
   const c=nouveau();
   /* un compagnon humain et une bête apprivoisée */

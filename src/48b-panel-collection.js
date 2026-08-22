@@ -32,6 +32,11 @@ function pCollection(){
     h+=foldHead('col',f.k,D.g,D.n.toUpperCase(),
       f.a+' / '+f.t+' · '+Math.round(f.pct*100)+' %',null);
     if(!foldOpen('col',f.k,null))return;
+    /* OU CHERCHER CE QUI MANQUE. L'onglet disait ce qui manque et rien de
+       plus : pour une matiere cela suffit — on sait ou pousse un chene — mais
+       devant une piece nommee, un geste de creature ou une taille de gemme,
+       le joueur voit un trou sans savoir quel geste le comblerait. */
+    if(OU[f.k])h+='<div class="card"><div class="meta">Où : '+OU[f.k]+'</div></div>';
     if(COLBON[f.k])h+='<div class="card"><div class="meta">'
       +(f.pct>=1?'<b>Acquis : ':'À l\'achèvement : ')+COLBON[f.k]+(f.pct>=1?'</b>':'')+'</div></div>';
     const eus=colAvoir(f.k);

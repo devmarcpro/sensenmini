@@ -81,6 +81,41 @@ const COLLECTION={
   titre:{n:'Titres',g:'名',tout:()=>HFK,nom:k=>HAUTFAIT[k].n+' — '+HAUTFAIT[k].d,
     vus:()=>typeof hfAcquis==='function'?hfAcquis():[]},
 };
+/* ou trouver ce qui manque : une phrase par famille. Ce n'est pas de l'aide,
+   c'est la regle du jeu ecrite — « une piece nommee se prend sur le gardien
+   qui la garde » n'est pas un indice, c'est le fonctionnement. */
+const OU={
+  mat: "ramassées à la main, achetées à l'étal, ou tirées d'un alliage",
+  creature: "croisées en combat — chaque biome a ses espèces, et la nuit en sort d'autres",
+  biome: "traversés : la carte ne se remplit qu'en marchant",
+  poi: "rencontrés en explorant — certains ne sortent que dans un biome précis",
+  arme: "une arme se compte quand tu l'as portée, pas quand tu l'as vue",
+  outil: "les quatre outils de récolte, portés au moins une fois",
+  parure: "anneaux, amulettes, capes : portés, pas trouvés",
+  affixe: "porte l'arme qui porte l'effet — c'est la seule façon de l'inscrire",
+  affu: "de même pour les parures : il faut l'avoir au doigt",
+  artefact: "chaque gardien de donjon en garde une, et une seule",
+  gemme: "taillées chez le tailleur de pierre, ou trouvées serties",
+  taille: "sept tailles : c'est le tailleur qui décide, selon la gemme",
+  module: "lus dans les livres — la bibliothèque en ruine et le scriptorium en donnent",
+  alliage: "fondus à la forge, une fois la recette apprise",
+  fiole: "distillées à l'alambic : une plante d'alchimie décide de l'effet",
+  conso: "fabriqués — bandage, torche, huile, ration, manuel",
+  meuble: "posés dans un bâtiment, sur une cellule que tu tiens",
+  station: "bâties chez toi, ou portées sur le dos",
+  vehicule: "construits — et deux d'entre eux demandent une bête apprivoisée",
+  lieu: "les gestes des lieux : fouiller, écouter, se baigner, dépecer",
+  statut: "subis, pas choisis — c'est le seul catalogue qui se remplit en souffrant",
+  gardien: "au fond d'un donjon : un par thème, et le majeur au dernier étage",
+  guilde: "rejointes en prenant une quête dans leur hall",
+  quete: "accomplies — chaque guilde a les siennes, et ses hauts rangs en ouvrent d'autres",
+  prise: "à la ligne : chaque eau donne autre chose, et la salle noyée ne gèle jamais",
+  race: "croisées chez les habitants — les royaumes n'ont pas tous le même peuple",
+  culture: "lues sur les royaumes et leurs gens : douze façons de nommer le monde",
+  plat: "reconnus en cuisinant : ce qu'on met dans la marmite décide du plat",
+  geste: "vus s'armer en combat — le télégraphe sous la créature",
+  titre: "ce que tu as FAIT ; ils ne se cherchent pas, ils tombent"
+};
 const COLK=Object.keys(COLLECTION);
 
 /* ===== INSCRIRE ===== */

@@ -1087,6 +1087,16 @@ test('collection — tout ce que le monde contient, et ce qui manque',()=>{
   R(c,'collecte("fiole","xyz_inconnu");collecte("famille_inconnue","x");');
   eq(G(c,'colAvoir("fiole").length'),2,'une clé inconnue n\'entre pas dans le compte');
 
+  /* --- ET CHAQUE FAMILLE DOIT DIRE OU CHERCHER. « Remplir sa collection a
+     cent pour cent » sans indication d'ou regarder, c'est trente listes de
+     noms gris. Une famille ajoutee sans sa phrase laisserait le joueur devant
+     un trou muet. --- */
+  const muettes=G(c,'COLK.filter(k=>!OU[k])');
+  ok(muettes.length===0,'chaque famille dit ou trouver ce qui lui manque',
+    muettes.length?'sans indication : '+muettes.join(', '):'');
+  R(c,"S.fold=S.fold||{};S.fold.col='geste';globalThis.__pc2=pCollection();");
+  ok(G(c,'__pc2').indexOf('Où :')>0,'et l onglet l affiche');
+
   /* --- CHAQUE FAMILLE DOIT POUVOIR SE REMPLIR : une famille qu'aucun geste
      du jeu n'inscrit est une liste de choses inatteignables, et le
      pourcentage ne montera jamais a cent. --- */

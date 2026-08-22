@@ -8,7 +8,7 @@
      sauvegarde en arrière-plan, rechargement.
    Captures d'écran dans DIR (défaut : .shots/). Code de sortie 1 si problème. */
 import {spawn,spawnSync} from 'node:child_process';
-import {existsSync,mkdirSync,writeFileSync,rmSync,readFileSync} from 'node:fs';
+import {existsSync,mkdirSync,writeFileSync,rmSync,readFileSync,appendFileSync} from 'node:fs';
 import {join,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {tmpdir} from 'node:os';
@@ -377,5 +377,14 @@ try{
   for(const s of SCENARIOS)if(!only||s.key===only)await runScenario(s);
 }catch(e){console.error(e);problems.push({kind:'harnais',msg:String(e)});}
 ws.close();cleanup();
+/* UN DEFAUT QUI NE SE REPRODUIT PAS RESTE UN DEFAUT : on le consigne */
+if(problems.length){
+  try{
+    const t=new Date().toISOString(),nl=String.fromCharCode(10);
+    const ligne=problems.map(p=>t+'  '+p.scen+'  '+p.kind+'  '+p.msg).join(nl)+nl;
+    appendFileSync(join(SHOTS,'problemes.txt'),ligne);
+    console.log('  (consigne dans .shots/problemes.txt)');
+  }catch(e){}
+}
 console.log('\n'+(problems.length?problems.length+' probleme(s)':'aucun probleme detecte')+' - captures : '+SHOTS);
 process.exit(problems.length?1:0);

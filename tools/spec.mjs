@@ -1230,6 +1230,15 @@ test('gestes — quatorze telegraphes, tous portes et tous lisibles',()=>{
   /* un statut annonce doit exister */
   const st=G(c,'Object.keys(PATTERN).filter(k=>PATTERN[k].st&&!STATUS[PATTERN[k].st])');
   ok(st.length===0,'aucun geste ne pose un etat qui n existe pas');
+  /* ET LE HAUT DU BESTIAIRE DOIT LES PORTER AUSSI. Les huit gestes neufs
+     n'etaient distribues qu'aux especes de debut de partie : les combats qui
+     comptent — auroch, troll, hydre, forgeron calcine — se lisaient encore
+     avec les six d'origine. Un telegraphe neuf qui ne sert qu'aux loups est
+     un telegraphe qu'on n'a plus besoin de lire quand ca devient dur. */
+  const bas=G(c,'Object.keys(PATTERN).filter(k=>!CK.some(x=>CREATURE[x].lv>=20&&(CREATURE[x].pat||[]).includes(k)))');
+  ok(bas.length===0,'chaque geste est porte par au moins une espece de haut niveau',
+    bas.length?'absents du haut du bestiaire : '+bas.join(', '):'');
+
   /* le geste s inscrit quand la creature l arme : c est la qu on le VOIT */
   R(c,`S.col={};S.occ='combat';E=null;EE=[];spawn();
     E.pats=['souffle'];armePattern(E);`);

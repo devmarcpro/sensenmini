@@ -5345,6 +5345,65 @@ test('publication — feuille de style et code du même âge',()=>{
     'la version du cache est un condensé du contenu');
 });
 
+test('failles — le monde ne s epuise pas',()=>{
+  /* 3.5 pose la question et ne la tranche pas : « un nouveau donjon peut-il
+     apparaitre ailleurs dans le monde pour remplacer celui disparu ? » Sans
+     reponse, le jeu repondait NON : la reserve de failles autour de chez soi
+     s epuisait pour toujours, et il ne restait qu a marcher plus loin. */
+  const c=nouveau();
+  const poser=`(o)=>{S.world[key(o.x,o.y)]=Object.assign(
+    {x:o.x,y:o.y,b:'plaine',corr:o.corr,corr0:o.corr0===undefined?o.corr:o.corr0,
+     cleared:0,vide:0,mats:[],stock:{},poi:null,claim:null},o);}`;
+  R(c,`globalThis.__pose=${poser};`);
+
+  /* --- UNE CASE TRES CORROMPUE FINIT PAR S OUVRIR --- */
+  R(c,`S.world={};__pose({x:20,y:20,corr:90,corr0:20});
+    let n=0;for(let i=0;i<400;i++){weekly();if(S.world[key(20,20)].poi==='donjon'){n=i+1;break;}}
+    globalThis.__ouvert=S.world[key(20,20)].poi;globalThis.__sem=n;`);
+  eq(G(c,'__ouvert'),'donjon','une case laissee tres au-dessus de son bruit finit par s ouvrir');
+
+  /* --- MAIS PAS UNE CASE TRANQUILLE --- */
+  R(c,`S.world={};__pose({x:21,y:21,corr:20,corr0:20});
+    for(let i=0;i<400;i++)weekly();`);
+  eq(G(c,`S.world[key(21,21)].poi`),null,'une case a son bruit de base ne s ouvre jamais');
+
+  /* --- NI CE QU ON TIENT --- */
+  R(c,`S.world={};__pose({x:0,y:0,corr:20,corr0:20,claim:'base'});
+    __pose({x:1,y:0,corr:90,corr0:20});
+    for(let i=0;i<400;i++)weekly();`);
+  eq(G(c,`S.world[key(1,0)].poi`),null,
+    'a cote de ce que tu tiens, rien ne s ouvre — tenir du terrain protege');
+
+  /* --- ET LE MONDE NE SE COUVRE PAS DE FAILLES ---
+     Vingt candidates, chacune tenue au-dessus de son bruit par un camp
+     voisin : elles restent eligibles indefiniment, ce qui isole le
+     plafond de la decroissance naturelle. Le plafond ne compte que les
+     FAILLES — un monde un peu explore porte assez de camps pour que la
+     regle se taise d elle-meme si on les comptait. */
+  R(c,`S.world={};
+    for(let i=0;i<20;i++){
+      __pose({x:40+i*3,y:50,corr:70,corr0:60,poi:'camp'});
+      __pose({x:41+i*3,y:50,corr:85,corr0:60});
+    }
+    for(let i=0;i<800;i++)weekly();
+    globalThis.__n=Object.values(S.world).filter(z=>z.poi==='donjon').length;`);
+  const n=G(c,'__n');
+  ok(n>=2,'plusieurs failles finissent par s ouvrir — '+n);
+  ok(n<=4,'mais jamais plus de quatre ouvertes a la fois — '+n);
+
+  /* --- ET LE JOUEUR L APPREND ---
+     weekly() n'a pas de valeur de retour : son rapport part au journal.
+     C'est donc le journal qu'on lit — une faille qui s'ouvre sans qu'on
+     l'apprenne n'existe pas. */
+  R(c,`S.world={};__pose({x:31,y:31,corr:95,corr0:20});
+    globalThis.__dit='';
+    for(let i=0;i<400;i++){const rap=weekly()||[];
+      if(S.world[key(31,31)].poi==='donjon'){__dit=rap.join(' | ');break;}}`);
+  ok(String(G(c,'__dit')).indexOf('faille')>=0,
+    'et le journal le dit — une faille qui s ouvre sans qu on l apprenne n existe pas',
+    String(G(c,'__dit')));
+});
+
 test('corruption — le monde ne fait plus que noircir',()=>{
   /* E.20 donne quatre mouvements ; il n en existait qu un et demi. Un foyer
      poussait la corruption sans plafond et sans retour : une case gagnee
@@ -5374,7 +5433,10 @@ test('corruption — le monde ne fait plus que noircir',()=>{
   eq(G(c,'__dj'),35,'une faille, vingt-cinq — le foyer majeur pese plus lourd');
 
   /* --- LE MONDE REVIENT A LUI-MEME --- */
-  R(c,`S.world={};__pose({x:5,y:5,corr:60,corr0:20});
+  /* la case porte un sanctuaire : cela ne change rien a la decroissance, et
+     cela l'ecarte des candidates a l'ouverture d'une faille — sans quoi elle
+     s'ouvrirait sous la mesure et cesserait de refluer */
+  R(c,`S.world={};__pose({x:5,y:5,corr:60,corr0:20,poi:'sanctuaire'});
     for(let i=0;i<10;i++)weekly();`);
   eq(G(c,`S.world[key(5,5)].corr`),50,
     'loin de tout foyer, la corruption reflue vers le bruit de base, un point par semaine');

@@ -112,6 +112,55 @@ function weekly(){
   if(inf)r.push(inf+' cases gagnées par la corruption');
   if(calm)r.push(calm+' cases s\'apaisent');
   if(civ)r.push(civ+" cases refoulées par ce que tu tiens");
+  /* ==================================================================
+     DE NOUVELLES FAILLES S'OUVRENT (question ouverte de 3.5).
+     Le document la pose et ne la tranche pas : « un nouveau donjon peut-il
+     apparaitre ailleurs dans le monde pour remplacer celui disparu ? »
+     Sans reponse, le jeu repondait NON — un donjon nettoye disparait, la
+     cellule redevient normale, et rien ne vient jamais. La reserve de
+     failles autour de chez soi s'epuise donc pour toujours ; il ne reste
+     qu'a marcher plus loin, indefiniment. Un monde infini par la taille,
+     et fini par le contenu.
+
+     La reponse tient dans ce qui existe deja : LA CORRUPTION. Une case
+     qu'aucune civilisation ne presse, qu'aucun foyer ne nourrit plus, mais
+     restee tres au-dessus de son bruit, finit par s'ouvrir. On ne tire que
+     dans ce que le joueur a vu — une case jamais visitee porte deja ce que
+     la generation lui a donne — et jamais chez lui : ce qu'on TIENT ne
+     s'ouvre pas. Tenir du terrain devient donc la seule facon d'empecher
+     le monde de se retourner contre soi, ce qui est exactement ce que la
+     pression de civilisation (E.20) promettait sans encore rien couter. */
+  const ouvrables=[];
+  let failles=0;
+  for(const k in S.world){
+    const z=S.world[k];
+    if(z.poi==='donjon'&&!z.djDone){failles++;continue;}
+    if(z.poi||z.claim||z.town||presse[k])continue;
+    ouvrables.push(z);
+  }
+  /* ON NE COMPTE QUE LES FAILLES, PAS LES CAMPS. Une premiere version
+     plafonnait sur tous les foyers : un monde un peu explore en porte
+     assez pour que plus rien ne s'ouvre jamais, et la regle se serait
+     tue d'elle-meme sans que rien ne le dise. Quatre failles ouvertes a
+     la fois parmi ce qu'on connait : au-dela, la terre attend qu'on en
+     ferme une. */
+  if(ouvrables.length&&failles<4){
+    /* la plus noire d'abord — une faille s'ouvre la ou la corruption a le
+       plus pousse au-dessus du bruit, pas au hasard */
+    const delta=z=>z.corr-(z.corr0||0);
+    ouvrables.sort((a,b)=>delta(b)-delta(a));
+    const z=ouvrables[0];
+    /* la chance se lit sur l'ECART au bruit, et sur lui seul : une terre
+       naturellement noire n'ouvre rien, c'est ce qu'on lui a fait qui
+       compte. SEUIL points au-dessus pour commencer a exister. */
+    const SEUIL=22,PENTE=118;
+    if(Math.random()<Math.min(.35,(delta(z)-SEUIL)/PENTE)){
+      z.poi='donjon';z.dj=null;z.djDone=null;z.cleared=0;
+      r.push('<span class="bd">une faille s ouvre en ('+z.x+','+z.y+')</span>');
+      if(typeof cutIn==='function')
+        cutIn('裂','Une faille s ouvre','('+z.x+','+z.y+') — la corruption y a trop pousse');
+    }
+  }
   S.kingdoms=kingdomsNear();
   S.kingdoms.forEach(k=>{k.or=Math.min(15000,k.or+2000);
     /* le tribut se paie chaque semaine ; ce qu'il achete — la paix — se lit
@@ -126,4 +175,8 @@ function weekly(){
     }});
   weeklyTowns(r);weeklyFamilies(r);weeklyFarms(r);weeklyKingdom(r);weeklyGuild(r);
   log('<span class="in">Semaine '+S.week+'</span>'+(r.length?' · '+r.join(' · '):' · rien à signaler'));
+  /* le rapport est aussi RENDU : une fonction qui compose un compte rendu
+     doit pouvoir le donner a qui l'appelle, et pas seulement l'ecrire au
+     journal — c'est ce qui permet de l'eprouver ligne a ligne. */
+  return r;
 }

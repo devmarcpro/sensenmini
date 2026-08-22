@@ -2022,6 +2022,44 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('gestes de la case — un seul endroit pour une seule intention',()=>{
+  /* Aller sur un autel dans MONDE, ouvrir CELLULE pour le fouiller, ouvrir
+     MAGIE pour lire le grimoire qu'on vient d'y trouver : trois pages pour un
+     geste et sa suite. Le jeu savait tout faire, il le faisait dire par trois
+     endroits differents. */
+  const c=nouveau();
+  R(c,"S.occ='repos';S.books=[];here().poi=null;here().dj=null;");
+  eq(G(c,'gestesIci().length'),0,'sur une case nue, aucun geste — une barre de boutons grisés ne fait gagner aucun clic');
+
+  /* --- l autel --- */
+  R(c,"here().poi='sanctuaire';here().shrine=0;S.week=5;");
+  ok(G(c,'gestesIci().some(g=>g[0].indexOf("shrine")===0)'),'sur un sanctuaire, on peut fouiller sans changer d onglet');
+  R(c,'here().shrine=S.week+1;');
+  ok(!G(c,'gestesIci().some(g=>g[0].indexOf("shrine")===0)'),'et une fois fouillé, le geste disparaît au lieu de se griser');
+
+  /* --- le livre trouve : le second onglet qu on s epargne --- */
+  R(c,"S.books=[{id:'a',dom:'feu',diff:9},{id:'b',dom:'eau',diff:3}];");
+  const lire=G(c,'gestesIci().filter(g=>g[0].indexOf("read")===0)');
+  eq(lire.length,1,'un livre en sac se lit depuis la carte');
+  ok(String(lire[0][0]).indexOf('read="1"')===0,'et c est le plus FACILE qui est proposé — celui qu on ouvrirait à la main');
+  R(c,"S.occ='combat';");
+  ok(!G(c,'gestesIci().some(g=>g[0].indexOf("read")===0)'),'on ne lit pas au milieu d un combat');
+
+  /* --- le donjon --- */
+  R(c,"S.occ='repos';S.books=[];here().poi='donjon';here().dj={clear:false,floors:[[{t:'salle'}]],f:0,r:0,nom:'x'};");
+  ok(G(c,'gestesIci().some(g=>g[0].indexOf("dj")===0)'),'on redescend depuis la carte');
+  R(c,'here().dj.clear=true;');
+  ok(!G(c,'gestesIci().some(g=>g[0].indexOf("dj")===0)'),'un donjon vidé ne propose plus rien');
+
+  /* --- ce sont les MEMES boutons : chaque attribut doit avoir son lecteur --- */
+  const src=readFileSync(join(root,'src','50-input.js'),'utf8');
+  R(c,"here().poi='sanctuaire';here().shrine=0;S.books=[{id:'a',dom:'feu',diff:3}];");
+  const attrs=G(c,'gestesIci().map(g=>g[0].split("=")[0])');
+  const orphelins=attrs.filter(a=>src.indexOf('data-'+a)<0);
+  ok(orphelins.length===0,'chaque geste de la carte est lu par l entrée du jeu',
+    orphelins.length?'sans lecteur : '+orphelins.join(', '):'');
+});
+
 test('caravane — un transporteur deplace de l or, il n en fabrique pas',()=>{
   /* Le Marchand et le Transporteur rendaient exactement la meme ligne :
      rend x 7 x reputation, de l'or venu de nulle part. Deux fiches, deux

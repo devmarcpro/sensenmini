@@ -72,6 +72,48 @@ function carteHtml(R){
   h+='</div>';
   return h;
 }
+/* ==================================================================
+   TROIS ONGLETS POUR UNE SEULE INTENTION.
+   Aller sur un autel dans MONDE, ouvrir CELLULE pour le fouiller,
+   ouvrir MAGIE pour lire le grimoire qu'on vient d'y trouver : trois
+   pages pour un geste et sa suite. Le jeu savait tout faire, il le
+   faisait dire par trois endroits differents.
+
+   Sous la carte vit desormais ce que la CASE OU L'ON EST permet, et
+   rien d'autre : entrer dans le donjon, fouiller l'autel, faire le
+   geste du lieu, pecher, lire le livre qu'on tient. Ce sont les MEMES
+   boutons — memes attributs, meme code d'entree — pas des doublons :
+   l'onglet CELLULE garde ses explications, la scene garde les gestes.
+
+   Une regle stricte, sans quoi la barre redeviendrait un menu : on
+   n'y met que ce qui est possible ICI, MAINTENANT. Une barre qui
+   affiche huit boutons grises ne fait gagner aucun clic.
+   ================================================================== */
+function gestesIci(){
+  const c=here(),g=[];
+  if(c.poi==='donjon'){
+    const d=c.dj;
+    if(!(d&&d.clear))g.push(['dj="1"','塔',d?'redescendre':'entrer dans le donjon']);
+  }
+  if(c.poi==='sanctuaire'&&!((c.shrine||0)>S.week-1))
+    g.push(['shrine="1"','社',"fouiller l'autel"]);
+  if(typeof LIEU==='object'&&LIEU[c.poi]&&lieuPret(c))
+    g.push(['lieu="1"',LIEU[c.poi].g,LIEU[c.poi].geste.toLowerCase()]);
+  /* LE LIVRE QU'ON VIENT DE TROUVER : c'est le second onglet qu'on
+     s'epargne. On lit le plus facile — celui qu'on ouvrirait a la main. */
+  if((S.books||[]).length&&S.occ!=='combat'){
+    let i=0;for(let k=1;k<S.books.length;k++)if(S.books[k].diff<S.books[i].diff)i=k;
+    const b=S.books[i];
+    g.push(['read="'+i+'"','読','lire '+(DOMAIN[b.dom]?DOMAIN[b.dom].n.toLowerCase():'')+' (DD '+readDD(b)+')']);
+  }
+  if(typeof pecheBlocage==='function'&&!pecheBlocage()&&S.occ!=='peche'&&S.occ!=='combat')
+    g.push(['occ="peche"','漁','pêcher']);
+  return g;
+}
+const gestesHtml=()=>{const g=gestesIci();
+  return g.length?'<div class="row" style="margin-top:6px">'
+    +g.map(([a,gl,n])=>'<button class="btn" data-'+a+'>'+gl+' '+n+'</button>').join('')+'</div>':'';};
+
 /* les trois occupations : elles suivent la carte, ou qu'elle soit */
 const carteActions=()=>'<div class="row"><button class="btn'+(S.occ==='combat'?' pri':'')+'" data-occ="combat">戦 Combattre</button>'
   +'<button class="btn'+(S.occ==='explore'?' pri':'')+'" data-occ="explore">歩 Explorer</button>'
@@ -83,7 +125,7 @@ function pMonde(){
   let h='<p class="hint">Une seule génération continue : la carte n\'est qu\'une fenêtre sur le monde voxel. Le danger sort des couches de bruit, jamais de la distance — et il dérive chaque semaine selon ce que tu nettoies ou laisses pourrir.</p>';
   /* sur grand ecran la carte est deja a gauche, en permanence : la repeter
      ici serait un doublon qu'il faudrait tenir a jour deux fois */
-  if(!grandEcran())h+=carteHtml(5)+carteLegende()+carteActions();
+  if(!grandEcran())h+=carteHtml(5)+carteLegende()+carteActions()+gestesHtml();
   else h+='<p class="hint">La carte et les trois occupations sont à gauche, toujours visibles — tu n\'as plus à quitter un menu pour voir où tu es.</p>';
   h+=blocVehicule();
   return h;

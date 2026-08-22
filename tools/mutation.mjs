@@ -120,6 +120,12 @@ const MUT=[
   ['garde : la hauteur encaisse','garde',[['src/24-combat.js',"    const inc=raw*(q===1?(acc>=1?.12:acc>0?.17:.30):1);",'    const inc=raw*(q===1?.20:1);']]],
   ['garde : le bouclier ne couvre que les voisines','garde',[['src/24-combat.js',"  if(grip().k==='bouclier'&&S.eq.main2&&(VOISINE[g]||[]).includes(d))return .5;","  if(grip().k==='bouclier'&&S.eq.main2)return .5;"]]],
   ['garde : ce qui vient de loin ne se pare pas','garde',[['src/24-combat.js',"  if(!d)return 0;                        /* ce qui vient de loin ne se pare pas */",'  if(!d)return 1;']]],
+  /* les six lieux */
+  ['lieu : le puits descend','six lieux',[['src/07b-lieux.js',"      if(c.depth<5){c.depth++;c.dug=0;bas=' · tu debouches dans la strate '+c.depth+' ('+STRATA[c.depth].n+')';}",'']]],
+  ['lieu : l arbre donne des semences','six lieux',[['src/07b-lieux.js','      const graines=Object.keys(MAT).filter(m=>MAT[m].crop&&MAT[m].nutr>0&&!MAT[m].tox);',"      const graines=['fer'];"]]],
+  ['lieu : le champ rend des composants','six lieux',[['src/07b-lieux.js','      const cts=Object.keys(COMP);','      const cts=[];']]],
+  ['lieu : la fumerolle chauffe','six lieux',[['src/07b-lieux.js',"      poserBuff('isofroid',40,1200,'Vapeurs chaudes');",'']]],
+  ['lieu : l epave paie','six lieux',[['src/07b-lieux.js',"      const or=ri(10,60)+lv('perception_sk')*3;S.or+=or;","      const or=0;"]]],
   /* les gestes */
   ['geste : il s inscrit quand il s arme','gestes',[['src/24-combat.js',"  if(typeof collecte==='function')collecte('geste',e.pat);",'']]],
   ['geste : le souffle porte loin','gestes',[['src/23c-creatures.js',"souffle: {n:'souffle',g:'息',wm:1.7,dm:1.05,hits:1,aoe:1,dist:1,st:'brulure'},","souffle: {n:'souffle',g:'息',wm:1.7,dm:1.05,hits:1,aoe:1,st:'brulure'},"]]],

@@ -113,6 +113,103 @@ const LIEU={
       gainXp('collecte',90);
       return 'os, cuir et viande séchée';
     }},
+  /* ==================================================================
+     SIX LIEUX DE PLUS, ET AUCUN QUI NE FASSE QUE DONNER.
+     Un lieu qui rend trois matieres au hasard est un coffre pose sur la
+     carte. Chacun de ceux-ci branche un systeme QUI EXISTE DEJA et que
+     rien n'alimentait assez — c'est la seule raison valable d'en ajouter.
+     ================================================================== */
+  epave:{n:'Épave',g:'難',geste:'Fouiller l\'épave',hebdo:1,
+    d:'Une coque eventree que la mer a recrachee. Le bois de coque et le cordage sont ce qui manque toujours pour armer un bateau.',
+    fais(c){
+      /* LA MARINE MANQUAIT DE SES PROPRES MATIERES : un voilier demande du
+         tissu et du bois, et rien sur la cote n'en donnait. */
+      const mats=['teck','chene','lin','chanvre','bronze','etain','coquillage','sel'];
+      let pris=[];
+      tirerN(mats.filter(m=>MAT[m]),3).forEach(m=>{
+        const n=ri(2,5)+Math.floor(lv('navigation')/10);
+        S.mat[m]=(S.mat[m]||0)+n;pris.push(n+' × '+matName(m));});
+      const or=ri(10,60)+lv('perception_sk')*3;S.or+=or;
+      gainXp('navigation',80);gainXp('collecte',60);
+      return pris.join(' · ')+' · +'+or+' or dans un coffre creve';
+    }},
+  puits:{n:'Puits ancien',g:'井',geste:'Descendre au puits',hebdo:1,
+    d:'Un puits que personne n\'a comble. L\'eau est partie depuis longtemps ; ce qui reste au fond, non.',
+    fais(c){
+      const mats=['salpetre','calcite','sel','argile','cristalmana','quartz'];
+      let pris=[];
+      tirerN(mats.filter(m=>MAT[m]),2).forEach(m=>{
+        const n=ri(3,7);S.mat[m]=(S.mat[m]||0)+n;pris.push(n+' × '+matName(m));});
+      /* on descend vraiment : un puits ouvre la strate suivante sans percer */
+      let bas='';
+      if(c.depth<5){c.depth++;c.dug=0;bas=' · tu debouches dans la strate '+c.depth+' ('+STRATA[c.depth].n+')';}
+      gainXp('minage',110);
+      return pris.join(' · ')+bas;
+    }},
+  arbre:{n:'Arbre vénérable',g:'樹',geste:'Recueillir ses graines',hebdo:1,
+    d:'Plus vieux que les royaumes autour. Ce qui tombe de lui pousse ailleurs.',
+    fais(c){
+      /* LES SEMENCES NE S'OBTENAIENT QU'A L'EPICIER : un joueur qui ne va
+         jamais en ville ne pouvait pas cultiver. Ici elles tombent d'un arbre. */
+      const graines=Object.keys(MAT).filter(m=>MAT[m].crop&&MAT[m].nutr>0&&!MAT[m].tox);
+      let pris=[];
+      tirerN(graines,2).forEach(m=>{
+        const n=ri(2,4);S.mat[m]=(S.mat[m]||0)+n;
+        if(typeof addFood==='function')addFood(m,n);
+        pris.push(n+' × '+matName(m));});
+      const bois=['chene','if','ebene','frene','tilleul'].filter(m=>MAT[m]);
+      const bm=pick(bois),bn=ri(4,9);S.mat[bm]=(S.mat[bm]||0)+bn;
+      gainXp('herboristerie',120);gainXp('agriculture',90);
+      return 'semences : '+pris.join(' · ')+' · '+bn+' × '+matName(bm)+' de branche morte';
+    }},
+  bataille:{n:'Champ de bataille',g:'戦',geste:'Ramasser sur le champ',hebdo:1,corr:4,
+    d:'Deux armees se sont defaites ici. Personne n\'est revenu ramasser ce qu\'elles ont laisse.',
+    fais(c){
+      /* LES COMPOSANTS ABIMES ne venaient que du butin humain : un artisan
+         qui ne se bat pas n'avait aucune source de pieces a refondre. */
+      let n=0;
+      const cts=Object.keys(COMP);
+      tirerN(cts,3).forEach(ct=>{
+        const mk=pick(['fer','bronze','cuir','chene','acier'].filter(m=>MAT[m]));
+        const q=Math.max(.3,.5+Math.random()*.4);
+        const kk=ct+'|brut|'+mk+'|'+(Math.round(q*4)/4);
+        const nb=ri(1,3);
+        const cc=S.comp[kk];
+        if(cc){cc.q=(cc.q*cc.n+q*nb)/(cc.n+nb);cc.n+=nb;}else S.comp[kk]={ct,f:'brut',mk,q,n:nb};
+        n+=nb;});
+      const os=ri(3,8);S.mat.os=(S.mat.os||0)+os;
+      gainXp('assemblage',90);gainXp('perception_sk',60);
+      return n+' composant(s) abîmé(s) · '+os+' × os';
+    }},
+  mine:{n:'Mine effondrée',g:'坑',geste:'Dégager l\'entrée',hebdo:1,
+    d:'Une galerie que la roche a refermee. Ce qu\'on y prend vient de bien plus bas que la surface.',
+    fais(c){
+      /* LA PROFONDEUR SANS PERCER : quatre percements pour toucher le
+         basalte, c'est une heure de jeu avant la premiere pepite. */
+      const prof=STRATA[Math.min(5,3+ri(0,2))];
+      const mats=[prof.rock,'fer','argent','or','cuivre','plomb','obsidienne','adamant','mithril']
+        .filter(m=>MAT[m]);
+      let pris=[];
+      tirerN(mats,3).forEach(m=>{
+        const n=Math.max(1,ri(1,4)+Math.floor(lv('minage')/12));
+        S.mat[m]=(S.mat[m]||0)+n;pris.push(n+' × '+matName(m));});
+      gainXp('minage',160);
+      return pris.join(' · ')+' — remontes d\'une galerie noyee';
+    }},
+  fumerolle:{n:'Fumerolle',g:'噴',geste:'Recueillir les vapeurs',hebdo:1,
+    d:'La terre respire ici, en soufre et en chaleur. On s\'y brule, ou on y gagne.',
+    fais(c){
+      const mats=['soufre','obsidienne','sel','cendre','basalte'].filter(m=>MAT[m]);
+      let pris=[];
+      tirerN(mats,2).forEach(m=>{
+        const n=ri(3,8);S.mat[m]=(S.mat[m]||0)+n;pris.push(n+' × '+matName(m));});
+      /* la chaleur reste dans les vetements : c'est un abri portatif */
+      poserBuff('isofroid',40,1200,'Vapeurs chaudes');
+      /* et l'on s'y brule si l'on s'attarde sans rien pour se couvrir */
+      if(Math.random()<.35)addStatus(S,'brulure',4,Math.max(1,maxHp()*.02));
+      gainXp('alchimie',110);
+      return pris.join(' · ')+' · +40 contre le froid, 20 min';
+    }},
 };
 const LIEUK=Object.keys(LIEU);
 /* combien de fois par semaine : un lieu « hebdo » se referme jusqu'à la

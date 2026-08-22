@@ -270,7 +270,16 @@ const POI={village:{n:'Village',g:'村'},donjon:{n:'Donjon',g:'塔'},camp:{n:'Ca
   ruine:{n:'Ruine ancienne',g:'廃'},tombe:{n:'Tombe scellée',g:'墓'},
   bibliotheque:{n:'Bibliothèque en ruine',g:'書'},source:{n:'Source chaude',g:'湯'},
   monolithe:{n:'Monolithe',g:'碑'},cercle:{n:'Cercle de pierres',g:'環'},
-  ermitage:{n:'Ermitage',g:'庵'},carcasse:{n:'Grande carcasse',g:'骸'}};
+  ermitage:{n:'Ermitage',g:'庵'},carcasse:{n:'Grande carcasse',g:'骸'},
+  /* SIX LIEUX DE PLUS. Treize points d'interet pour un monde infini, c'est
+     treize raisons de s'arreter — et l'on en croise une tous les quinze pas.
+     Chacun des six ci-dessous branche un systeme QUI EXISTE DEJA et que rien
+     n'alimentait assez : les semences ne s'achetaient qu'a l'epicier, les
+     composants abimes ne venaient que du butin humain, les matieres de
+     strate profonde exigeaient de percer quatre fois. */
+  epave:{n:'Épave',g:'難'},puits:{n:'Puits ancien',g:'井'},
+  arbre:{n:'Arbre vénérable',g:'樹'},bataille:{n:'Champ de bataille',g:'戦'},
+  mine:{n:'Mine effondrée',g:'坑'},fumerolle:{n:'Fumerolle',g:'噴'}};
 const TOWN=['Grispierre','Val-Muet','Fontcendre','Haute-Ronce','Sombreverse','Pierrelune','Trois-Racines',
   'Sel-du-Nord','Bassefeuille','Cormorance','Roche-Fendue','Ambrelune','Bois-Dormant','Clairvive','Ferrebrume',
   'Mortefontaine','Aubépine','Gué-des-Loups','Saint-Orme','Vieille-Forge','Brumaille','Les Tanneries','Ronce-Basse',

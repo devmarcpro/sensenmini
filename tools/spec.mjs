@@ -2042,6 +2042,55 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('six lieux — chacun nourrit un systeme qui manquait de source',()=>{
+  /* Un lieu qui rend trois matieres au hasard est un coffre pose sur la
+     carte. Chacun des six branche un systeme QUI EXISTE DEJA et que rien
+     n'alimentait assez — c'est la seule raison valable d'en ajouter. */
+  const c=nouveau();
+  ['epave','puits','arbre','bataille','mine','fumerolle'].forEach(k=>{
+    eq(G(c,'!!POI.'+k+'&&!!LIEU.'+k),true,'le lieu '+k+' existe des deux cotes');
+  });
+  R(c,`globalThis.__visite=(k)=>{here().poi=k;here().lieuW=0;S.week=9;
+      const av={mat:JSON.stringify(S.mat),comp:JSON.stringify(S.comp),or:S.or,
+        prof:here().depth,buffs:(S.buffs||[]).length};
+      lieuVisiter();
+      return {mat:JSON.stringify(S.mat)!==av.mat,comp:JSON.stringify(S.comp)!==av.comp,
+        or:S.or>av.or,prof:here().depth>av.prof,buffs:(S.buffs||[]).length>av.buffs};};`);
+
+  /* --- l epave arme un bateau, et paie --- */
+  R(c,'S.mat={};S.or=0;');
+  const ep=G(c,'__visite("epave")');
+  eq(ep.mat,true,'l épave rend des matières de marine');
+  eq(ep.or,true,'et de l or dans un coffre crevé');
+
+  /* --- le puits descend vraiment d une strate --- */
+  R(c,'S.mat={};here().depth=0;');
+  eq(G(c,'__visite("puits")').prof,true,'le puits ouvre la strate suivante sans percer');
+
+  /* --- l arbre donne des SEMENCES : elles ne s achetaient qu a l epicier --- */
+  R(c,'S.mat={};S.food={};');
+  R(c,'__visite("arbre");');
+  const sem=G(c,'Object.keys(S.mat).filter(m=>MAT[m]&&MAT[m].crop&&MAT[m].nutr>0)');
+  ok(sem.length>0,'l arbre donne des semences — la culture ne dépend plus d une ville');
+
+  /* --- le champ de bataille donne des COMPOSANTS : ils ne venaient que du butin --- */
+  R(c,'S.comp={};');
+  eq(G(c,'__visite("bataille")').comp,true,'le champ de bataille rend des composants abîmés');
+
+  /* --- la mine rend de la profondeur sans percer quatre fois --- */
+  R(c,'S.mat={};');
+  R(c,'__visite("mine");');
+  ok(G(c,'Object.keys(S.mat).length')>0,'la mine effondrée remonte des matières de fond');
+
+  /* --- la fumerolle chauffe, et brule parfois --- */
+  R(c,'S.mat={};S.buffs=[];');
+  eq(G(c,'__visite("fumerolle")').buffs,true,'les vapeurs posent une protection contre le froid');
+
+  /* --- tous se referment pour la semaine : un lieu sans limite est une mine d or --- */
+  R(c,"here().poi='epave';here().lieuW=S.week+1;");
+  eq(G(c,'lieuPret(here())'),false,'et chacun se referme jusqu à la semaine suivante');
+});
+
 test('touches — un raccourci qu on n annonce pas n existe pas',()=>{
   /* Le combat a ses raccourcis depuis le debut, ecrits sur ses boutons. Les
      onglets n'en avaient aucun, et pas de bouton ou les ecrire : on parcourait

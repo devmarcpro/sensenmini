@@ -112,6 +112,12 @@ const bio=sous(W,'b:'),poi=sous(W,'p:'),matsSauvages=sous(W,'m:');
 bilan('biomes poses par le monde',Object.keys(G('BIOME')),bio,
   MONDES+' x 8 100 cellules balayees');
 bilan('points d interet',Object.keys(G('POI')),poi);
+/* ---------- 1ter. les gestes de lieu ---------- */
+/* Un LIEU est un geste attache a un point d'interet. Si le point d'interet
+   ne sort jamais de la generation, le geste n'existe que dans la table. */
+bilan('gestes de lieu',G('LIEUK'),poi,
+  'un geste attache a un lieu que le monde ne pose jamais');
+
 
 /* ---------- 1bis. les gestes de creature ---------- */
 /* Le telegraphe est la seule information que le joueur ait en combat. Un

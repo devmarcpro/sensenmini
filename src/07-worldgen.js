@@ -76,6 +76,13 @@ function genCell(x,y){
     else if(r2<.138&&mana&&!sec)c.poi='cercle';
     else if(r2<.162&&(c.b==='foret'||c.b==='taiga'||c.b==='montagne'||c.b==='jungle'))c.poi='ermitage';
     else if(r2<.190&&(froid||c.b==='desert'||c.b==='badlands'||c.b==='banquise'||chaud))c.poi='carcasse';
+    /* les six nouveaux : chacun la ou son histoire tient debout */
+    else if(r2<.215&&(c.b==='cote'||c.b==='salines'||c.b==='banquise'))c.poi='epave';
+    else if(r2<.240&&(sec||c.b==='steppe'||c.b==='oasis'||c.b==='badlands'))c.poi='puits';
+    else if(r2<.268&&(c.b==='foret'||c.b==='foretmana'||c.b==='jungle'||c.b==='taiga'))c.poi='arbre';
+    else if(r2<.292&&(c.b==='plaine'||c.b==='steppe'||c.b==='ruines'||c.b==='badlands'))c.poi='bataille';
+    else if(r2<.316&&(haut||c.b==='karst'||c.b==='montcris'))c.poi='mine';
+    else if(r2<.340&&(c.b==='cendres'||c.b==='montcris'||c.b==='salines'))c.poi='fumerolle';
   }
   if(c.poi==='village'){
     const base=TOWN[Math.floor(hash(x,y,s,11)*TOWN.length)];

@@ -96,6 +96,10 @@ const MUT=[
   ['symetrie : le souffle des creatures','symetrie',[['src/28-loop.js',"    if(e.w<0&&!crePeutFrapper(e))continue;",'']]],
   ['symetrie : la depense','symetrie',[['src/28-loop.js','{creDepense(e);resolveHit(S.guard?1:0,e);}','resolveHit(S.guard?1:0,e);']]],
   ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,zk):tgt.arm)",'tgt.arm']]],
+  /* le scriptorium */
+  ['scriptorium : on comble sa lacune','scriptorium',[['src/14b-consommables.js','      doms.sort((a,b)=>connus[a]-connus[b]);','      doms.sort((a,b)=>connus[b]-connus[a]);']]],
+  ['scriptorium : la difficulte suit la lecture','scriptorium',[['src/14b-consommables.js',"      const diff=Math.max(2,Math.min(12,2+Math.floor(lv('lecture')/6)));",'      const diff=4;']]],
+  ['scriptorium : on n ecrit que ce qu on sait','scriptorium',[['src/14b-consommables.js',"      if(!doms.length)return 'aucun domaine pratiqué — le papier reste blanc';","      if(!doms.length){S.books.push({id:'b'+(S.nid++),dom:'feu',diff:4});return 'x';}"]]],
   /* les cultures */
   ['culture : douze pour un humain','cultures',[['src/05-data-social.js',"cult:['latine','nordique','germanique','hellenique','slave','celte','sino','nipponne','arabo','persane','bantoue','andine'],pot:{}},","cult:['latine','nordique'],pot:{}},"]]],
   ['culture : la collection les compte','cultures',[['src/48-collection.js',"  for(const k in (S.kd||{}))(S.kd[k]||[]).forEach(r=>{if(r&&r.cult)collecte('culture',r.cult);});",'']]],

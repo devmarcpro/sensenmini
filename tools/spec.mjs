@@ -1136,6 +1136,46 @@ test('anatomie — le coup vaut ce qu il touche, et la visee remplace le de',()=
   ok(torse>pieds&&torse<tete,'et le torse est entre les deux');
 });
 
+test('scriptorium — on peut enfin ECRIRE un livre, pas seulement en trouver',()=>{
+  /* Les livres sont la seule porte vers les modules, et toutes leurs sources
+     se subissent : un butin, un etal, un don de guilde. Le scriptorium en
+     fait une source qu'on choisit — mais on n'y copie QUE ce qu'on sait. */
+  const c=nouveau();
+  eq(G(c,'!!STATION.scriptorium'),true,'la station existe');
+  eq(G(c,'STATION.scriptorium.sk'),'lecture','et c est la lecture qui la tient');
+
+  /* --- sans station, rien --- */
+  R(c,"S.stations={};S.mat={};S.ref={};");
+  ok(String(G(c,'consoBlocage("manuel")')||'').length>0,'sans scriptorium, on ne copie rien');
+
+  /* --- sans module, le papier reste blanc --- */
+  R(c,`S.stations={scriptorium:1};S.modules=[];S.books=[];
+    globalThis.__m=CONSO.manuel.fais();`);
+  eq(G(c,'S.books.length'),0,'sans rien savoir, on n écrit pas');
+  ok(String(G(c,'__m')).indexOf('blanc')>=0,'et le jeu le dit');
+
+  /* --- on comble sa lacune : le domaine le plus pauvre vient --- */
+  R(c,`S.modules=[{id:MK[0],dom:'feu',lv:1,xp:0},{id:MK[1],dom:'feu',lv:1,xp:0},
+      {id:MK[2],dom:'eau',lv:1,xp:0}];
+    S.books=[];S.sk.lecture={xp:0,lv:30};CONSO.manuel.fais();`);
+  eq(G(c,'S.books.length'),1,'un livre est ecrit');
+  eq(G(c,'S.books[0].dom'),'eau','et c est le domaine le plus pauvre qu on comble');
+
+  /* --- la difficulte suit la lecture, jamais au-dessus de soi --- */
+  R(c,"S.books=[];S.sk.lecture={xp:0,lv:6};CONSO.manuel.fais();globalThis.__d1=S.books[0].diff;");
+  R(c,"S.books=[];S.sk.lecture={xp:0,lv:60};CONSO.manuel.fais();globalThis.__d2=S.books[0].diff;");
+  ok(G(c,'__d2')>G(c,'__d1'),'un scribe aguerri ecrit plus dense — '+G(c,'__d1')+' puis '+G(c,'__d2'));
+  ok(G(c,'__d2')<=12,'et jamais au-dela de ce qui se relit');
+
+  /* --- et le livre ecrit se lit vraiment --- */
+  R(c,`S.books=[];S.modules=[{id:MK[0],dom:'feu',lv:1,xp:0}];S.sk.lecture={xp:0,lv:40};
+    CONSO.manuel.fais();globalThis.__n0=S.modules.length;
+    globalThis.__ok=false;for(let i=0;i<40&&!__ok;i++){
+      S.books=[{id:'x',dom:S.books[0]?S.books[0].dom:'feu',diff:2}];readBook(0);
+      if(S.modules.length>__n0)__ok=true;}`);
+  eq(G(c,'__ok'),true,'un livre de sa propre main enseigne comme un autre');
+});
+
 test('cultures — douze, toutes reelles, toutes atteignables',()=>{
   /* C.9 en annonce douze et nous en avions dix, dont trois inventees pour des
      races inventees. Une culture ne porte AUCUNE regle de jeu, seulement des
@@ -2353,6 +2393,9 @@ test('consignes — le plan apprend les verbes des nouveaux systemes',()=>{
     S.mat={fer:80,or:3,chene:20,lin:20,sel:10,terre:20,gres:20,os:10};
     S.ref={'tissu:lin':6,'lingot:fer':6,'tanne:cuir':4};
     S.conso={bandage:2,torche:2};
+    /* de quoi copier un manuel : un scriptorium, une lecture, et un domaine
+       qu'on pratique deja — on n'ecrit que ce qu'on sait */
+    S.sk.lecture.lv=20;S.modules=[{id:MK[0],dom:'feu',lv:1,xp:0}];S.books=[];
     S.items=[mkParure('anneau',null,1.2)];S.items[0].vole=1;
     S.vehicule={k:'charrette',pv:1,crie:0};
     S.st=[];addStatus(S,'infection',4,1);addStatus(S,'poison',4,1);

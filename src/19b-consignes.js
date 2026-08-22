@@ -183,6 +183,10 @@ const ACTES={
     peut:()=>hasStation('alambic')&&Object.keys(S.food||{}).some(k=>ALCHPLANTE[k]&&S.food[k]>0),
     fais:()=>{const k=Object.keys(S.food).find(x=>ALCHPLANTE[x]&&S.food[x]>0);
       if(k)distill([k]);}},
+  copier:{n:'copier un manuel',g:'書',d:'au scriptorium, dans le domaine le plus pauvre',
+    peut:()=>typeof CONSO==='object'&&!!CONSO.manuel&&!consoBlocage('manuel')
+      &&lv('lecture')>=5&&(S.modules||[]).length>0&&(S.books||[]).length<6,
+    fais:()=>{consoFaire('manuel');const i=CONSK.indexOf('manuel');if(i>=0)consoUser('manuel');}},
   reparer:{n:'réparer l\'attelage',g:'車',d:'il faut la station et le quart des matières',
     peut:()=>{const veh=vehicule();return !!veh&&veh.pv<vehDef().pv&&hasStation(vehDef().st);},
     fais:()=>{vehReparer();}},

@@ -67,6 +67,13 @@ const STATION={
   enchantement:{n:"Table d'enchantement",g:'呪',sk:'enchantement',p:50,cost:[['form:taillee',6],['form:lingot',4]]},
   cuisine:{n:'Cuisine',g:'厨',sk:'cuisine',p:40,cost:[['roche',8],['bois',6]]},
   alambic:{n:'Alambic',g:'蒸',sk:'alchimie',p:45,cost:[['form:lingot',4],['roche',6]]},
+  /* LES LIVRES SONT LA SEULE PORTE VERS LES MODULES, et on ne pouvait pas en
+     faire. Ils tombaient d'un butin, d'un etal, d'une guilde — toutes des
+     sources qu'on subit. F.1 porte le papier au catalogue des matieres depuis
+     toujours ; il n'avait ni fabricant ni usage. Le scriptorium est cette
+     usage : des fibres, du noir de fumee, et une compétence de lecture assez
+     haute pour ECRIRE ce qu'on sait deja. */
+  scriptorium:{n:'Scriptorium',g:'書',sk:'lecture',p:55,cost:[['bois',10],['vegetal',10],['form:taillee',3]]},
   /* Palier industriel (4.2.2) : deux stations qui prolongent les premieres.
      Elles coutent cher et se batissent APRES leur ainee — c'est ce qui fait
      du palier une fin de partie et non un raccourci. */

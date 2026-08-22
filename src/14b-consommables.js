@@ -39,6 +39,27 @@ const CONSO={
     d:'cinq minutes durant, tes coups portent du feu en plus',
     utile:()=>!S.huile&&(S.occ==='combat'||S.occ==='donjon'),
     fais(){S.huile=300;return 'la lame fume';}},
+  /* ON NE COPIE QUE CE QU'ON SAIT. Le domaine sort de ce dont on porte deja
+     un module, et c'est le PLUS PAUVRE qui vient : un scribe comble ses
+     lacunes, il ne devine pas un art qu'il n'a jamais vu. La difficulte suit
+     la lecture — ecrire au-dessus de son niveau produirait un livre qu'on ne
+     saurait pas relire, ce qui serait une farce. */
+  manuel:{n:'Manuel copié',g:'冊',lot:1,st:'scriptorium',sk:'lecture',
+    cout:[['vegetal',8],['mineral',2]],
+    d:'un livre écrit de ta main, dans un domaine que tu pratiques déjà',
+    utile:()=>lv('lecture')>=5&&(S.modules||[]).length>0,
+    fais(){
+      const connus={};(S.modules||[]).forEach(m=>{
+        if(m.dom)connus[m.dom]=(connus[m.dom]||0)+1;});
+      const doms=Object.keys(connus).filter(d=>DOMAIN[d]);
+      if(!doms.length)return 'aucun domaine pratiqué — le papier reste blanc';
+      doms.sort((a,b)=>connus[a]-connus[b]);
+      const dm=doms[0];
+      const diff=Math.max(2,Math.min(12,2+Math.floor(lv('lecture')/6)));
+      S.books.push({id:'b'+(S.nid++),dom:dm,diff});
+      gainXp('lecture',diff*40);
+      return DOMAIN[dm].n+' · difficulté '+diff;
+    }},
   ration:{n:'Ration de voyage',g:'糧',lot:4,st:'cuisine',sk:'cuisine',
     cout:[['vegetal',3],['mineral',1]],
     d:'nourrit franchement, et sans le risque de la chair crue',

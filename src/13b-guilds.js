@@ -165,7 +165,13 @@ const GUILDGIFT={
 function guildOf(k){return S.guilds[k]||(S.guilds[k]={rank:0,xp:0,gains:0});}
 const guildRankNeed=r=>100*Math.pow(2,r);
 /* les gabarits ouverts à une guilde, au rang courant */
-const guildTemplates=gk=>QTPL.filter(t=>t.g===gk&&t.r<=guildOf(gk).rank);
+/* guildOf() CREE la guilde si elle n'existe pas — c'est ce qu'on veut quand
+   on s'y engage, et c'est une faute quand on ne fait que REGARDER. Depuis
+   qu'une consigne demande « puis-je prendre une quete ? » a chaque battement,
+   la simple lecture inscrivait le personnage dans les cinq guildes du monde.
+   Une condition ne doit rien changer a ce qu'elle observe. */
+const guildRank=gk=>((S.guilds||{})[gk]||{rank:0}).rank||0;
+const guildTemplates=gk=>QTPL.filter(t=>t.g===gk&&t.r<=guildRank(gk));
 /* choisir la matière d'une quête selon le sélecteur du gabarit */
 function questMat(t){
   const c=here();

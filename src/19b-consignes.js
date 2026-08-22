@@ -183,6 +183,20 @@ const ACTES={
     peut:()=>hasStation('alambic')&&Object.keys(S.food||{}).some(k=>ALCHPLANTE[k]&&S.food[k]>0),
     fais:()=>{const k=Object.keys(S.food).find(x=>ALCHPLANTE[x]&&S.food[x]>0);
       if(k)distill([k]);}},
+  /* LES QUETES SONT LE SEUL SYSTEME QUE LE PLAN NE SAVAIT PAS CONDUIRE.
+     Cinquante-six gabarits, cinq guildes, cinq rangs — et un personnage qui
+     joue seul n'en prenait jamais une. L'instrument de partie longue l'a dit
+     sans detour : la famille « quetes accomplies » reste a zero apres
+     soixante jours. Un contenu qu'aucune boucle automatique n'atteint
+     n'existe que pour celui qui clique. */
+  prendrequete:{n:'prendre une quête',g:'受',d:'auprès d\'une guilde à portée, si l\'on n\'en a pas',
+    peut:()=>!S.quest&&GUILDS.some(g=>guildReachable(g.k)&&guildTemplates(g.k).length),
+    fais:()=>{const g=GUILDS.find(x=>guildReachable(x.k)&&guildTemplates(x.k).length);
+      if(g)newQuest(g.k);}},
+  rendrequete:{n:'rendre la quête',g:'達',d:'une livraison ne se conclut pas toute seule',
+    peut:()=>!!S.quest&&S.quest.cur>=S.quest.need
+      &&(S.quest.type!=='deliver'||(S.mat[S.quest.mat]||0)>=S.quest.need),
+    fais:()=>{completeQuest();}},
   copier:{n:'copier un manuel',g:'書',d:'au scriptorium, dans le domaine le plus pauvre',
     peut:()=>typeof CONSO==='object'&&!!CONSO.manuel&&!consoBlocage('manuel')
       &&lv('lecture')>=5&&(S.modules||[]).length>0&&(S.books||[]).length<6,
@@ -315,6 +329,25 @@ function planDefaut(){
     /* on ne se bat pas dans les rues : sans cette ligne, entrer dans un
        village suffisait a figer le plan. Eteins-la si tu veux y flaner. */
     {c:'enville',v:0,a:'ailleurs',on:true},
+    /* TROIS VERBES QUE LE PLAN SAIT DESORMAIS CONDUIRE, ET QUI RESTENT
+       ETEINTS PAR DEFAUT. Je les avais allumes, croyant remplir du temps
+       mort ; la mesure sur six parties de soixante jours dit le contraire :
+       equipement 27,8 puis 21,8, et l'or tombe de sept a quatre par jour.
+       Zero quete prise, pourtant — la bote ne se tient jamais dans un hall.
+       Le cout ne vient donc pas de ce que ces lignes FONT, mais de ce que
+       leur condition doit REGARDER : chercher une guilde a portee fait
+       naitre les villes voisines plus tot, et « on ne se bat pas dans les
+       rues » envoie alors le personnage marcher au lieu de chasser.
+
+       Une ligne qu'on n'utilise pas doit donc rester froide. Le joueur qui
+       veut un coureur de quetes les allume d'un clic — le verbe existe, la
+       decision lui revient, chiffres a l'appui. */
+    {c:'toujours',v:0,a:'rendrequete',on:false},
+    {c:'toujours',v:0,a:'prendrequete',on:false},
+    /* pecher quand l'eau est la et que le ventre parle : la peche nourrit
+       sans combat et sans territoire, c'est exactement le trou qu'elle
+       comble */
+    {c:'aubordeleau',v:0,a:'pecher',on:false},
     {c:'toujours',v:0,a:'combattre',on:true},
     {c:'toujours',v:0,a:'explorer',on:true},
   ];

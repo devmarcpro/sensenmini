@@ -2615,6 +2615,9 @@ test('consignes — le plan apprend les verbes des nouveaux systemes',()=>{
         /* le climat mord : « se mettre a l abri » n a de sens que la */
         ()=>{globalThis.__ft2=feltTemp;feltTemp=()=>-30;S.occ='repos';},
         ()=>{here().poi='camp';S.occ='repos';},
+        /* une quete DEJA remplie qui attend d'etre rendue — et son absence,
+           qui est la seule situation ou l'on peut en prendre une */
+        ()=>{S.quest={g:GUILDS[0].k,tpl:QTPL[0].id,type:'kill',cur:9,need:1,or:10,xp:5,txt:'x'};S.occ='repos';},
       ];
       const p0=S.pos.slice(),j0=S.day;
       scenes.forEach(s=>{

@@ -100,6 +100,8 @@ const MUT=[
   ['rotation : le geste pose la hauteur','rotation',[['src/24b-sequence.js',"    fais:g=>{S.gdir=(GARDES.some(x=>x.k===g)?g:'haut');S.guard=true;return true;}},","    fais:()=>{S.guard=true;return true;}},"]]],
   ['rotation : lire place la garde','rotation',[['src/24b-sequence.js',"    fais:()=>{S.gdir=patOf(E).dir;S.guard=true;return true;}},","    fais:()=>{S.guard=true;return true;}},"]]],
   ['rotation : ce qui ne s annonce pas ne se lit pas','rotation',[['src/24b-sequence.js','    peut:()=>!!E&&!!patOf(E).dir,','    peut:()=>!!E,']]],
+  ['conseil : les gestes se calculent','conseils',[['src/46-tips.js',"      +Object.keys(PATTERN).map(k=>{const P=PATTERN[k];","      +['simple','double'].map(k=>{const P=PATTERN[k];"]]],
+  ['conseil : un corps peut se calculer','conseils',[['src/46-tips.js',"const tipCorps=t=>typeof t.d==='function'?t.d():t.d;",'const tipCorps=t=>t.d;']]],
   /* la garde directionnelle */
   ['garde : la hauteur ouvre la fenetre','garde',[['src/24-combat.js',"  return parryWin()*(P.win||1)*(a>=1?1.6:a>0?1.15:.55);",'  return parryWin()*(P.win||1);']]],
   ['garde : la hauteur encaisse','garde',[['src/24-combat.js',"    const inc=raw*(q===1?(acc>=1?.12:acc>0?.17:.30):1);",'    const inc=raw*(q===1?.20:1);']]],

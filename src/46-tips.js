@@ -21,8 +21,25 @@ const TIPS=[
    d:'Une arme et un bouclier : parade élargie, réduction partout, et une parade parfaite pose son élément dans la chaîne. Deux armes : la seconde main pose son propre segment. Deux mains : plus fort, mais rien pour parer. Un arc : la Dextérité porte, tu tiens la distance, mais rien ne se pare.',
    when:()=>S.occ==='combat'||S.occ==='donjon'},
   {id:'geste',g:'二',t:'Lis le geste',
-   d:'La barre sous la créature annonce ce qui vient : 一 coup · 二 enchaînement · 重 charge (lente, facile à parer, très douloureuse) · 薙 balayage (prend aussi ton escorte) · 咬 morsure (saigne) · 吐 crachat (imparable, garde-toi).',
+   /* la liste se construit sur la table : elle ne peut plus vieillir */
+   d:()=>{const F={haut:'↑ haut',cote:'↔ latéral',bas:'↓ bas'};
+     return 'La barre sous la créature annonce ce qui vient, et D\'OÙ : '
+      +Object.keys(PATTERN).map(k=>{const P=PATTERN[k];
+        return P.g+' '+P.n+(P.dir?' ('+F[P.dir]+')':' (imparable)');}).join(' · ')
+      +'. Place ta garde à la bonne hauteur — 闘 COMBAT, section 護 — : elle encaisse moitié moins et double presque la chance de parade parfaite.';},
    when:()=>!!(E&&E.w>=0)},
+  {id:'hauteur',g:'護',t:'La garde a une hauteur',
+   d:'Trois : 上 haute pour ce qui tombe, 横 latérale pour ce qui fauche, 下 basse pour ce qui mord et ce qui saisit. Un bouclier couvre en plus les hauteurs VOISINES — jamais toutes. Au cinquième rang de 護 Garde réflexe, elle suit le télégraphe toute seule ; dans 闘 COMBAT, une ligne d\'enchaînement peut aussi la poser ou la lire.',
+   when:()=>!!(E&&E.w>=0)&&(S.guard||auto('garde')>0)},
+  {id:'boyau',g:'洞',t:'Une hampe cogne les parois',
+   d:'Dans une galerie ou un cul-de-basse-fosse, une arme d\'allonge — lance, hallebarde, trident — perd son balayage, se ramène plus lentement et coûte un quart de souffle en plus. La lame courte ne subit rien : c\'est ce qui en fait l\'arme des couloirs.',
+   when:()=>typeof etroitIci==='function'&&etroitIci()},
+  {id:'titre',g:'名',t:'Un titre',
+   d:'Quarante-deux titres nomment ce que tu as FAIT — pas ce que tu as vu. Ils ne donnent rien : on ne farme pas un nom. Ce qui paie, c\'est la collection : chaque famille achevée vaut 1 % d\'XP partout, et quatre d\'entre elles rendent bien davantage. Onglet 蒐 COLLECTION.',
+   when:()=>typeof hfAcquis==='function'&&hfAcquis().length>0},
+  {id:'scriptorium',g:'書',t:'Écrire un livre',
+   d:'Les livres sont la seule porte vers les modules, et toutes leurs sources se subissent. Bâtis un 書 Scriptorium : avec des fibres, du noir de fumée et assez de Lecture, tu copies un manuel dans le domaine que tu pratiques le moins. On n\'écrit que ce qu\'on sait.',
+   when:()=>lv('lecture')>=5&&(S.modules||[]).length>0},
   {id:'groupe',g:'囲',t:'Ils sont plusieurs',
    d:'Tape une créature pour la viser (Tab ou ←→ au clavier). Celles que tu ne regardes pas frappent dans ton dos : +30 %, et impossibles à parer. La posture 退 Arrêt les garde en vue. Une arme d\'allonge balaie tout le groupe.',
    when:()=>EE.length>1},
@@ -149,13 +166,23 @@ function tickTips(){
   }
   showTip();
 }
+/* le corps d'un conseil, calcule ou ecrit. Il vit dans sa propre fonction
+   parce qu'un banc d'essai n'a pas de page a peindre : ce qui n'est
+   verifiable que dans le DOM n'est pas verifie. */
+const tipCorps=t=>typeof t.d==='function'?t.d():t.d;
 function showTip(){
   const box=$('tip');if(!box)return;
   const body=document.body;
   if(!tipQ.length){box.hidden=true;if(body&&body.classList)body.classList.remove('has-tip');return;}
   const t=tipQ[0];
   box.hidden=false;if(body&&body.classList)body.classList.add('has-tip');   /* la page garde de la place pour défiler sous le conseil */
-  box.innerHTML='<b>'+t.g+'</b><div class="tt"><div class="tt1">'+t.t+'</div><div class="tt2">'+t.d+'</div>'
+  /* UN CONSEIL QUI ENUMERE UNE TABLE FINIT PAR MENTIR. Celui des gestes
+     listait les six telegraphes d'origine ; il y en a quatorze, et le texte
+     est reste au premier jour. Un conseil peut donc etre une FONCTION : il se
+     calcule au moment ou on le lit, sur la table elle-meme, et il ne peut
+     plus se desynchroniser de ce que le jeu fait. */
+  const corps=tipCorps(t);
+  box.innerHTML='<b>'+t.g+'</b><div class="tt"><div class="tt1">'+t.t+'</div><div class="tt2">'+corps+'</div>'
     +'<div class="row" style="margin-top:6px"><button class="btn pri" data-tipok="1">Compris</button>'
     +(tipQ.length>1?'<span class="meta">'+(tipQ.length-1)+' autre'+(tipQ.length>2?'s':'')+'</span>':'')
     +'<button class="btn" data-tipoff="1" style="margin-left:auto">Mode vétéran</button></div></div>';

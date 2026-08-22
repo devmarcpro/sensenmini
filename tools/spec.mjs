@@ -1950,6 +1950,13 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
       /* au bord d'une eau libre, par temps clair */
       ()=>{__tousEtats();const cc=here();cc.b='cote';cc.poi=null;cc.dj=null;
            meteo=()=>'clair';S.occ='repos';},
+      /* une bete en plein armement, garde levee — la hauteur de garde */
+      ()=>{__tousEtats();S.occ='combat';here().poi=null;here().dj=null;spawn();
+           if(E){E.w=.4;E.wEff=1;}S.guard=true;S.auto=S.auto||{};S.auto.garde=1;},
+      /* un boyau : une galerie de karst, ou l'on se bat a la hampe */
+      ()=>{__tousEtats();caverne=()=>1;S.occ='combat';here().poi=null;here().dj=null;spawn();},
+      /* un titre decroche */
+      ()=>{__tousEtats();S.bes=S.bes||{};S.bes.loup={v:9,t:9,a:0};S.hf={};hfBalayer();S.occ='repos';},
       /* une bete en plein armement, et du butin rare dans le sac */
       ()=>{__tousEtats();S.occ='combat';here().poi=null;here().dj=null;spawn();
            if(E){E.w=.4;E.wEff=1;}
@@ -1987,6 +1994,18 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
       if(!vu)ko.push(t.id);
     });
     return ko;})()`);
+  /* UN CONSEIL QUI ENUMERE UNE TABLE FINIT PAR MENTIR. Celui des gestes
+     listait les six telegraphes d'origine ; il y en a quatorze. Un conseil
+     peut donc etre une FONCTION, calculee sur la table au moment ou on la
+     lit — et l'on verifie ici qu'aucun geste n'y manque, ce qu'aucune
+     relecture de prose ne garantirait. */
+  const tg=G(c,'tipCorps(TIPS.find(x=>x.id==="geste"))');
+  const oublies=G(c,'Object.keys(PATTERN)').filter(k=>{
+    const n=G(c,'PATTERN["'+k+'"].n');return tg.indexOf(n)<0;});
+  ok(oublies.length===0,'le conseil des gestes les nomme TOUS — il se calcule, il ne se recopie pas',
+    oublies.length?'oublies : '+oublies.join(', '):'');
+  ok(tg.indexOf('hauteur')>0,'et il enseigne la hauteur de garde, qui est ce qui rend la lecture utile');
+
   ok(muets.length===0,'chacun des '+G(c,'TIPS.length')+' conseils peut se déclencher',
     'jamais vus : '+muets.join(', '));
 

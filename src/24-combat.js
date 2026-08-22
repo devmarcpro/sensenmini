@@ -233,12 +233,50 @@ function armePattern(e){
   e.wEff=e.wind*P.wm;
   return P;
 }
+/* ==================================================================
+   QUATORZE TELEGRAPHES QUI NE VOULAIENT RIEN DIRE (E.3.1)
+
+   « La defense passe par la GARDE DIRECTIONNELLE, plus par un jet
+   d'esquive : une garde couvre sa direction, un bouclier couvre en plus les
+   directions VOISINES (jamais toutes, sans quoi un bouclier couvrirait
+   l'integralite de la rose). »
+
+   Nous avions une garde BOOLEENNE : levee ou baissee. Le joueur lisait donc
+   un telegraphe — une charge, une morsure, un coup de queue — pour en tirer
+   une seule information : « quelque chose arrive ». Quatorze gestes disaient
+   la meme chose que deux. Toute la lecture du combat, qui est la promesse du
+   GDD, tenait dans un booleen.
+
+   Trois hauteurs, parce qu'un idle se joue au pouce et qu'une rose a huit
+   branches ne se tient pas : HAUT (ce qui tombe — charge, bond), BAS (ce qui
+   mord et ce qui saisit), COTE (ce qui fauche). Une garde couvre la sienne ;
+   un bouclier couvre en plus les VOISINES — et c'est cote qui touche les
+   deux autres, jamais haut et bas ensemble : deux tailles ne se jouxtent pas.
+   ================================================================== */
+const GARDES=[{k:'haut',n:'Haute',g:'上',d:'ce qui tombe — charges et bonds'},
+  {k:'cote',n:'Latérale',g:'横',d:'ce qui fauche — balayages, enchaînements, queues'},
+  {k:'bas',n:'Basse',g:'下',d:'ce qui mord et ce qui saisit'}];
+const VOISINE={haut:['cote'],cote:['haut','bas'],bas:['cote']};
+const gardeDir=()=>S.gdir||'haut';
+/* accord : 1 la bonne hauteur, .5 une voisine couverte par le bouclier, 0 sinon */
+function gardeAccord(e){
+  const P=patOf(e),d=P&&P.dir;
+  if(!d)return 0;                        /* ce qui vient de loin ne se pare pas */
+  const g=gardeDir();
+  if(g===d)return 1;
+  /* « un bouclier couvre en plus les directions voisines (jamais toutes) » */
+  if(grip().k==='bouclier'&&S.eq.main2&&(VOISINE[g]||[]).includes(d))return .5;
+  return 0;
+}
 /* la fenêtre de parade contre CE geste : une charge se lit de loin,
    un crachat ne se pare pas du tout */
 function parryWinVs(e){
   const P=patOf(e);
   if(P.dist)return 0;
-  return parryWin()*(P.win||1);
+  /* la hauteur ELARGIT ou RETRECIT la fenetre : c'est la que se paie la
+     lecture du telegraphe, et c'est le seul endroit ou elle se paie */
+  const a=gardeAccord(e);
+  return parryWin()*(P.win||1)*(a>=1?1.6:a>0?1.15:.55);
 }
 function spawn(){
   const c=here();
@@ -645,8 +683,13 @@ function resolveHit(q,atk){
     }
     float('返 '+z.g,'#6FBFA0');if(typeof sfx==='function')sfx('parry');
   } else {
-    const inc=raw*(q===1?.20:1);
-    const cost=q===1?(12+inc/4)*(1+passives().gardecost):0;
+    /* « Une garde couvre SA direction » : tenir la bonne hauteur encaisse
+       nettement moins, tenir la mauvaise coute plus de souffle sans rien
+       rendre. Un bouclier adoucit la faute sur une voisine, jamais sur
+       l'oppose. */
+    const acc=q===1?gardeAccord(atk):0;
+    const inc=raw*(q===1?(acc>=1?.12:acc>0?.17:.30):1);
+    const cost=q===1?(12+inc/4)*(1+passives().gardecost)*(acc>=1?1:acc>0?1.15:1.45):0;
     let red=(it?armorOf(zk)*consMult(it.cons,atk.dt):0)+buffOf('def')*2+passives().def+GB.red;
     /* « garde levee : +N % de reduction » — sur ce qu'on ENCAISSE, la ou le
        nom et la fiche le disent tous les deux */

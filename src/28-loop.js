@@ -162,13 +162,20 @@ function combatTick(dt){
     const lent=(hasStatus(e,'ralenti')?.6:1)*(hasStatus(e,'enracine')?.75:1)*kite
       *((typeof etroitIci==='function'&&etroitIci()&&e.eqReel&&armeGene(e.eqReel.arme))?.8:1);
     if(e.w<0){e.tt+=dt*lent;
-      if(e.tt>=e.delay){e.w=0;armePattern(e);}}   /* le geste se choisit au moment de s'armer */
+      if(e.tt>=e.delay){e.w=0;armePattern(e);
+        /* GARDE REFLEXE, DERNIER RANG : la garde SUIT le telegraphe. C'est
+           ce qu'un joueur attentif ferait a la main, et c'est ce qu'on achete
+           quand on ne regarde pas — la lecture reste la meme, seule la main
+           change. */
+        if(e===E&&auto('garde')>=4&&patOf(e).dir)S.gdir=patOf(e).dir;}}   /* le geste se choisit au moment de s'armer */
     else{
       e.w+=dt*lent;
       const cible=e===E;                      /* la garde réflexe ne couvre que la cible regardée */
       const fen=parryWinVs(e),reste=e.wEff-e.w;
       if(cible&&fen>0&&auto('garde')&&reste<=fen*.55&&S.end>=14)
-        {creDepense(e);resolveHit(Math.random()<.12*auto('garde')?2:1,e);}
+        /* la hauteur decide si le reflexe devient une PARADE PARFAITE : bien
+           placee elle double presque, mal placee elle ne rattrape rien */
+        {creDepense(e);resolveHit(Math.random()<.12*auto('garde')*(1+gardeAccord(e))?2:1,e);}
       else if(e.w>=e.wEff){creDepense(e);resolveHit(S.guard?1:0,e);}
     }
     if(!E)return;

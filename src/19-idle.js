@@ -9,8 +9,8 @@
    simulation accélérée (même principe que l'abstraction hors-site).
    ================================================================== */
 const AUTOS={
-  garde:{g:'護',n:'Garde réflexe',max:4,cost:600,r:2.1,
-    d:'la garde se lève seule dans la fenêtre ; chaque rang ajoute 12 % de chances que ce soit une parade parfaite'},
+  garde:{g:'護',n:'Garde réflexe',max:5,cost:600,r:2.1,
+    d:'la garde se lève seule dans la fenêtre ; chaque rang ajoute 12 % de chances que ce soit une parade parfaite — doublées si la HAUTEUR est la bonne. Au cinquième rang, la garde suit d\'elle-même le télégraphe'},
   rotation:{g:'環',n:'Communion des cinq',max:1,cost:2600,r:1,
     d:'l\'élément de l\'arme tourne tout seul dans le cycle d\'engendrement — entretien 4 mana par frappe, aucun dégainage'},
   deto:{g:'重',n:'Détonateur',max:1,cost:1500,r:1,

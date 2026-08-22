@@ -1136,6 +1136,56 @@ test('anatomie — le coup vaut ce qu il touche, et la visee remplace le de',()=
   ok(torse>pieds&&torse<tete,'et le torse est entre les deux');
 });
 
+test('garde — trois hauteurs, et un bouclier qui ne couvre pas tout',()=>{
+  /* E.3.1 : « La defense passe par la GARDE DIRECTIONNELLE... une garde
+     couvre sa direction, un bouclier couvre en plus les directions VOISINES
+     (jamais toutes, sans quoi un bouclier couvrirait l'integralite de la
+     rose). » Notre garde etait BOOLEENNE : quatorze telegraphes disaient
+     donc tous la meme chose — « quelque chose arrive ». */
+  const c=nouveau();
+  eq(G(c,'GARDES.length'),3,'trois hauteurs');
+  /* chaque geste de melee vient de quelque part */
+  const sansdir=G(c,'Object.keys(PATTERN).filter(k=>!PATTERN[k].dist&&!PATTERN[k].dir)');
+  ok(sansdir.length===0,'chaque geste au contact a une hauteur',
+    sansdir.length?'sans hauteur : '+sansdir.join(', '):'');
+
+  R(c,"S.occ='combat';E=null;EE=[];spawn();E.pats=['lourd'];armePattern(E);S.eq={};");
+  R(c,"S.gdir='haut';");
+  eq(G(c,'gardeAccord(E)'),1,'la charge vient du haut, la garde haute l attend');
+  R(c,"S.gdir='bas';");
+  eq(G(c,'gardeAccord(E)'),0,'la garde basse ne l attend pas — et sans bouclier, rien ne rattrape');
+  R(c,"S.gdir='cote';");
+  eq(G(c,'gardeAccord(E)'),0,'même la voisine, à mains nues, ne couvre rien');
+
+  /* --- le bouclier couvre les voisines, JAMAIS toutes --- */
+  R(c,`S.items=[];
+    const p1=FUNC.epee.comp.map(ct=>partFor(ct,['fer','chene','cuir']));
+    S.items.push(mkItem('arme','epee',p1,1));equipItem(0);
+    S.eq.main2=mkItem('arme','bouclier',
+      FUNC.bouclier.comp.map(ct=>partFor(ct,['fer','chene','cuir'])),1);`);
+  R(c,"S.gdir='cote';");
+  ok(G(c,'gardeAccord(E)')>0,'un bouclier couvre la hauteur voisine');
+  R(c,"S.gdir='bas';");
+  eq(G(c,'gardeAccord(E)'),0,'mais jamais l opposee : haut et bas ne se jouxtent pas');
+
+  /* --- et la hauteur paie dans la fenetre de parade --- */
+  R(c,"S.eq.main2=null;S.gdir='haut';globalThis.__f1=parryWinVs(E);S.gdir='bas';globalThis.__f0=parryWinVs(E);");
+  ok(G(c,'__f1')>G(c,'__f0')*2,'bien placee, la fenetre s ouvre — '
+    +G(c,'__f0').toFixed(3)+' contre '+G(c,'__f1').toFixed(3));
+
+  /* --- et dans ce qu on encaisse --- */
+  R(c,`globalThis.__prend=(d)=>{S.gdir=d;S.hp=maxHp()*99;S.end=100;
+      const h=S.hp;E.pats=['lourd'];armePattern(E);resolveHit(1,E);return h-S.hp;};`);
+  const bon=G(c,'__prend("haut")'),mauvais=G(c,'__prend("bas")');
+  ok(bon<mauvais,'la bonne hauteur encaisse nettement moins — '
+    +bon.toFixed(1)+' contre '+mauvais.toFixed(1));
+
+  /* --- ce qui vient de loin ne se pare pas, quelle que soit la hauteur --- */
+  R(c,"E.pats=['souffle'];armePattern(E);");
+  eq(G(c,'gardeAccord(E)'),0,'un souffle ne s attend d aucune hauteur');
+  eq(G(c,'parryWinVs(E)'),0,'et ne se pare pas');
+});
+
 test('gestes — quatorze telegraphes, tous portes et tous lisibles',()=>{
   /* Six gestes pour soixante-trois creatures : la table la plus maigre du
      jeu, et celle que le joueur LIT a chaque seconde de combat. Un ours

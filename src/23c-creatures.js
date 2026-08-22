@@ -128,11 +128,11 @@ const bestiaireVus=()=>Object.keys(S.bes||{}).filter(k=>CREATURE[k]).length;
    dist : à distance — tenir l'écart n'y change rien et rien ne se pare
    ================================================================== */
 const PATTERN={
-  simple:  {n:'coup',g:'一',wm:1,   dm:1,   hits:1},
-  double:  {n:'enchaînement',g:'二',wm:.62,dm:.58,hits:2},
-  lourd:   {n:'charge',g:'重',wm:1.9,dm:2.0,hits:1,win:1.7},
-  balayage:{n:'balayage',g:'薙',wm:1.3,dm:.85,hits:1,aoe:1},
-  morsure: {n:'morsure',g:'咬',wm:.85,dm:1.15,hits:1,st:'saignement'},
+  simple:  {n:'coup',g:'一',wm:1,   dm:1,   hits:1,dir:'haut'},
+  double:  {n:'enchaînement',g:'二',wm:.62,dm:.58,hits:2,dir:'cote'},
+  lourd:   {n:'charge',g:'重',wm:1.9,dm:2.0,hits:1,win:1.7,dir:'haut'},
+  balayage:{n:'balayage',g:'薙',wm:1.3,dm:.85,hits:1,aoe:1,dir:'cote'},
+  morsure: {n:'morsure',g:'咬',wm:.85,dm:1.15,hits:1,st:'saignement',dir:'bas'},
   crachat: {n:'crachat',g:'吐',wm:1.35,dm:.95,hits:1,dist:1},
   /* ==================================================================
      SIX GESTES POUR SOIXANTE-TROIS CREATURES.
@@ -146,13 +146,13 @@ const PATTERN={
      parade plus ou moins large. Ce qui manquait n'etait pas de la
      mecanique, c'etait des COMBINAISONS, et chacune se lit differemment.
      ================================================================== */
-  triple:  {n:'rafale',g:'三',wm:.5, dm:.40,hits:3},
-  saut:    {n:'bond',g:'跳',wm:1.45,dm:1.35,hits:1,win:.8,st:'etourdi'},
-  venimeux:{n:'crocs venimeux',g:'毒',wm:.95,dm:.95,hits:1,st:'poison'},
+  triple:  {n:'rafale',g:'三',wm:.5, dm:.40,hits:3,dir:'cote'},
+  saut:    {n:'bond',g:'跳',wm:1.45,dm:1.35,hits:1,win:.8,st:'etourdi',dir:'haut'},
+  venimeux:{n:'crocs venimeux',g:'毒',wm:.95,dm:.95,hits:1,st:'poison',dir:'bas'},
   souffle: {n:'souffle',g:'息',wm:1.7,dm:1.05,hits:1,aoe:1,dist:1,st:'brulure'},
-  etreinte:{n:'étreinte',g:'絡',wm:1.25,dm:1.05,hits:1,st:'enracine'},
-  ruade:   {n:'ruade',g:'蹴',wm:1.05,dm:1.30,hits:1,win:1.3,st:'etourdi'},
-  queue:   {n:'coup de queue',g:'尾',wm:1.2,dm:1.00,hits:1,aoe:1},
+  etreinte:{n:'étreinte',g:'絡',wm:1.25,dm:1.05,hits:1,st:'enracine',dir:'bas'},
+  ruade:   {n:'ruade',g:'蹴',wm:1.05,dm:1.30,hits:1,win:1.3,st:'etourdi',dir:'bas'},
+  queue:   {n:'coup de queue',g:'尾',wm:1.2,dm:1.00,hits:1,aoe:1,dir:'cote'},
   harcele: {n:'harcèlement',g:'翔',wm:.55,dm:.58,hits:2,dist:1},
 };
 const patOf=e=>PATTERN[e&&e.pat]||PATTERN.simple;

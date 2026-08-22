@@ -195,7 +195,16 @@ function renderCombat(){
     $('teleF').style.width=(E.w/we*100)+'%';
     $('teleW').style.width=fen?Math.min(100,fen/we*100)+'%':'0';
     $('guardBtn').className=(fen&&(we-E.w)<=fen)?'armed':'';
-    const tg=$('teleG');if(tg)tg.textContent=P.g+' '+P.n+(fen?'':' — imparable');}
+    /* LE TELEGRAPHE DIT LA HAUTEUR. Sans cela la garde directionnelle est
+       une regle qui existe et ne se voit pas : le joueur devrait apprendre
+       par coeur quel geste vient d'ou. On l'ecrit, et l'accord se lit d'un
+       coup d'oeil — la fleche est pleine quand la garde est bien placee. */
+    const acc=typeof gardeAccord==='function'?gardeAccord(E):0;
+    const FL={haut:'↑',cote:'↔',bas:'↓'};
+    const tg=$('teleG');
+    if(tg)tg.textContent=P.g+' '+P.n
+      +(P.dir?' '+FL[P.dir]+(acc>=1?' ✓':acc>0?' ~':' ✗'):'')
+      +(fen?'':' — imparable');}
   else{t.className='tele';$('teleF').style.width='0';$('guardBtn').className=S.guard?'held':'';
     const tg=$('teleG');if(tg)tg.textContent='';}
 

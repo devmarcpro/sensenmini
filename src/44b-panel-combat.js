@@ -25,6 +25,19 @@ function pCombat(){
       +' · parade ×'+(s.win||1).toFixed(2)+'</small></button>').join('')+'</div>';
   }
 
+  /* --- la hauteur de garde : ce qui donne enfin un sens aux telegraphes --- */
+  h+=foldHead('combat','gd','護','HAUTEUR DE GARDE',
+    (GARDES.find(g=>g.k===gardeDir())||GARDES[0]).n,'gd');
+  if(foldOpen('combat','gd','gd')){
+    h+='<div class="meta" style="margin-bottom:6px">Chaque geste de créature vient d\'une hauteur, et le télégraphe la donne avant le coup. '
+     +'La bonne hauteur encaisse moitié moins et double presque la chance de parade parfaite ; la mauvaise coûte du souffle pour rien. '
+     +'<b>Un bouclier couvre en plus les hauteurs voisines</b> — jamais toutes : haut et bas ne se jouxtent pas.</div>';
+    h+='<div class="matlist">'+GARDES.map(g=>
+      '<button class="mat'+(gardeDir()===g.k?' sel':'')+'" data-gdir="'+g.k+'"><b>'+g.g+'</b>'+g.n
+      +'<small>'+g.d+'</small></button>').join('')+'</div>';
+    h+='<div class="meta">Au cinquième rang de <b>護 Garde réflexe</b>, elle suit le télégraphe toute seule.</div>';
+  }
+
   /* L'ENCHAINEMENT. Le plan dit QUOI faire ; celui-ci dit COMMENT frapper.
      Il vit juste sous le plan parce que c'est la meme idee, un cran plus
      bas : ecrire d'avance ce qu'on ferait a la main. */

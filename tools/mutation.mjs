@@ -97,6 +97,11 @@ const MUT=[
   ['symetrie : la depense','symetrie',[['src/28-loop.js','{creDepense(e);resolveHit(S.guard?1:0,e);}','resolveHit(S.guard?1:0,e);']]],
   ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,zk):tgt.arm)",'tgt.arm']]],
   ['collection : la boucle balaie','titres',[['src/28-loop.js',"    if(typeof colBalayer==='function')colBalayer();}",'  }']]],
+  /* la garde directionnelle */
+  ['garde : la hauteur ouvre la fenetre','garde',[['src/24-combat.js',"  return parryWin()*(P.win||1)*(a>=1?1.6:a>0?1.15:.55);",'  return parryWin()*(P.win||1);']]],
+  ['garde : la hauteur encaisse','garde',[['src/24-combat.js',"    const inc=raw*(q===1?(acc>=1?.12:acc>0?.17:.30):1);",'    const inc=raw*(q===1?.20:1);']]],
+  ['garde : le bouclier ne couvre que les voisines','garde',[['src/24-combat.js',"  if(grip().k==='bouclier'&&S.eq.main2&&(VOISINE[g]||[]).includes(d))return .5;","  if(grip().k==='bouclier'&&S.eq.main2)return .5;"]]],
+  ['garde : ce qui vient de loin ne se pare pas','garde',[['src/24-combat.js',"  if(!d)return 0;                        /* ce qui vient de loin ne se pare pas */",'  if(!d)return 1;']]],
   /* les gestes */
   ['geste : il s inscrit quand il s arme','gestes',[['src/24-combat.js',"  if(typeof collecte==='function')collecte('geste',e.pat);",'']]],
   ['geste : le souffle porte loin','gestes',[['src/23c-creatures.js',"souffle: {n:'souffle',g:'息',wm:1.7,dm:1.05,hits:1,aoe:1,dist:1,st:'brulure'},","souffle: {n:'souffle',g:'息',wm:1.7,dm:1.05,hits:1,aoe:1,st:'brulure'},"]]],

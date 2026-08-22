@@ -1097,6 +1097,37 @@ test('collection — tout ce que le monde contient, et ce qui manque',()=>{
   R(c,"S.fold=S.fold||{};S.fold.col='geste';globalThis.__pc2=pCollection();");
   ok(G(c,'__pc2').indexOf('Où :')>0,'et l onglet l affiche');
 
+  /* --- PAR OU REPRENDRE. Trente et une familles, sept cent quatre-vingts
+     entrees : pour trouver celle a qui il ne manque que deux lignes, il
+     fallait toutes les deplier. L'onglet le dit maintenant en premier. --- */
+  R(c,`S.col={};COLK.forEach(k=>{const t=COLLECTION[k].tout();
+    t.slice(0,Math.max(0,t.length-1)).forEach(x=>collecte(k,x));});
+    /* une famille a qui il ne manque plus rien qu'une seule ligne */
+    COLLECTION.muni.tout().forEach(x=>collecte('muni',x));
+    /* et l'on creuse un gros trou dans les matieres : c'est la famille a
+       laquelle il en manque LE PLUS, elle ne doit pas figurer en tete */
+    Object.keys(S.col.mat).slice(0,60).forEach(k=>{delete S.col.mat[k];});`);
+  R(c,"globalThis.__pc3=pCollection();");
+  ok(G(c,'__pc3').indexOf('LE PLUS PRÈS DU BOUT')>0,
+    "l onglet dit d abord ce qui est le plus pres d etre fini");
+  /* la famille achevee ne s'y trouve pas : il n'y a rien a y finir */
+  const tete=G(c,`__pc3.split('LE PLUS PRÈS DU BOUT')[1].split('</div></div>')[0]`);
+  ok(tete.indexOf('Munitions')<0,'et une famille deja achevee n y figure pas');
+  ok(tete.indexOf('Matières premières')<0&&tete.indexOf('Matières')<0,
+    "et la famille a qui il manque le plus n y figure pas non plus",tete.slice(0,300));
+
+  /* --- NE MONTRER QUE CE QUI MANQUE --- */
+  R(c,`S.fold.col='mat';S.fold.colfiltre=null;globalThis.__tout=pCollection();
+    S.fold.colfiltre='on';globalThis.__creux=pCollection();
+    /* et le filtre ne referme pas la famille qu'on regardait */
+    globalThis.__ouverte=S.fold.col;`);
+  ok(G(c,'__creux.length')<G(c,'__tout.length'),
+    'le filtre retire les cases deja rencontrees',
+    'tout : '+G(c,'__tout.length')+' · filtre : '+G(c,'__creux.length'));
+  ok(G(c,"__creux.indexOf('rencontré<')<0||__creux.split('>rencontré<').length<__tout.split('>rencontré<').length"),
+    'et il ne reste que du gris');
+  eq(G(c,'__ouverte'),'mat','et il ne referme pas la famille qu on regardait');
+
   /* --- CHAQUE FAMILLE DOIT POUVOIR SE REMPLIR : une famille qu'aucun geste
      du jeu n'inscrit est une liste de choses inatteignables, et le
      pourcentage ne montera jamais a cent. --- */

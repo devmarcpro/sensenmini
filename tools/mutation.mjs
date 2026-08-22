@@ -198,6 +198,8 @@ const MUT=[
   ['boyau : une grande salle n en est pas un','boyaux',[['src/24-combat.js',"  if(typeof caverne==='function'&&caverne(here())===1)return true;","  if(typeof caverne==='function'&&caverne(here())>=1)return true;"]]],
   ['boyau : une lame courte ne subit rien','boyaux',[['src/24-combat.js','  return !F.dist&&F.reach>=2;','  return !F.dist;']]],
   /* le scriptorium */
+  ['collection : le filtre retire ce qu on a deja','collection',[['src/48b-panel-collection.js',"    h+='<div class=\"matlist\">'+tout.filter(k=>!seulManque||!eus.includes(k)).map(k=>{","    h+='<div class=\"matlist\">'+tout.map(k=>{"]]],
+  ['collection : le plus pres du bout vient en premier','collection',[['src/48b-panel-collection.js','    .filter(f=>f.m>0).sort((x,y)=>x.m-y.m);','    .filter(f=>f.m>0);']]],
   ['munitions : la pointe de fer perce','munitions',[['src/24-combat.js',"  let pierce=PA.pierce+(MU?MU.pierce:0);",'  let pierce=PA.pierce;']]],
   ['munitions : le trait porte ce qu on encoche','munitions',[['src/24-combat.js','  if(MU)base*=1+MU.dmg;','  if(MU)base*=1;']]],
   ['munitions : le carquois se vide','munitions',[['src/24-combat.js','  if(MU)muniConsommer();','  if(0)muniConsommer();']]],

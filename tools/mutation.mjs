@@ -96,6 +96,7 @@ const MUT=[
   ['symetrie : le souffle des creatures','symetrie',[['src/28-loop.js',"    if(e.w<0&&!crePeutFrapper(e))continue;",'']]],
   ['symetrie : la depense','symetrie',[['src/28-loop.js','{creDepense(e);resolveHit(S.guard?1:0,e);}','resolveHit(S.guard?1:0,e);']]],
   ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,zk):tgt.arm)",'tgt.arm']]],
+  ['collection : la boucle balaie','titres',[['src/28-loop.js',"    if(typeof colBalayer==='function')colBalayer();}",'  }']]],
   /* les titres */
   ['titre : ils se decrochent','titres',[['src/48-collection.js',"  if(typeof hfBalayer==='function')hfBalayer();",'']]],
   ['titre : le bestiaire compte les morts','titres',[['src/49-hautsfaits.js','const hfMorts=()=>Object.values(S.bes||{}).reduce((a,b)=>a+(b.t||0),0);','const hfMorts=()=>0;']]],

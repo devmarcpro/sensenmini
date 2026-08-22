@@ -64,7 +64,17 @@ function step(dt){
   /* les consignes decident de ce que le personnage fait de sa journee */
   planTick(dt);
   rateT=(rateT||0)+dt;
-  if(rateT>=60){rateT=0;rollRates();}
+  if(rateT>=60){rateT=0;rollRates();
+    /* LA COLLECTION NE S'INSCRIVAIT QU'EN REGARDANT L'ONGLET.
+       Tout ce qui se DEDUIT de l'etat — les biomes vus, les matieres en sac,
+       les stations, les races croisees — n'etait releve que par pCollection,
+       c'est-a-dire au moment ou l'on ouvrait la page. Un jeu qui tourne tout
+       seul ne collectionnait donc rien : soixante jours de partie mesuree,
+       deux pour cent, vingt-six familles a zero. Et depuis que les titres se
+       decrochent au meme balayage, ils ne tombaient pas non plus tant qu'on
+       ne regardait pas. Une fois par minute suffit — c'est la cadence des
+       cadences du jeu, et le balayage ne coute qu'une lecture d'etat. */
+    if(typeof colBalayer==='function')colBalayer();}
   if(auto('marmite')&&(S.faim<40||avgPot()<70)){
     const p2={};Object.keys(S.food).forEach(k=>{const i=foodInfo(k);if(!p2[i.el]&&S.food[k]>0)p2[i.el]=k;});
     const c5=Object.values(p2);

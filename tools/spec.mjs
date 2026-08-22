@@ -1173,6 +1173,14 @@ test('titres — chacun se decroche, aucun ne se contemple',()=>{
   ok(rates.length===0,'dans un état maximal, les '+G(c,'HFK.length')+' titres tombent',
     rates.length?'jamais atteignables : '+rates.join(', '):'');
 
+  /* --- ET LA BOUCLE DU JEU LE FAIT SEULE. Tout ce qui se DEDUIT de l'etat
+     n'etait releve que par l'onglet : un jeu qui tourne tout seul ne
+     collectionnait rien, et depuis que les titres suivent le meme balayage,
+     ils ne tombaient pas non plus tant qu'on ne regardait pas. --- */
+  R(c,`S.hf={};S.col={};S.mat={fer:5};rateT=59.9;
+    for(let i=0;i<3;i++)step(0.25);`);
+  ok(G(c,'Object.keys(S.col||{}).length')>0,'la boucle inscrit la collection sans qu on ouvre la page');
+
   /* --- et c'est le balayage ORDINAIRE qui les decroche : un titre qui
      n'existe que si l'on appelle sa propre fonction n'existe pas --- */
   R(c,'S.hf={};colBalayer();');

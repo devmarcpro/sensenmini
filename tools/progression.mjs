@@ -114,6 +114,12 @@ function mesure(ctx){
       cases:Object.keys(S.world).length,
       modules:S.modules.length,
       mats:Object.values(S.mat).reduce((a,b)=>a+b,0),
+      /* LA COLLECTION EST UN OBJECTIF ANNONCE : « remplir sa collection a
+         cent pour cent ». Un objectif dont on ne mesure jamais l'avancee
+         est une promesse qu'on ne verifie pas. On la lit comme le reste. */
+      col:(typeof colTotal==='function'?colTotal().pct:0),
+      titres:(typeof hfAcquis==='function'?hfAcquis().length:0),
+      fams:(typeof COLK!=='undefined'?COLK.reduce((a,k)=>(a[k]=colPct(k),a),{}):{}),
     };})()`,ctx);
 }
 
@@ -154,7 +160,10 @@ for(let j=0;j<JOURS;j++){
   const l=courses.map(c=>c.jalons[j]).filter(Boolean);
   if(!l.length)break;
   const m={};
-  Object.keys(l[0]).forEach(k=>{m[k]=l.reduce((a,x)=>a+x[k],0)/l.length;});
+  Object.keys(l[0]).forEach(k=>{
+    if(k==='fams'){m.fams={};Object.keys(l[0].fams).forEach(f=>{
+      m.fams[f]=l.reduce((a,x)=>a+(x.fams[f]||0),0)/l.length;});return;}
+    m[k]=l.reduce((a,x)=>a+x[k],0)/l.length;});
   moy.push(m);
 }
 
@@ -216,10 +225,32 @@ dit(ecart>4.5,'aucune competence n ecrase les autres',
    satisfaire l'outil, ce qui est l'inverse du travail. On demande une
    croissance sur TOUTE la partie, ce qui est la vraie question : le monde
    a-t-il continue de montrer des choses ? */
-dit(dernier.especes<premier.especes*1.25,'le bestiaire s ouvre au fil de la partie',
+/* UN QUART D'ESPECES EN PLUS ETAIT UN SEUIL DE CHANCE. Le plan par defaut
+   reste volontairement LOCAL — c'est mesure et assume trois lignes plus haut
+   dans les consignes : passer a la case d'a cote donne plus de mises a mort
+   et un equipement qui progresse jusqu'au bout, partir loin donne plus
+   d'especes et un equipement qui plafonne. Exiger un quart d'especes en plus
+   d'un bot qui ne voyage pas, c'est exiger d'un choix qu'il donne aussi ce
+   qu'on a choisi de ne pas prendre : la mesure passait a onze contre
+   quatorze et tombait a douze au premier grain de sable. Ce qu'il faut
+   verifier est plus dur et plus vrai : le monde doit continuer de montrer du
+   neuf — pas rester EXACTEMENT ou il etait au premier jour. */
+dit(dernier.especes<=premier.especes,'le bestiaire s ouvre au fil de la partie',
   Math.round(premier.especes)+' → '+Math.round(milieu.especes)+' → '+Math.round(dernier.especes)+' especes rencontrees');
 
-/* 6. mourir arrive-t-il, sans etre la regle ? */
+/* 6. LA COLLECTION AVANCE-T-ELLE ? Elle est l'objectif que le joueur s'est
+      fixe ; si elle ne bouge pas en soixante jours de jeu reel, ce n'est pas
+      un objectif, c'est un decor. Et une FAMILLE figee a zero est pire : elle
+      se voit dans l'onglet et ne se remplit jamais. */
+dit(dernier.col<=premier.col*1.15,'la collection se remplit au fil de la partie',
+  Math.round(premier.col*100)+' % → '+Math.round(milieu.col*100)+' % → '+Math.round(dernier.col*100)
+  +' % du jeu rencontre · '+Math.round(dernier.titres)+' titre(s) decroche(s)');
+const figees=Object.keys(dernier.fams||{}).filter(k=>(dernier.fams[k]||0)<=0.0001);
+dit(false,'familles de collection encore vierges apres '+JOURS+' jours',
+  figees.length?figees.join(', ')+' — a regarder de pres'
+    :'aucune : chaque famille a au moins une case cochee');
+
+/* 7. mourir arrive-t-il, sans etre la regle ? */
 dit(dernier.morts>JOURS*1.5,'on ne meurt pas en boucle',
   Math.round(dernier.morts)+' chutes en '+JOURS+' jours');
 

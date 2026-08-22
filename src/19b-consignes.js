@@ -235,6 +235,17 @@ function potionUtile(p){
   if(p.e==='fraicheur'){const t=tempStress();return !!t&&!t.froid;}
   if(p.e==='resistance'){const t=tempStress();return !!t&&!!t.froid;}
   if(p.e==='poisonlame')return !S.lame&&(S.occ==='combat'||S.occ==='donjon');
+  /* LES CINQ NOUVELLES FIOLES NE SE BUVAIENT JAMAIS SEULES. La liste se
+     terminait par « return false » : une fiole inconnue du plan reste dans
+     le sac pour l'eternite. C'est la meme regle que partout — un systeme
+     qu'une consigne ne conduit pas n'existe pas dans un jeu qui tourne quand
+     on ne le regarde pas. Le banc exige desormais qu'aucun effet de fiole ne
+     manque a cette liste. */
+  if(p.e==='souffle')return S.end<35&&(S.occ==='combat'||S.occ==='donjon');
+  if(p.e==='hate')return (S.occ==='combat'||S.occ==='donjon')&&!hasStatus(S,'hate');
+  if(p.e==='garrot')return hasStatus(S,'saignement');
+  if(p.e==='oeil')return isNight()&&!buffOf('per');
+  if(p.e==='satiete')return S.faim<55&&!buffOf('satiete');
   return false;
 }
 /* la fiole qui repare precisement ce qui est casse, sinon rien */

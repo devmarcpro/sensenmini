@@ -134,6 +134,7 @@ const MUT=[
   ['passif : le resume se calcule','passifs',[['src/35-panel-magie.js','  const dits=Object.keys(PA).filter(k=>PA[k])',"  const dits=['dmg','pierce','win'].filter(k=>PA[k])"]]],
   ['attelage : le refus nomme la bete','attelages',[['src/22b-vehicules.js',"    return 'il faut une bête apprivoisée dans ton escorte';",'    return null;']]],
   ['attelage : la fiche dit le terrain','attelages',[['src/30-panel-monde.js',"        +vehTerrain(D2)+","        +\"\"+"]]],
+  ['fiole : le plan sait la boire','fioles',[['src/19b-consignes.js',"  if(p.e==='garrot')return hasStatus(S,'saignement');",'']]],
   /* les fioles */
   ['fiole : la satiete ralentit la faim','fioles',[['src/28-loop.js',"    *(1-Math.min(.6,buffOf('satiete'))));",'    );']]],
   ['fiole : le second souffle tient','fioles',[['src/14-food.js',"poserBuff('regen',+(1.2*v).toFixed(1)","poserBuff('regen',0"]]],

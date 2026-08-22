@@ -2106,6 +2106,32 @@ test('fioles — treize effets, et chacun deplace quelque chose',()=>{
   ok(inertes.length===0,'chacune des '+G(c,'Object.keys(POTEFF).length')+' fioles change l état du joueur',
     inertes.length?'sans effet : '+inertes.join(', '):'');
 
+  /* --- ET LE PLAN DOIT SAVOIR QUAND LA BOIRE. La liste de potionUtile se
+     terminait par « return false » : une fiole inconnue du plan reste dans le
+     sac pour l'eternite, et cinq des treize l'etaient. On exige donc qu'une
+     situation existe pour chacune — sinon ajouter une fiole revient a ajouter
+     un objet que le jeu automatique ne prendra jamais. --- */
+  R(c,`globalThis.__buvable=(e)=>{
+    const scenes=[
+      ()=>{S.hp=1;S.faim=100;S.end=100;S.mana=maxMana();S.st=[];S.buffs=[];S.occ='repos';S.lame=0;},
+      ()=>{S.occ='combat';S.end=10;S.hp=maxHp();S.st=[];S.buffs=[];S.lame=0;S.mana=maxMana();},
+      ()=>{S.occ='combat';S.end=100;S.hp=maxHp();S.st=[];S.buffs=[];S.lame=0;},
+      ()=>{S.occ='repos';S.st=[];addStatus(S,'saignement',9,1);},
+      ()=>{S.occ='repos';S.st=[];addStatus(S,'infection',9,1);},
+      ()=>{S.occ='repos';S.st=[];addStatus(S,'poison',9,1);},
+      ()=>{S.occ='repos';S.st=[];S.buffs=[];S.day=Math.floor(S.day)+23/24;},
+      ()=>{S.occ='repos';S.st=[];S.buffs=[];S.faim=20;},
+      ()=>{S.occ='repos';S.mana=0;S.end=10;S.st=[];S.buffs=[];},
+      ()=>{S.occ='repos';S.st=[];S.buffs=[];feltTemp=()=>-30;},
+      ()=>{S.occ='repos';S.st=[];S.buffs=[];feltTemp=()=>45;},
+    ];
+    const ft=feltTemp;let ok=false;
+    for(const s of scenes){if(ok)break;try{s();if(potionUtile({e}))ok=true;}catch(err){}}
+    feltTemp=ft;return ok;};`);
+  const jamais=G(c,'Object.keys(POTEFF)').filter(e=>!G(c,'__buvable("'+e+'")'));
+  ok(jamais.length===0,'le plan sait quand boire chacune des fioles',
+    jamais.length?'jamais bues : '+jamais.join(', '):'');
+
   /* --- UN BONUS POSE A ZERO EST UN BONUS ABSENT. Compter les bonus ne
      suffit pas : une fiole qui en pose un de valeur nulle bouge l'etat sans
      rien donner. On lit donc la VALEUR, pas la presence. --- */

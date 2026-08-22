@@ -2045,6 +2045,47 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('modificateurs — ce qui se met devant fait la profondeur',()=>{
+  /* Trente-six effets, trente-cinq passifs — et douze modificateurs pour
+     DEUX declencheurs. Dans un systeme a la Noita, ce n'est pas l'effet qui
+     fait la profondeur : c'est ce qui se met devant. Un effet de plus ajoute
+     une ligne au catalogue ; un modificateur de plus multiplie tout ce qui
+     le suit. */
+  const c=nouveau();
+  const par=G(c,'MK.reduce((a,k)=>(a[MODULE[k].t]=(a[MODULE[k].t]||0)+1,a),{})');
+  ok(par.modificateur>=20,'au moins vingt modificateurs — '+par.modificateur);
+  ok(par.declencheur>=4,'et au moins quatre declencheurs — '+par.declencheur);
+
+  /* --- CHACUN DOIT AVOIR UN DEFAUT : ce qui ne coute rien ne se choisit pas --- */
+  const gratuits=G(c,`MK.filter(k=>{const d=MODULE[k];
+    if(d.t!=='modificateur'&&d.t!=='declencheur')return false;
+    const m=d.mul||{};
+    const gain=(m.pow>1)||(m.count>1)||(m.cd<1)||(m.echo>0)||d.status||d.statusDur>1;
+    const prix=(d.mana>0)||(m.pow<1)||(m.count<1)||(m.cd>1)||d.hp>0;
+    return gain&&!prix;})`);
+  ok(gratuits.length===0,'aucun modificateur ne donne sans rien prendre',
+    gratuits.length?'gratuits : '+gratuits.join(', '):'');
+
+  /* --- et le compilateur doit VRAIMENT les lire --- */
+  R(c,`S.modules=[];
+    globalThis.__sp=(ids)=>{S.modules=ids.map(id=>({id,dom:MODULE[id].d[0],lv:1,xp:0}));
+      return compileSpell(S.modules.map((m,i)=>i));};`);
+  const nu=G(c,'__sp(["projectile"]).casts[0].pow');
+  const lourd=G(c,'__sp(["lenteur","projectile"]).casts[0].pow');
+  ok(lourd>nu*1.5,'« incantation lourde » frappe bien plus fort — '+nu.toFixed(1)+' puis '+lourd.toFixed(1));
+  const salve=G(c,'__sp(["salve","projectile"]).casts[0].count');
+  ok(salve>=3,'« salve » multiplie vraiment les traits — '+salve);
+  const gel=G(c,'__sp(["gel","projectile"]).casts[0].status');
+  eq(gel&&gel.k,'gel','« morsure du gel » pose son etat sur le module suivant');
+  const res=G(c,'__sp(["resonance","projectile"]).casts[0].echo');
+  ok(res>.5,'« resonance » rend un second coup — '+res.toFixed(2));
+  const off=G(c,'__sp(["offrande","projectile"]).casts[0].hp');
+  ok(off>0,'« offrande » se paie en vie — '+off.toFixed(3));
+  /* le cout en mana suit : un modificateur negatif REND du mana */
+  const m1=G(c,'__sp(["projectile"]).mana'),m2=G(c,'__sp(["offrande","projectile"]).mana');
+  ok(m2<m1,'et elle rend du mana, comme le tribut de sang — '+m1.toFixed(1)+' puis '+m2.toFixed(1));
+});
+
 test('guildes — aucune ne se repete faute de gabarits',()=>{
   /* Les Transporteurs avaient DEUX gabarits pour cinq rangs : un membre monte
      au rang trois et on lui repropose la livraison du premier jour. Une

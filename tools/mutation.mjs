@@ -120,6 +120,10 @@ const MUT=[
   ['garde : la hauteur encaisse','garde',[['src/24-combat.js',"    const inc=raw*(q===1?(acc>=1?.12:acc>0?.17:.30):1);",'    const inc=raw*(q===1?.20:1);']]],
   ['garde : le bouclier ne couvre que les voisines','garde',[['src/24-combat.js',"  if(grip().k==='bouclier'&&S.eq.main2&&(VOISINE[g]||[]).includes(d))return .5;","  if(grip().k==='bouclier'&&S.eq.main2)return .5;"]]],
   ['garde : ce qui vient de loin ne se pare pas','garde',[['src/24-combat.js',"  if(!d)return 0;                        /* ce qui vient de loin ne se pare pas */",'  if(!d)return 1;']]],
+  /* les modificateurs */
+  ['module : le modificateur multiplie','modificateurs',[['src/25-modules.js',"      if(def.mul){for(const k in def.mul)pend[k]=(k==='count')?pend[k]*def.mul[k]:(k==='echo'?pend.echo+def.mul[k]:pend[k]*def.mul[k]);}",'']]],
+  ['module : le statut passe au suivant','modificateurs',[['src/25-modules.js','      if(def.status)pend.status=def.status;','']]],
+  ['module : le cout en vie se paie','modificateurs',[['src/25-modules.js','      if(def.hp)pend.hp+=def.hp;','']]],
   /* les six lieux */
   ['lieu : le puits descend','six lieux',[['src/07b-lieux.js',"      if(c.depth<5){c.depth++;c.dug=0;bas=' · tu debouches dans la strate '+c.depth+' ('+STRATA[c.depth].n+')';}",'']]],
   ['lieu : l arbre donne des semences','six lieux',[['src/07b-lieux.js','      const graines=Object.keys(MAT).filter(m=>MAT[m].crop&&MAT[m].nutr>0&&!MAT[m].tox);',"      const graines=['fer'];"]]],

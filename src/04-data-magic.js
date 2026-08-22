@@ -88,6 +88,40 @@ const MODULE={
   contagion:{n:'Contagion',t:'modificateur',mana:8,statusDur:2,d:['corruption'],x:'les statuts du suivant durent deux fois plus'},
   tranchant:{n:'Tranchant',t:'modificateur',mana:5,mul:{pow:1.2},d:['metal']},
   /* ----- déclencheurs ----- */
+  /* ==================================================================
+     QUATRE-VINGT-CINQ MODULES, ET DOUZE MODIFICATEURS.
+     Trente-six effets, trente-cinq passifs — et douze modificateurs pour
+     deux declencheurs. Or dans un systeme a la Noita, ce n'est PAS l'effet
+     qui fait la profondeur : c'est ce qui se met devant. Un effet de plus
+     ajoute une ligne au catalogue ; un modificateur de plus multiplie tout
+     ce qui le suit. Le compilateur savait deja tout faire — puissance,
+     nombre, delai, echo, statut, duree de statut, cout en vie — et la
+     moitie de ces leviers n'avait qu'un seul porteur.
+
+     Dix de plus, ecrits dans le vocabulaire que compileSpell comprend, et
+     chacun avec un DEFAUT : ce qui ne coute rien ne se choisit pas.
+     ================================================================== */
+  lenteur:{n:'Incantation lourde',t:'modificateur',mana:3,mul:{pow:1.75,cd:1.6},d:['terre','metal'],
+    x:'beaucoup plus fort, beaucoup plus lent'},
+  salve:{n:'Salve',t:'modificateur',mana:9,mul:{count:4,pow:.32},d:['foudre','espace'],
+    x:'quatre traits pour le tiers des degats — la ou le nombre compte'},
+  gel:{n:'Morsure du gel',t:'modificateur',mana:5,mul:{pow:1.05},status:{k:'gel',dur:1.4,v:1},d:['eau'],
+    x:'le suivant fige un instant'},
+  ronce:{n:'Ronce',t:'modificateur',mana:5,mul:{pow:1.05},status:{k:'saignement',dur:5,m:.12},d:['bois','metal'],
+    x:'le suivant ouvre une plaie'},
+  venin:{n:'Venin',t:'modificateur',mana:6,mul:{pow:.95},status:{k:'poison',dur:7,m:.10},d:['corruption','vie'],
+    x:'le suivant empoisonne'},
+  rupture:{n:'Rupture',t:'modificateur',mana:7,mul:{pow:1.15},status:{k:'affaibli',dur:5,v:1},d:['metal','terre'],
+    x:'le suivant affaiblit ce qu il touche'},
+  persistance:{n:'Persistance',t:'modificateur',mana:6,statusDur:1.8,mul:{pow:.9},d:['bois','vie'],
+    x:'les statuts du suivant durent beaucoup plus, ses degats un peu moins'},
+  offrande:{n:'Offrande',t:'modificateur',mana:-9,mul:{pow:1.45,count:2,cd:1.2},hp:.05,d:['corruption','vie'],
+    x:'deux fois, plus fort, et ta propre vie en paie le prix'},
+  /* --- les declencheurs : ils etaient DEUX --- */
+  resonance:{n:'Résonance',t:'declencheur',mana:11,mul:{echo:.75,cd:1.25},d:['eau','arcane'],
+    x:'un second coup, presque aussi fort, mais l incantation traine'},
+  contrecoup:{n:'Contrecoup',t:'declencheur',mana:7,mul:{echo:.35,pow:1.2},hp:.02,d:['feu','corruption'],
+    x:'le coup revient, et il te mord un peu'},
   echo:{n:'Écho',t:'declencheur',mana:9,mul:{echo:.4},d:['arcane','metal','vie']},
   marque:{n:'Marque',t:'declencheur',mana:6,mul:{echo:.55},d:['arcane','espace']},
   /* ----- manuels — passifs de maniement ----- */

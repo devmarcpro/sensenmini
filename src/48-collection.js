@@ -68,6 +68,11 @@ const COLLECTION={
      on lisait « culture Andine » sur la fiche d'un royaume sans savoir qu'il
      y en avait onze autres a trouver. */
   culture:{n:'Cultures croisées',g:'名',tout:()=>Object.keys(CULT),nom:k=>CULT[k].n},
+  /* Vingt-sept familles disaient ce qu'on n'avait pas VU ; aucune ne disait
+     ce qu'on n'avait pas FAIT. Voir demande d'aller quelque part, accomplir
+     demande d'y rester — ce ne sont pas les memes joueurs. */
+  titre:{n:'Titres',g:'名',tout:()=>HFK,nom:k=>HAUTFAIT[k].n+' — '+HAUTFAIT[k].d,
+    vus:()=>typeof hfAcquis==='function'?hfAcquis():[]},
 };
 const COLK=Object.keys(COLLECTION);
 
@@ -186,4 +191,7 @@ function colBalayer(){
     });});
   });
   (S.carry||[]).forEach(k=>collecte('station',k));
+  /* les titres se decrochent au meme balayage : leurs conditions ne lisent
+     que de l'etat durable, elles coutent une microseconde */
+  if(typeof hfBalayer==='function')hfBalayer();
 }

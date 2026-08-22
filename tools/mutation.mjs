@@ -96,6 +96,11 @@ const MUT=[
   ['symetrie : le souffle des creatures','symetrie',[['src/28-loop.js',"    if(e.w<0&&!crePeutFrapper(e))continue;",'']]],
   ['symetrie : la depense','symetrie',[['src/28-loop.js','{creDepense(e);resolveHit(S.guard?1:0,e);}','resolveHit(S.guard?1:0,e);']]],
   ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,zk):tgt.arm)",'tgt.arm']]],
+  /* les titres */
+  ['titre : ils se decrochent','titres',[['src/48-collection.js',"  if(typeof hfBalayer==='function')hfBalayer();",'']]],
+  ['titre : le bestiaire compte les morts','titres',[['src/49-hautsfaits.js','const hfMorts=()=>Object.values(S.bes||{}).reduce((a,b)=>a+(b.t||0),0);','const hfMorts=()=>0;']]],
+  ['titre : les cases vues comptent','titres',[['src/49-hautsfaits.js','const hfCases=()=>Object.keys(S.world||{}).filter(k=>S.world[k]&&S.world[k].seen).length;','const hfCases=()=>0;']]],
+  ['titre : les rangs de guilde comptent','titres',[['src/49-hautsfaits.js','const hfRang=()=>Object.values(S.guilds||{}).reduce((a,g)=>Math.max(a,g.rank||0),0);','const hfRang=()=>0;']]],
   /* l erudition */
   ['erudition : un pour cent par famille','erudition',[['src/09-progress.js',"  if(typeof colErudition==='function')mul*=1+colErudition();",'']]],
   ['erudition : les biomes font marcher plus vite','erudition',[['src/28-loop.js',"  const ery=(typeof colComplete==='function'&&colComplete('biome'))?.9:1;","  const ery=1;"]]],

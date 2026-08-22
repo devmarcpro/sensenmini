@@ -1136,6 +1136,57 @@ test('anatomie — le coup vaut ce qu il touche, et la visee remplace le de',()=
   ok(torse>pieds&&torse<tete,'et le torse est entre les deux');
 });
 
+test('titres — chacun se decroche, aucun ne se contemple',()=>{
+  /* Un titre n'est pas une recompense : il NOMME. C'est la seule forme
+     d'objectif qui ne desequilibre rien — on ne farme pas un nom. Mais un
+     titre INATTEIGNABLE est pire qu'un titre absent : il se voit et ne
+     s'obtient pas. On construit donc un etat maximal et on exige qu'ils
+     tombent TOUS. */
+  const c=nouveau();
+  ok(G(c,'HFK.length')>=40,'quarante titres au moins — '+G(c,'HFK.length'));
+  eq(G(c,'HFK.every(k=>typeof HAUTFAIT[k].quand==="function"&&!!HAUTFAIT[k].n&&!!HAUTFAIT[k].d)'),true,
+    'chacun a un nom, une explication et une condition');
+
+  /* --- rien n'est acquis au depart --- */
+  R(c,'S.hf={};hfBalayer();');
+  eq(G(c,'hfAcquis().length'),0,'au premier pas, aucun titre');
+
+  /* --- l etat maximal : tous doivent tomber --- */
+  R(c,`S.hf={};
+    Object.keys(CREATURE).forEach(k=>{S.bes[k]={v:99,t:400,a:9};});
+    Object.keys(S.sk).forEach(k=>{S.sk[k].lv=80;});
+    S.or=1e6;S.day=3000;
+    S.modules=DK.slice(0,6).map((d,i)=>({id:MK[i],dom:d,lv:12,xp:0}));
+    S.comps=[{},{},{},{}];
+    S.carry=Object.keys(STATION);
+    Object.keys(GUILDS.reduce((a,g)=>(a[g.k]=1,a),{})).forEach(k=>{S.guilds[k]={rank:6,xp:0,gains:0};});
+    S.prime={0:50};
+    S.arte={x:1};
+    S.col=S.col||{};S.col.gardien={x:1};
+    for(let i=0;i<1200;i++){const cc=cell(i%40,Math.floor(i/40));cc.seen=true;}
+    S.claims=[key(0,0),key(1,0),key(2,0)];
+    /* toutes les familles de collection, pour les titres qui les lisent */
+    COLK.forEach(cat=>{S.col[cat]=S.col[cat]||{};
+      try{COLLECTION[cat].tout().forEach(k=>S.col[cat][k]=1);}catch(e){}});
+    hfBalayer();`);
+  const rates=G(c,'HFK.filter(k=>!S.hf[k])');
+  ok(rates.length===0,'dans un état maximal, les '+G(c,'HFK.length')+' titres tombent',
+    rates.length?'jamais atteignables : '+rates.join(', '):'');
+
+  /* --- et c'est le balayage ORDINAIRE qui les decroche : un titre qui
+     n'existe que si l'on appelle sa propre fonction n'existe pas --- */
+  R(c,'S.hf={};colBalayer();');
+  ok(G(c,'hfAcquis().length')>0,'le balayage de la collection les decroche aussi');
+
+  /* --- et un titre pris ne se reprend pas --- */
+  R(c,'globalThis.__n=hfAcquis().length;hfBalayer();hfBalayer();');
+  eq(G(c,'hfAcquis().length'),G(c,'__n'),'on ne decroche pas deux fois le meme');
+
+  /* --- ils comptent dans la collection, et n y paient rien --- */
+  eq(G(c,'COLLECTION.titre.tout().length'),G(c,'HFK.length'),'la collection les porte tous');
+  eq(G(c,'!!COLBON.titre'),false,'et ils ne paient rien : un titre qui paie cesse d etre un titre');
+});
+
 test('erudition — une collection achevee paie en savoir-faire',()=>{
   /* J'avais ecrit, en posant la collection : « une premiere fois se dit :
      c'est la seule recompense, et elle suffit. » La deuxieme moitie de la

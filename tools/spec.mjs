@@ -22,6 +22,9 @@ const ONLY=arg('--only',''),VERBOSE=argv.includes('-v');
 const files=readdirSync(join(root,'src'))
   .filter(f=>f.endsWith('.js')&&!/^52-/.test(f)).sort();
 const code=files.map(f=>readFileSync(join(root,'src',f),'utf8')).join('\n');
+/* tout le code du jeu en une chaine : de quoi verifier qu'un appel EXISTE,
+   ce qu'aucune execution ne prouve quand le chemin est rare */
+function lireSrc(){return code;}
 
 function fakeEl(){
   const el={style:{setProperty(){}},children:[],dataset:{},innerHTML:'',textContent:'',className:'',hidden:false,
@@ -2040,6 +2043,45 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   /* --- le mode veteran les coupe tous --- */
   R(c,'S.seen={};S.tips=false;tipQ.length=0;for(let i=0;i<50;i++)tickTips();');
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
+});
+
+test('guildes — aucune ne se repete faute de gabarits',()=>{
+  /* Les Transporteurs avaient DEUX gabarits pour cinq rangs : un membre monte
+     au rang trois et on lui repropose la livraison du premier jour. Une
+     guilde qui se repete n'est pas une guilde, c'est une tache. */
+  const c=nouveau();
+  const parGuilde={};
+  G(c,'QTPL.map(t=>t.g)').forEach(g=>{parGuilde[g]=(parGuilde[g]||0)+1;});
+  const maigres=G(c,'GUILDS.map(g=>g.k)').filter(k=>(parGuilde[k]||0)<4);
+  ok(maigres.length===0,'chaque guilde a au moins quatre gabarits',
+    maigres.length?'trop maigres : '+maigres.map(k=>k+' ('+(parGuilde[k]||0)+')').join(', '):'');
+
+  /* --- et ses gabarits doivent couvrir la MONTEE : un rang sans gabarit
+     nouveau ne donne rien a faire de plus qu'avant --- */
+  const plafonds=G(c,'GUILDS.map(g=>g.k)').filter(k=>{
+    const rangs=G(c,'QTPL.filter(t=>t.g==="'+k+'").map(t=>t.r)');
+    return Math.max.apply(null,rangs)<3;});
+  ok(plafonds.length===0,'chaque guilde a de quoi occuper ses hauts rangs',
+    plafonds.length?'plafonnees : '+plafonds.join(', '):'');
+
+  /* --- ET CHAQUE TYPE DEMANDE DOIT ETRE UN TYPE QUE LE JEU SIGNALE.
+     questTick compare le type demande a celui qu'on lui passe : un gabarit
+     qui demande un geste que PERSONNE n'annonce ne se termine jamais, et
+     bloque la seule quete en cours jusqu'a ce qu'on l'abandonne. On cherche
+     donc l'appel, pas la comparaison. --- */
+  const tousSrc=lireSrc();
+  const types=G(c,'[...new Set(QTPL.map(t=>t.t))]');
+  const equiv={killcat:'kill',killrare:'kill',killnight:'kill'};
+  /* LA LIVRAISON EST LA SEULE QUI NE SE SIGNALE PAS : elle se VERIFIE au
+     moment de rendre — on regarde le sac, on prend la marchandise. C'est une
+     exception voulue, et elle merite d'etre nommee plutot que d'affaiblir la
+     regle pour tout le monde. */
+  const auRendu=['deliver'];
+  const inconnus=types.filter(t=>auRendu.indexOf(t)<0
+    &&tousSrc.indexOf("questTick('"+(equiv[t]||t)+"'")<0);
+  ok(tousSrc.indexOf("q.type==='deliver'")>0,'la livraison se vérifie au rendu, sac en main');
+  ok(inconnus.length===0,'aucun gabarit ne demande un geste que rien ne signale',
+    inconnus.length?'jamais signales : '+inconnus.join(', '):'');
 });
 
 test('six lieux — chacun nourrit un systeme qui manquait de source',()=>{

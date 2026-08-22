@@ -140,6 +140,40 @@ const QTPL=[
   /* --- developpement et magie : la commune et l'etude --- */
   {id:'grenier',g:'developpement',r:3,t:'peche',n:[20,45],or:7,xp:50,
    txt:q=>'Remplir le grenier : '+q.need+' prises'},
+  /* ==================================================================
+     DOUZE GABARITS DE PLUS, ET D'ABORD LA OU IL N'Y EN AVAIT PAS ASSEZ.
+     Les Transporteurs en avaient DEUX pour cinq rangs : un membre monte au
+     rang trois et on lui repropose la meme livraison qu'au premier jour.
+     Les Batisseurs trois, le Developpement quatre. Une guilde qui se repete
+     n'est pas une guilde, c'est une tache.
+
+     Et chacun s'appuie sur un systeme qui n'avait jamais rien a demander :
+     les six nouveaux lieux, la peche, l'apprivoisement, les gemmes.
+     ================================================================== */
+  {id:'roulage',g:'transporteurs',r:2,t:'deliver',sel:'dur',n:[20,40],or:6,xp:34,
+   txt:q=>'Convoyer '+q.need+' × '+matName(q.mat)+' — la charge lourde paie mieux'},
+  {id:'relais',g:'transporteurs',r:3,t:'lieu',n:[3,6],or:110,xp:60,
+   txt:q=>'Ouvrir '+q.need+' relais : visiter autant de lieux distincts'},
+  {id:'affretement',g:'transporteurs',r:4,t:'deliver',n:[45,90],or:6,xp:130,
+   txt:q=>'Affreter un convoi entier : '+q.need+' × '+matName(q.mat)},
+  {id:'fondations',g:'batisseurs',r:2,t:'harvest',sel:'dur',n:[25,50],or:4,xp:36,
+   txt:q=>'Tirer '+q.need+' × '+matName(q.mat)+' pour les fondations'},
+  {id:'gisement',g:'batisseurs',r:4,t:'harvest',sel:'dur',n:[60,120],or:4,xp:120,
+   txt:q=>'Ouvrir la carriere : '+q.need+' × '+matName(q.mat)},
+  {id:'cadastre',g:'developpement',r:2,t:'explore',n:[15,30],or:14,xp:38,
+   txt:q=>'Cadastrer '+q.need+' cellules autour de la commune'},
+  {id:'cheptel',g:'aventuriers',r:4,t:'tame',n:[3,5],or:260,xp:130,
+   txt:q=>'Ramener '+q.need+' betes domptees pour le cheptel'},
+  {id:'sondage',g:'prospecteurs',r:1,t:'lieu',n:[2,4],or:60,xp:24,
+   txt:q=>'Sonder '+q.need+' lieux : puits, mines et galeries se ressemblent de loin'},
+  {id:'joaillier',g:'prospecteurs',r:4,t:'gem',n:[4,8],or:150,xp:120,
+   txt:q=>'Tailler '+q.need+' gemmes pour la vitrine'},
+  {id:'greement',g:'navigateurs',r:2,t:'lieu',n:[2,5],or:90,xp:40,
+   txt:q=>'Depouiller '+q.need+' lieux de cote — epaves comprises'},
+  {id:'ecole',g:'magie',r:3,t:'book',n:[3,6],or:130,xp:66,
+   txt:q=>'Lire '+q.need+' ouvrages pour l ecole'},
+  {id:'trophees',g:'gladiateurs',r:3,t:'killrare',n:[3,6],or:180,xp:78,
+   txt:q=>'Abattre '+q.need+' betes rares pour l arene'},
   {id:'prosperite',g:'developpement',r:4,t:'build',n:[6,12],or:90,xp:125,
    txt:q=>'Bâtir '+q.need+' structures pour la commune'},
   {id:'grimoire',g:'magie',r:3,t:'book',n:[3,6],or:130,xp:60,

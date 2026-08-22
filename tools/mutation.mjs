@@ -121,6 +121,8 @@ const MUT=[
   ['garde : le bouclier ne couvre que les voisines','garde',[['src/24-combat.js',"  if(grip().k==='bouclier'&&S.eq.main2&&(VOISINE[g]||[]).includes(d))return .5;","  if(grip().k==='bouclier'&&S.eq.main2)return .5;"]]],
   ['garde : ce qui vient de loin ne se pare pas','garde',[['src/24-combat.js',"  if(!d)return 0;                        /* ce qui vient de loin ne se pare pas */",'  if(!d)return 1;']]],
   ['module : la fiche annonce l etat pose','modificateurs',[['src/35-panel-magie.js',"          +(c.status&&STATUS[c.status.k]?' · '+STATUS[c.status.k].g+' '+STATUS[c.status.k].n.toLowerCase()",'          +(false?'+"''"]]],
+  ['prose : l annee garde son nom','prose',[['src/29-render.js','Math.floor(S.day/ANNEE)+1,jr=Math.floor(S.day%ANNEE)+1','Math.floor(S.day/120)+1,jr=Math.floor(S.day%120)+1']]],
+  ['prose : quatre saisons font une annee','prose',[['src/18-weather.js','const ANNEE=120,SAISON=ANNEE/4;','const ANNEE=120,SAISON=25;']]],
   /* les postures */
   ['posture : le souffle se paie','postures',[['src/24-combat.js','  let cost=(heavy?18:sd.end)*(1+PA.endcost);','  let cost=(heavy?18:8)*(1+PA.endcost);']]],
   ['posture : les touches comptent les postures','postures',[['src/50-input.js','&&+e.code.slice(5)<=STANCE.length','&&+e.code.slice(5)<=4']]],

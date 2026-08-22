@@ -16,7 +16,8 @@ const SEASON=[
   {k:'automne',n:'Automne',g:'秋',t:-2,pousse:-.05,veg:1},
   {k:'hiver',n:'Hiver',g:'冬',t:-11,pousse:-.35,veg:.5},
 ];
-const seasonIdx=day=>Math.floor(((day===undefined?S.day:day)%120+120)%120/30);
+const ANNEE=120,SAISON=ANNEE/4;
+const seasonIdx=day=>Math.floor(((day===undefined?S.day:day)%ANNEE+ANNEE)%ANNEE/SAISON);
 const season=day=>SEASON[seasonIdx(day)];
 function phase(){const h=HOUR();
   return h<5?'nuit':h<7?'aube':h<19?'jour':h<21?'crépuscule':'nuit';}

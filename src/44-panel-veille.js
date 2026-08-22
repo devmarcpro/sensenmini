@@ -6,7 +6,7 @@ function pAuto(){
   let h='<p class="hint">Tout ce que tu fais à la main se rachète. Le jeu doit tourner quand tu ne regardes pas — et à ton retour, l\'absence se résout par formules, à la cadence que tu tenais réellement, jamais par une simulation accélérée.</p>';
   /* les têtes de section affichent un résumé : tout ce qu'elles lisent se calcule ici */
   const ch=S.chron||[];
-  const an=d=>Math.floor(d/120)+1,jr=d=>Math.floor(d%120)+1;
+  const an=d=>Math.floor(d/ANNEE)+1,jr=d=>Math.floor(d%ANNEE)+1;
   const rk=rackElements();
   const rt=S.rate||{};
   const est=k=>{const o=(rt[k]||0),e=cadence(k);

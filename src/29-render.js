@@ -67,7 +67,7 @@ function foldHead(panel,key,g,label,right,def){
     +'<i>'+(open?'▾':'▸')+'</i></button>';
 }
 function render(){
-  const an=Math.floor(S.day/120)+1,jr=Math.floor(S.day%120)+1;
+  const an=Math.floor(S.day/ANNEE)+1,jr=Math.floor(S.day%ANNEE)+1;
   $('hClock').textContent='AN '+an+' · J'+jr+' · 週'+S.week;
   const c=here();
   $('hCell').textContent=(c.town||BIOME[c.b].n)+' ('+c.x+','+c.y+')';

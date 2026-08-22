@@ -2491,6 +2491,18 @@ test('prose — aucun onglet ne recopie un compte qu il pourrait lire',()=>{
   eq(G(c,'nomNombre(16)'),'seize','jusqu a vingt, au-dela le chiffre');
   eq(G(c,'nomNombre(42)'),'42','et le chiffre au-dela, plutot qu un mot faux');
 
+  /* --- L'ANNEE A UN NOM. Cent vingt vivait en clair dans le calcul des
+     saisons, dans l'entete du jeu et dans l'onglet VEILLE : trois copies dont
+     aucune ne surveillait les autres. Un nombre nu ne se lit pas comme un
+     mensonge, c'est ce qui le rend dangereux. --- */
+  eq(G(c,'SAISON*4'),G(c,'ANNEE'),'quatre saisons font une annee, par construction');
+  R(c,'S.day=ANNEE-0.5;');
+  eq(G(c,'seasonIdx()'),3,'la veille du nouvel an, on est en hiver');
+  R(c,'S.day=ANNEE+0.5;');
+  eq(G(c,'seasonIdx()'),0,'le lendemain, au printemps');
+  const src=lireSrc();
+  ok(src.indexOf('%120')<0&&src.indexOf('/120')<0,'et plus aucune annee ecrite en clair');
+
   /* --- l onglet COMBAT dit le nombre de postures qu il affiche --- */
   R(c,"S.fold=S.fold||{};S.fold.combat='st';globalThis.__pc=pCombat();");
   const pc=G(c,'__pc');

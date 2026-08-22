@@ -16,7 +16,7 @@
    VERSION est un condensé du contenu réel, pose par tools/stamp.mjs : dès
    qu'un fichier change, l'installation se rejoue et les anciens caches
    disparaissent. `npm test` vérifie qu'elle est à jour. */
-const VERSION='sensen-mini-cd4d9a1f';
+const VERSION='sensen-mini-0f5ab797';
 const SHELL=['./','./index.html','./manifest.webmanifest','./icons/icon.svg','./icons/apple-touch-icon.png'];
 
 /* La mise en réserve AVALAIT SES PROPRES ÉCHECS : `cache.add(u).catch(()=>{})`

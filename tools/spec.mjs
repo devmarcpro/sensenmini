@@ -2022,6 +2022,30 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('deux colonnes — la carte est une piece, pas une copie',()=>{
+  /* Sur un ecran d'ordinateur, la carte vit a gauche en permanence et
+     l'onglet MONDE ne la repete pas. Le danger d'une mise en page a deux
+     colonnes est d'ecrire deux fois la meme chose : ce sont les MEMES
+     cellules, le meme rendu, la meme fonction. */
+  const c=nouveau();
+  R(c,"S.occ='repos';");
+  const carte=G(c,'carteHtml(5)');
+  ok(carte.indexOf('data-go=')>0,'la carte porte ses cases cliquables');
+  ok(G(c,'pMonde()').indexOf(carte)>0,
+    'et l onglet MONDE monte exactement la meme, sans la reecrire');
+  ok(G(c,'carteActions()').indexOf('data-occ="combat"')>0,'les trois occupations suivent la carte');
+  /* le nombre de cases doit suivre le rayon demande, pas un chiffre ecrit */
+  const n5=G(c,'(carteHtml(5).match(/data-go=/g)||[]).length');
+  const n3=G(c,'(carteHtml(3).match(/data-go=/g)||[]).length');
+  eq(n5,121,'un rayon de cinq fait onze sur onze');
+  eq(n3,49,'un rayon de trois, sept sur sept');
+
+  /* la feuille de style porte la coupe en deux, et le telephone n y touche pas */
+  const css=readFileSync(join(root,'src','style.css'),'utf8');
+  ok(css.indexOf('@media(min-width:1080px)')>0,'la coupe en deux est une requete de media');
+  ok(css.indexOf('grid-template-columns:minmax(420px,1fr)')>0,'et une grille a deux colonnes');
+});
+
 test('gestes de la case — un seul endroit pour une seule intention',()=>{
   /* Aller sur un autel dans MONDE, ouvrir CELLULE pour le fouiller, ouvrir
      MAGIE pour lire le grimoire qu'on vient d'y trouver : trois pages pour un

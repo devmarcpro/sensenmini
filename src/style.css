@@ -417,11 +417,16 @@ nav.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px
     gap:0 22px;align-items:start}
   /* le bandeau de jauges tient toute la largeur, au-dessus des deux colonnes */
   .hud .wrap{display:block;max-width:1560px}
-  #scene{grid-column:1;position:sticky;top:74px}
-  .log{grid-column:1;margin-top:12px;max-height:34vh;overflow-y:auto}
+  /* LES LIGNES D'UNE GRILLE SONT PARTAGEES PAR LES DEUX COLONNES : une
+     scene haute dans la premiere ligne rendait la premiere ligne haute, et le
+     panneau de droite commencait donc TOUT EN BAS, sous une colonne de vide.
+     La scene enjambe les deux premieres lignes ; les onglets tiennent la
+     ligne 1 a eux seuls, et le panneau commence juste dessous. */
+  #scene{grid-column:1;grid-row:1 / span 2;position:sticky;top:74px}
+  .log{grid-column:1;grid-row:3;margin-top:12px;max-height:30vh;overflow-y:auto}
   nav{grid-column:2;grid-row:1;margin-top:0;position:sticky;top:74px;z-index:15;
     background:var(--ink);flex-wrap:wrap;overflow-x:visible}
-  .panel{grid-column:2;grid-row:2 / span 2;padding-top:10px}
+  .panel{grid-column:2;grid-row:2 / span 2;padding-top:10px;align-self:start}
   /* les onglets ont la place de tenir sur deux lignes : plus de defilement
      horizontal, donc plus rien de cache derriere un bord */
   nav button{padding:7px 9px}
@@ -429,4 +434,32 @@ nav.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px
 /* très large : la scène peut respirer sans que le panneau maigrisse */
 @media(min-width:1500px){
   .wrap{grid-template-columns:minmax(520px,1fr) minmax(620px,1fr)}
+}
+
+/* ==================================================================
+   TROIS BANDEAUX POUR UN SEUL HAUT D'ECRAN.
+   Le HUD colle en haut, la vignette d'evenement (« cut ») s'affiche
+   au meme endroit, et le conseil occupe toute la largeur du bas. Sur
+   une colonne unique cela se suivait ; sur un ecran coupe en deux, les
+   trois se marchent dessus — on lisait le nom du personnage a travers
+   les jauges.
+
+   Sur grand ecran : la vignette passe SOUS le HUD, et le conseil
+   descend dans la colonne de gauche, sous le journal, la ou il ne
+   recouvre plus le panneau qu'il commente.
+   ================================================================== */
+@media(min-width:1080px){
+  /* la vignette d'evenement tient dans la colonne de GAUCHE : pleine
+     largeur, elle recouvrait la barre d'onglets pendant deux secondes — et
+     une barre d'onglets qu'on ne peut pas cliquer vaut une barre absente */
+  .cut{top:74px;left:calc(34px + 12px + env(safe-area-inset-left));right:auto;
+    width:calc((100vw - 34px - 46px) * .42);max-width:640px}
+  .tip{left:calc(34px + 12px + env(safe-area-inset-left));right:auto;
+    width:calc((100vw - 34px - 46px) * .42);max-width:640px}
+  /* le conseil ne pousse plus la page : il a sa place dans la colonne. En
+     revanche il ne doit rien MASQUER — un conseil qui recouvre les trois
+     boutons d'occupation empeche exactement ce qu'il conseille de faire. La
+     scene se raccourcit tant qu'il est la. */
+  body.has-tip{padding-bottom:46px}
+  body.has-tip #scene{max-height:calc(100dvh - 300px);overflow-y:auto}
 }

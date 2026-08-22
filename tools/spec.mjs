@@ -2073,7 +2073,21 @@ test('gestes de la case — un seul endroit pour une seule intention',()=>{
      endroits differents. */
   const c=nouveau();
   R(c,"S.occ='repos';S.books=[];here().poi=null;here().dj=null;");
-  eq(G(c,'gestesIci().length'),0,'sur une case nue, aucun geste — une barre de boutons grisés ne fait gagner aucun clic');
+  /* une case NUE n'est pas une case vide : on y recolte et on y perce, et ce
+     sont justement les deux gestes qu'on ne devrait pas aller chercher dans
+     un onglet. Ce qui doit etre absent, c'est ce que la case n'offre PAS. */
+  const nus=G(c,'gestesIci().map(g=>g[0].split("=")[0])');
+  ok(nus.every(k=>k==='harv'||k==='occ'),'sur une case nue, seulement récolter et percer',
+    'proposés : '+nus.join(', '));
+  ok(!nus.includes('shrine')&&!nus.includes('lieu')&&!nus.includes('dj'),
+    'aucun geste de lieu — une barre de boutons grisés ne fait gagner aucun clic');
+  /* et ces deux-la doivent VRAIMENT etre proposes, sinon le detour demeure */
+  R(c,"S.mat={};S.eq={};S.items=[{id:'p',kind:'outil',fn:'pioche',slot:'main1',parts:[{ct:'fixations',f:'brut',mk:'adamant'}],q:3,dur:60,durBase:20,de:10,mana:0,ela:8,vec:[.2,.2,.2,.2,.2],nom:'essai'}];");
+  ok(G(c,'gestesIci().some(g=>g[0].indexOf("harv")===0)'),'avec un outil, la récolte se lance depuis la carte');
+  /* la plus DURE est proposee : c'est la plus payante, et celle qu'on choisirait */
+  const prop=G(c,'(gestesIci().find(g=>g[0].indexOf("harv")===0)||[""])[0].replace(/[^a-z]/g,"").slice(4)');
+  const dure=G(c,'cellMats(here()).filter(m=>MAT[m]&&canHarvest(m)&&stockOf(here(),m)>0).sort((a,b)=>MAT[b].d-MAT[a].d)[0]');
+  eq(prop,dure,'et c est la plus dure que l outil morde');
 
   /* --- l autel --- */
   R(c,"here().poi='sanctuaire';here().shrine=0;S.week=5;");

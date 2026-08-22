@@ -108,6 +108,24 @@ function gestesIci(){
   }
   if(typeof pecheBlocage==='function'&&!pecheBlocage()&&S.occ!=='peche'&&S.occ!=='combat')
     g.push(['occ="peche"','漁','pêcher']);
+  /* RECOLTER SANS PASSER PAR L'ONGLET. Le choix de la matiere restait un
+     detour oblige alors que neuf fois sur dix on veut LA MEILLEURE qu'on
+     puisse prendre ici — la plus dure que l'outil morde, qui est aussi la
+     plus payante. L'onglet RECOLTE garde le choix fin ; la carte offre le
+     geste evident. */
+  if(S.occ!=='recolte'&&S.occ!=='combat'&&S.occ!=='percer'){
+    const pris=cellMats(c).filter(m=>MAT[m]&&canHarvest(m)&&stockOf(c,m)>0);
+    if(pris.length){
+      pris.sort((a,b)=>MAT[b].d-MAT[a].d);
+      g.push(['harv="'+pris[0]+'"','掘','récolter '+matName(pris[0])]);
+    }
+  }
+  /* percer : la descente est un geste de la case, pas un reglage */
+  if(S.occ!=='percer'&&S.occ!=='combat'&&c.depth<5){
+    const rk=STRATA[Math.min(5,c.depth+1)].rock;
+    if(typeof canPierce==='function'&&canPierce(rk))
+      g.push(['occ="percer"','鑿','percer vers la strate '+(c.depth+1)]);
+  }
   return g;
 }
 const gestesHtml=()=>{const g=gestesIci();

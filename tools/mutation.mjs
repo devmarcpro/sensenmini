@@ -100,6 +100,8 @@ const MUT=[
   ['rotation : le geste pose la hauteur','rotation',[['src/24b-sequence.js',"    fais:g=>{S.gdir=(GARDES.some(x=>x.k===g)?g:'haut');S.guard=true;return true;}},","    fais:()=>{S.guard=true;return true;}},"]]],
   ['rotation : lire place la garde','rotation',[['src/24b-sequence.js',"    fais:()=>{S.gdir=patOf(E).dir;S.guard=true;return true;}},","    fais:()=>{S.guard=true;return true;}},"]]],
   ['rotation : ce qui ne s annonce pas ne se lit pas','rotation',[['src/24b-sequence.js','    peut:()=>!!E&&!!patOf(E).dir,','    peut:()=>!!E,']]],
+  ['gestes : la matiere la plus dure','gestes de la case',[['src/30-panel-monde.js','      pris.sort((a,b)=>MAT[b].d-MAT[a].d);','      pris.sort((a,b)=>MAT[a].d-MAT[b].d);']]],
+  ['gestes : la recolte se lance de la carte','gestes de la case',[['src/30-panel-monde.js',"      g.push(['harv=\"'+pris[0]+'\"','掘','récolter '+matName(pris[0])]);",'']]],
   ['gestes : rien sur une case nue','gestes de la case',[['src/30-panel-monde.js',"  if(c.poi==='sanctuaire'&&!((c.shrine||0)>S.week-1))","  if(true)"]]],
   ['gestes : le livre le plus facile','gestes de la case',[['src/30-panel-monde.js','    let i=0;for(let k=1;k<S.books.length;k++)if(S.books[k].diff<S.books[i].diff)i=k;','    let i=0;']]],
   ['gestes : pas de lecture en combat','gestes de la case',[['src/30-panel-monde.js',"  if((S.books||[]).length&&S.occ!=='combat'){",'  if((S.books||[]).length){']]],

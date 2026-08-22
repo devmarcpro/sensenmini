@@ -162,6 +162,19 @@ const DJTHEME={
   crypte:{n:'Crypte',noms:['Crypte','Sépulcre','Ossuaire','Caveau scellé'],pop:{suaire:4,rodeur:3,deserteur:1,serpent:1,moustiques:1,sangsues:2,cauchemar:1}},
   mine:{n:'Mine',noms:['Mine noyée','Puits ancien','Galerie morte','Veine muette'],pop:{eclat:3,scorpion:2,serpent:2,bandit:2,rodeur:1,colosse:1}},
   repaire:{n:'Repaire',noms:['Gouffre','Tanière','Faille','Antre'],pop:{oursbrun:3,loup:3,lynx:2,chef:1,loupblanc:1,crocodile:1,glouton:2,crabetour:1}},
+  /* ==================================================================
+     QUATRE THEMES DE DONJON, DONC QUATRE GARDIENS ET QUATRE PIECES
+     NOMMEES. Un donjon majeur se descend en six etages ; au troisieme on
+     a vu tout ce que le theme sait montrer, et l'on connait deja le
+     gardien qui attend. Trois de plus : ce n'est pas le nombre de salles
+     qui fait un donjon, c'est de ne pas savoir ce qu'il y a derriere.
+     ================================================================== */
+  temple:{n:'Temple noyé',noms:['Temple noyé','Sanctuaire submergé','Nef basse','Cloître inondé'],
+    pop:{sangsues:3,crocodile:2,suaire:2,moustiques:2,serpent:1,heron:1,sylve:1}},
+  fonderie:{n:'Fonderie morte',noms:['Fonderie morte','Grands Fourneaux','Halle des scories','Cheminée froide'],
+    pop:{cendre:4,eclat:2,salamandre:2,deserteur:2,bandit:1,colosse:1}},
+  nid:{n:'Nid',noms:['Nid','Aire haute','Perchoir','Rocher creux']
+    ,pop:{aigle:3,harfang:2,chauvesouris:3,vautour:2,abeilles:2,lynx:1,crabetour:1}},
 };
 /* ==================================================================
    LA FAUNE SUIT L'ANNEE (E.28 / 12)

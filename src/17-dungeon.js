@@ -23,13 +23,20 @@ const ROOM={
 };
 /* tirage des salles : un poids par type, modulé par le thème */
 const ROOMW={salle:40,garde:12,biblio:7,tresor:6,piege:7,autel:4,puits:4,cellule:2,cache:4,armurerie:4};
-const THEMEW={ruine:{biblio:2,cellule:2},crypte:{piege:1.5,autel:2,cache:1.5},mine:{puits:2,cache:2,tresor:1.5},repaire:{garde:1.5,armurerie:1.5,cellule:1.5}};
+const THEMEW={ruine:{biblio:2,cellule:2},crypte:{piege:1.5,autel:2,cache:1.5},mine:{puits:2,cache:2,tresor:1.5},repaire:{garde:1.5,armurerie:1.5,cellule:1.5},
+  /* chaque theme penche les salles vers ce qu'il raconte : un temple a des
+     autels et des puits, une fonderie des armureries, un nid des caches */
+  temple:{autel:3,puits:2,biblio:1.5},fonderie:{armurerie:3,tresor:1.5,garde:1.5},nid:{cache:2.5,tresor:2,piege:1.5}};
 function genDungeon(c){
   const majeur=hash(c.x,c.y,S.seed,21)<.35;
   const themes=Object.keys(DJTHEME);
   const theme=c.b==='montagne'||c.b==='montcris'?(Math.random()<.6?'mine':pick(themes))
     :c.b==='marcorr'||c.b==='marecage'?(Math.random()<.6?'crypte':pick(themes))
-    :c.b==='foret'||c.b==='taiga'?(Math.random()<.5?'repaire':pick(themes)):pick(themes);
+    :c.b==='foret'||c.b==='taiga'?(Math.random()<.5?'repaire':pick(themes))
+    :c.b==='cote'||c.b==='oasis'||c.b==='jungle'?(Math.random()<.5?'temple':pick(themes))
+    :c.b==='cendres'||c.b==='ruines'?(Math.random()<.5?'fonderie':pick(themes))
+    :c.b==='montcris'||c.b==='karst'||c.b==='banquise'?(Math.random()<.5?'nid':pick(themes))
+    :pick(themes);
   const nf=majeur?ri(5,8):ri(2,3);
   const floors=[];
   const tw=THEMEW[theme]||{};

@@ -44,6 +44,23 @@ const GARDIEN={
 };
 /* Un donjon MAJEUR — cinq à huit étages — mérite mieux que le gardien
    ordinaire de son thème : c'est le seul endroit où celui-là se montre. */
+Object.assign(GARDIEN,{
+  /* Chaque theme neuf a son gardien : un donjon dont on connait deja le
+     dernier occupant n'a plus de fond. Et chacun porte un trait DEJA
+     branche — renfort, soin, rage, poison — plutot qu'un trait de plus. */
+  temple:{n:'Le Noyeur',g:'溺',cre:'crocodile',
+    hp:6.8,dmg:1.7,arm:1.8,trait:'poison',
+    d:'il attend sous l eau basse, et il ne lache pas',
+    arte:'harpon'},
+  fonderie:{n:'Le Fondeur',g:'鎔',cre:'cendre',
+    hp:7.2,dmg:1.9,arm:2.4,trait:'rage',
+    d:'la chaleur ne l a jamais quitte, et elle monte quand il saigne',
+    arte:'creuset'},
+  nid:{n:'La Mère des Vents',g:'翼',cre:'aigle',
+    hp:5.8,dmg:1.8,arm:1.2,trait:'renfort',
+    d:'elle appelle, et le ciel repond',
+    arte:'serre'},
+});
 const GARDIEN_MAJEUR={n:'Le Premier Enseveli',g:'祖',cre:'colosse',
   hp:9,dmg:2.0,arm:3.0,trait:'rage',
   d:'il était là avant la faille, et il s en souvient',
@@ -71,6 +88,15 @@ const ARTEFACT={
   ronce:{n:'Ronce-Mère',fn:'lance',mats:['boisfer','ecaille','soie'],
     aff:[['venin',{n:4,d:6}],['bas',{s:50,k:3}],['vecaff',{e:2,p:35}]],
     d:'elle empoisonne, et elle frappe plus fort blessée'},
+  harpon:{n:'Harpon du Noyeur',fn:'trident',mats:['acier','boisfer','ecaille'],
+    aff:[['gel',{d:3}],['venin',{n:3,d:5}],['blesse',{p:24}]],
+    d:'il fige, il empoisonne, et il s acharne sur ce qui saigne'},
+  creuset:{n:'Creuset du Fondeur',fn:'marteau',mats:['aciertrempe','obsidienne','cuir'],
+    aff:[['brule',{n:3,d:4}],['lourdeur',{p:30}],['corr',{s:40,p:28}]],
+    d:'la lourde revient deux fois plus vite, et la corruption la nourrit'},
+  serre:{n:'Serre de la Mère des Vents',fn:'arc',mats:['if','argent','soie'],
+    aff:[['premier',{p:40}],['seul',{p:24}],['eclat',{n:4,d:3}]],
+    d:'le premier trait part le plus fort — et vaut mieux seul'},
   couronne:{n:'Couronne du Premier Enseveli',fn:'hallebarde',mats:['adamant','granitnoir','ecaille'],
     aff:[['perce',{n:5,p:100}],['souffle',{p:20}],['harmonie',{p:35}],['seul',{p:28}]],
     d:'la pièce que rien d autre du jeu ne remplace'},

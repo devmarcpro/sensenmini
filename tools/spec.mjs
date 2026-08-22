@@ -2045,6 +2045,48 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('donjons — sept themes, sept gardiens, et rien qui se devine',()=>{
+  /* Quatre themes, donc quatre gardiens et quatre pieces nommees. Un donjon
+     majeur se descend en six etages ; au troisieme on a vu tout ce que le
+     theme sait montrer, et l'on connait deja le gardien qui attend. Ce n'est
+     pas le nombre de salles qui fait un donjon, c'est de ne pas savoir ce
+     qu'il y a derriere. */
+  const c=nouveau();
+  ok(G(c,'Object.keys(DJTHEME).length')>=7,'sept themes au moins — '+G(c,'Object.keys(DJTHEME).length'));
+  /* CHAQUE THEME A SON GARDIEN ET SA PIECE : un theme sans gardien retombe
+     sur celui de la ruine, et l'on croit avoir trouve un donjon neuf */
+  const sansG=G(c,'Object.keys(DJTHEME).filter(t=>!GARDIEN[t])');
+  ok(sansG.length===0,'chaque theme a son propre gardien',
+    sansG.length?'sans gardien : '+sansG.join(', '):'');
+  const sansA=G(c,'Object.keys(GARDIEN).filter(t=>!ARTEFACT[GARDIEN[t].arte])');
+  ok(sansA.length===0,'chaque gardien garde une piece qui existe',
+    sansA.length?'sans piece : '+sansA.join(', '):'');
+  /* et deux gardiens ne gardent pas la meme piece */
+  const artes=G(c,'Object.keys(GARDIEN).map(t=>GARDIEN[t].arte)');
+  eq(artes.length,new Set(artes).size,'et deux gardiens ne gardent jamais la même');
+
+  /* --- ET CHAQUE THEME DOIT PENCHER SES SALLES. Un theme sans profil tire
+     exactement comme tous les autres : il ne reste alors de lui qu'un nom et
+     une liste de betes, et deux donjons de themes differents se parcourent de
+     la meme facon. --- */
+  const plats=G(c,'Object.keys(DJTHEME).filter(t=>!THEMEW[t]||!Object.keys(THEMEW[t]).length)');
+  ok(plats.length===0,'chaque theme penche ses salles vers ce qu il raconte',
+    plats.length?'sans profil : '+plats.join(', '):'');
+  const salles=G(c,'Object.keys(DJTHEME).flatMap(t=>Object.keys(THEMEW[t]||{}).filter(r=>!ROOMW[r]))');
+  ok(salles.length===0,'et aucun profil ne cite une salle qui n existe pas',
+    salles.length?'inconnues : '+salles.join(', '):'');
+
+  /* --- la population d un theme doit exister, sinon la salle est vide --- */
+  const fantomes=G(c,'Object.keys(DJTHEME).flatMap(t=>Object.keys(DJTHEME[t].pop).filter(k=>!CREATURE[k]))');
+  ok(fantomes.length===0,'aucun theme ne peuple ses salles d espèces inexistantes',
+    fantomes.length?'inconnues : '+fantomes.join(', '):'');
+
+  /* --- et chaque piece nommee porte des effets que le jeu applique --- */
+  const inconnus=G(c,'ARTK.flatMap(k=>ARTEFACT[k].aff.map(a=>a[0])).filter(id=>!AFF.some(x=>x.id===id))');
+  ok(inconnus.length===0,'aucune pièce nommée ne promet un effet disparu',
+    inconnus.length?'inconnus : '+inconnus.join(', '):'');
+});
+
 test('modificateurs — ce qui se met devant fait la profondeur',()=>{
   /* Trente-six effets, trente-cinq passifs — et douze modificateurs pour
      DEUX declencheurs. Dans un systeme a la Noita, ce n'est pas l'effet qui

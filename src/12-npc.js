@@ -9,6 +9,8 @@ const JOBS={
   garde:{n:'Garde',sk:'epee'},vendeur:{n:'Marchand',sk:'negociation',wallet:300},
   forgeron:{n:'Forgeron',sk:'forge'},couturier:{n:'Couturier',sk:'tissage'},
   cuisinier:{n:'Cuisinier',sk:'cuisine'},herboriste:{n:'Herboriste',sk:'herboristerie'},
+  /* il ne fabrique pas d'or : il porte ton surplus jusqu'a une ville connue
+     et le vend au prix de cette ville, dans la limite de sa bourse */
   transporteur:{n:'Transporteur',sk:'athletisme'},
 };
 const JK=Object.keys(JOBS);

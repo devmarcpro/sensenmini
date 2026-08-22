@@ -2022,6 +2022,45 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('caravane — un transporteur deplace de l or, il n en fabrique pas',()=>{
+  /* Le Marchand et le Transporteur rendaient exactement la meme ligne :
+     rend x 7 x reputation, de l'or venu de nulle part. Deux fiches, deux
+     noms, deux salaires — et un seul metier : le choix n'existait pas. */
+  const c=nouveau();
+  R(c,`S.claims=[key(S.pos[0],S.pos[1])];here().claim=1;
+    globalThis.__t=(kingdomsNear()[0]?kTowns(kingdomsNear()[0])[0]:null);
+    if(__t){const cc=cell(__t.x,__t.y);cc.seen=true;__t.or=100000;__t.abandonne=false;}
+    globalThis.__n={id:'x',nom:'y',lv:5,mood:80,rec:1,assign:'transporteur',
+      cell:key(S.pos[0],S.pos[1]),home:1,race:'humain'};`);
+
+  /* --- sans marchandise, rien : il ne fabrique pas --- */
+  R(c,'S.mat={};');
+  eq(G(c,'caravane(__n,7)'),0,'sans rien a porter, la caravane rentre a vide');
+  /* --- sans ville connue, rien non plus --- */
+  R(c,"S.mat={fer:200};globalThis.__vus=villesConnues().length;");
+  R(c,'(kTowns(kingdomsNear()[0])||[]).forEach(t=>{const cc=cell(t.x,t.y);cc.seen=false;});');
+  eq(G(c,'caravane(__n,7)'),0,'sans ville dont on ait vu la case, personne a qui vendre');
+
+  /* --- avec les deux : de l or, et de la MARCHANDISE EN MOINS --- */
+  R(c,`(kTowns(kingdomsNear()[0])||[]).forEach(t=>{const cc=cell(t.x,t.y);cc.seen=true;t.or=100000;});
+    S.mat={fer:200};globalThis.__av=S.mat.fer;globalThis.__g=caravane(__n,7);`);
+  gt(G(c,'__g'),0,'elle rapporte de l or');
+  ok(G(c,'S.mat.fer')<G(c,'__av'),'et il en manque au grenier — l or vient de la marchandise, pas du neant ('
+    +G(c,'__av')+' puis '+G(c,'S.mat.fer')+')');
+
+  /* --- la bourse de la ville borne, et se vide --- */
+  R(c,`(kTowns(kingdomsNear()[0])||[]).forEach(t=>{t.or=12;});
+    S.mat={fer:400};globalThis.__g2=caravane(__n,20);`);
+  ok(G(c,'__g2')<=12,'une ville a sec ne paie que ce qu elle a — '+G(c,'__g2'));
+  ok(G(c,'kTowns(kingdomsNear()[0]).reduce((a,t)=>a+t.or,0)')<12*G(c,'kTowns(kingdomsNear()[0]).length'),
+    'et sa bourse a diminue d autant');
+
+  /* --- le marchand, lui, garde son metier a lui --- */
+  R(c,"globalThis.__m=Object.assign({},__n,{assign:'vendeur'});");
+  eq(G(c,'JOBS.vendeur.n'),'Marchand','le marchand vend sur place');
+  eq(G(c,'JOBS.transporteur.n'),'Transporteur','le transporteur porte ailleurs');
+});
+
 test('prose — aucun onglet ne recopie un compte qu il pourrait lire',()=>{
   /* Le conseil des gestes en listait six quand la table en portait quatorze ;
      l'onglet COMBAT annoncait « trois postures » alors qu'il y en a quatre

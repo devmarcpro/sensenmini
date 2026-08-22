@@ -42,6 +42,45 @@ function mkKingdom(i){
     rep:0,diplo:null,or:ri(6000,15000)};
 }
 /* --- claims --- */
+/* Les villes ou une caravane peut aller : celles des royaumes voisins, non
+   abandonnees, et dont on a VU la case — on n'envoie pas un homme vendre
+   dans une ville dont on ignore l'existence. */
+function villesConnues(){
+  const out=[];
+  (typeof kingdomsNear==='function'?kingdomsNear():[]).forEach(k=>{
+    (typeof kTowns==='function'?kTowns(k):[]).forEach(t=>{
+      if(!t||t.abandonne)return;
+      const cc=(S.world||{})[key(t.x,t.y)];
+      if(cc&&cc.seen)out.push(t);
+    });
+  });
+  return out;
+}
+/* Ce qu'un transporteur rapporte : le prix REEL de ce qu'il a porte, borne
+   par la bourse de la ville. Rien de plus, et souvent moins. */
+function caravane(n,rend){
+  const villes=villesConnues();
+  if(!villes.length)return 0;
+  const stock=Object.keys(S.mat||{}).filter(m=>MAT[m]&&S.mat[m]>0);
+  if(!stock.length)return 0;
+  /* il charge ce qui abonde : c'est le SURPLUS qui part, pas la reserve */
+  stock.sort((a,b)=>S.mat[b]*MAT[b].v-S.mat[a]*MAT[a].v);
+  const mk=stock[0];
+  const charge=Math.max(1,Math.min(S.mat[mk],Math.round(4+rend*1.2)));
+  /* il va la ou sa cargaison vaut le plus */
+  let best=villes[0],bp=0;
+  villes.forEach(t=>{const pr=(typeof townPrice==='function'?townPrice(t,mk):1);
+    if(pr>bp){bp=pr;best=t;}});
+  const prix=Math.round(MAT[mk].v*charge*bp*(1+n.lv*.02)
+    *(typeof repFactor==='function'?repFactor():1));
+  /* la bourse de la ville est finie — c'est elle qui borne, jamais l'envie */
+  const paye=Math.min(prix,Math.floor(best.or||0));
+  if(paye<1)return 0;
+  const vendu=Math.max(1,Math.round(charge*paye/Math.max(1,prix)));
+  S.mat[mk]-=vendu;if(!S.mat[mk])delete S.mat[mk];
+  best.or=Math.max(0,(best.or||0)-paye);
+  return paye;
+}
 const claimCost=()=>Math.round(130*Math.pow(1.38,S.claims.length));
 function claimCell(){
   const c=here();
@@ -100,13 +139,37 @@ function weeklyKingdom(r){
       const cc=S.comp[kk];const nb=Math.max(1,Math.round(rend/3));
       if(cc){cc.q=(cc.q*cc.n+q*nb)/(cc.n+nb);cc.n+=nb;}else S.comp[kk]={ct,f,mk:mk2,q,n:nb};
       prod.comp+=nb;
-    } else if(n.assign==='vendeur'||n.assign==='transporteur'){
+    } else if(n.assign==='vendeur'){
+      /* le marchand vend SUR PLACE : c'est le trafic qui le paie */
       const g=Math.round(rend*7*repFactor());S.tresor+=g;prod.or+=g;
+    } else if(n.assign==='transporteur'){
+      /* ==================================================================
+         DEUX METIERS, UN SEUL COMPORTEMENT.
+         Le Marchand et le Transporteur rendaient exactement la meme ligne :
+         rend x 7 x reputation, de l'or venu de nulle part. Deux fiches, deux
+         noms, deux salaires — et un seul metier. Assigner un transporteur
+         plutot qu'un marchand ne changeait rien, ce qui veut dire que le
+         choix n'existait pas.
+
+         UN TRANSPORTEUR NE FABRIQUE PAS D'OR : IL EN DEPLACE. Chaque
+         semaine il charge le surplus de tes matieres et va le vendre dans
+         une ville que tu connais, au PRIX DE CETTE VILLE, et dans la limite
+         de sa bourse — la meme bourse finie que la tienne, celle qui se
+         regarnit lentement. Il ne rapporte donc rien si tu ne produis rien,
+         et rien non plus si les villes sont a sec. C'est ce qui en fait le
+         debouche du mineur et du bucheron, et non un second marchand.
+         ================================================================== */
+      const g=caravane(n,rend);
+      if(g){S.tresor+=g;prod.or+=g;prod.caravane=(prod.caravane||0)+g;}
+      else prod.videCaravane=1;
     }
     n.mood=Math.max(15,Math.min(100,n.mood+(n.home?3+comfort()*.4:-6)));
   });
   if(prod.or||prod.mat||prod.vivres||prod.comp)
-    r.push('exploitation +'+prod.or+' or, +'+prod.mat+' matériaux, +'+prod.vivres+' vivres, +'+prod.comp+' composants');
+    r.push('exploitation +'+prod.or+' or, +'+prod.mat+' matériaux, +'+prod.vivres+' vivres, +'+prod.comp+' composants'
+      +(prod.caravane?' (dont '+prod.caravane+' rapportés par la caravane)':''));
+  if(prod.videCaravane)
+    r.push('<span class="bd">La caravane rentre à vide — il faut des matières à vendre et une ville connue dont la bourse ne soit pas à sec.</span>');
   /* boutique passive (E.8) : trafic × attractivité, bornée par les bourses locales */
   const etals=countSlot('etal');
   if(etals){

@@ -2098,6 +2098,19 @@ test('attelages — huit, et le terrain decide',()=>{
   ok(G(c,'__froid')<G(c,'__chaud'),'le traîneau va plus vite sur la neige que sur le sable — '
     +G(c,'__froid').toFixed(2)+' contre '+G(c,'__chaud').toFixed(2));
 
+  /* --- UN REFUS DOIT DIRE POURQUOI, et la fiche doit dire OU l attelage
+     sert. Le harnais se refusait en silence, et la liste annoncait « sur
+     terre » de tous les attelages terrestres — y compris de ceux qui
+     refusent la montagne et de ceux qui exigent une bete. --- */
+  R(c,"S.comps=[];S.carry=Object.keys(STATION);S.mat={};S.ref={};");
+  ok(String(G(c,'vehBlocage("somme")')||'').indexOf('bête')>0,
+    'le refus du harnais nomme la bête qui manque');
+  R(c,'globalThis.__pm2=pMonde();');
+  const pm=G(c,'__pm2');
+  ok(pm.indexOf('montagne comprise')>0,'la liste dit ce qui passe partout');
+  ok(pm.indexOf('ni montagne')>0,'et ce qui ne passe pas');
+  ok(pm.indexOf('exige une bête apprivoisée')>0,'et ce qui demande une bête');
+
   /* --- et un attelage sans station se batit quand meme --- */
   eq(G(c,'!!VEHICULE.somme&&!VEHICULE.somme.st'),true,'la bête de somme ne demande aucun atelier');
   R(c,"S.carry=[];S.vehicule=null;globalThis.__b=vehBlocage?vehBlocage('somme'):null;");

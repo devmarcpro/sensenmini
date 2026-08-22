@@ -132,6 +132,8 @@ const MUT=[
   ['plat : le panneau l annonce','plats',[['src/36-panel-table.js',"       return '<div class=\"meta\">Cela donnera : <b>'+pl.g+' '+pl.n+'</b> — '+pl.d","       return '';const z=pl.d"]]],
   ['plat : le compte des recettes','plats',[['src/36-panel-table.js',"  h+='<div class=\"card\"><div class=\"meta\">Recettes reconnues : <b>'+vus.length+' / '+PLAT.length+'</b> — '","  h+='<div class=\"card\"><div class=\"meta\">'+('"]]],
   ['passif : le resume se calcule','passifs',[['src/35-panel-magie.js','  const dits=Object.keys(PA).filter(k=>PA[k])',"  const dits=['dmg','pierce','win'].filter(k=>PA[k])"]]],
+  ['attelage : le refus nomme la bete','attelages',[['src/22b-vehicules.js',"    return 'il faut une bête apprivoisée dans ton escorte';",'    return null;']]],
+  ['attelage : la fiche dit le terrain','attelages',[['src/30-panel-monde.js',"        +vehTerrain(D2)+","        +\"\"+"]]],
   /* les attelages */
   ['attelage : la roue ne monte pas','attelages',[['src/22b-vehicules.js','  if(rude&&!D.tout)return false;','']]],
   ['attelage : une bete demande une bete','attelages',[['src/22b-vehicules.js',"  if(D.bete&&!(S.comps||[]).some(x=>x.esc&&!x.dead&&x.type==='bete'))return false;",'']]],

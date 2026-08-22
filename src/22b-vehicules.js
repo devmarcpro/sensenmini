@@ -180,6 +180,8 @@ function vehBlocage(k){
   const D=VEHICULE[k];
   if(!D)return 'inconnu';
   if(D.st&&!hasStation(D.st))return 'il faut '+STATION[D.st].n;
+  if(D.bete&&!(S.comps||[]).some(x=>x.esc&&!x.dead&&x.type==='bete'))
+    return 'il faut une bête apprivoisée dans ton escorte';
   if(lv('menuiserie')<D.lv)return 'Menuiserie '+D.lv+' (tu en as '+lv('menuiserie')+')';
   /* on ne paie pas ici : on regarde seulement si l on pourrait */
   if(!D.cout.every(([w,n])=>w.startsWith('form:')

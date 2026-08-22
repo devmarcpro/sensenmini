@@ -147,7 +147,9 @@ const readDD=b=>10+b.diff/2;
    qu'on n'ouvrait pas, et cela ne se transporte pas. On revient chez soi
    pour lire les livres difficiles, ce qui donne enfin une raison de rentrer. */
 const readBonus=()=>lv('lecture')/2+st('per')/4
-  +(typeof meubleIci==='function'?Math.min(6,meubleIci('bibliotheque')*3):0);
+  +(typeof meubleIci==='function'?Math.min(6,meubleIci('bibliotheque')*3):0)
+  /* la bibliotheque tient le lecteur chez lui ; le talisman le suit dehors */
+  +(typeof util==='function'?util().lettre:0);
 function readBook(i){
   const b=S.books[i];if(!b)return;
   S.books.splice(i,1);

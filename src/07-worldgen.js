@@ -114,7 +114,8 @@ function cellVec(c){
 function stockMax(c,mk){
   const local=BIOME[c.b].mats.includes(mk);
   const veg=(MAT[mk].c==='vegetal'||MAT[mk].c==='bois')?season().veg:1;    /* l'hiver appauvrit le vivant */
-  const base=Math.round((90+c.res*360)*(local?1:.45)*veg*(c.poi==='filon'&&['fer','argent','or'].includes(mk)?2:1));
+  const base=Math.round((90+c.res*360)*(local?1:.45)*veg*(c.poi==='filon'&&['fer','argent','or'].includes(mk)?2:1)
+    *(1+(typeof util==='function'?util().veine:0)));
   return Math.max(20,base);
 }
 function stockOf(c,mk){

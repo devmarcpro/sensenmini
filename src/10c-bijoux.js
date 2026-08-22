@@ -33,6 +33,24 @@ const AFFU=[
    t:p=>'+'+p.n+' en '+(SKILLS[p.k]?SKILLS[p.k].n:p.k)},
   {f:'CORPS',id:'ustat',r:()=>({k:pick(STATS.map(s=>s[0])),n:ri(1,3)}),
    t:p=>'+'+p.n+' en '+(STATS.find(s=>s[0]===p.k)||[,p.k])[1]},
+  /* ==================================================================
+     ONZE EFFETS DE PARURE CONTRE TRENTE ET UN D'ARME.
+     C'est l'axe UTILITAIRE du jeu — ce qu'on porte pour vivre, pas pour
+     frapper — et il etait trois fois plus maigre que celui du combat.
+     Cinq de plus, et chacun branche un chiffre qui existe deja et qu'aucun
+     bijou n'atteignait : le prix de vente, le rendement d'un gisement, la
+     patience d'une ligne de peche, la marge d'un lecteur, le butin d'or.
+     ================================================================== */
+  {f:'NEGOCE',id:'troc',r:()=>({p:ri(6,18)}),
+   t:p=>'+'+p.p+' % sur ce que tu vends'},
+  {f:'FILON',id:'veine',r:()=>({p:ri(10,30)}),
+   t:p=>'+'+p.p+' % de matiere dans les gisements que tu ouvres'},
+  {f:'LIGNE',id:'ligne',r:()=>({p:ri(10,25)}),
+   t:p=>'la ligne mord '+p.p+' % plus vite'},
+  {f:'LETTRE',id:'lettre',r:()=>({n:ri(1,3)}),
+   t:p=>'+'+p.n+' aux jets de lecture'},
+  {f:'BUTIN',id:'bourse',r:()=>({p:ri(10,25)}),
+   t:p=>'+'+p.p+' % d or sur ce que tu abats'},
   {f:'CHARGE',id:'poids',r:()=>({n:ri(10,40)}),
    t:p=>'+'+p.n+' de place dans le sac'},
   {f:'CORPS',id:'faim',r:()=>({p:ri(10,30)}),
@@ -102,7 +120,8 @@ const salirUtil=()=>{utilSale=true;};
 function util(){
   if(!utilSale&&utilCache)return utilCache;
   utilSale=false;
-  const u={sk:{},stat:{},poids:0,faim:0,soin:0,marche:0,dons:{}};
+  const u={sk:{},stat:{},poids:0,faim:0,soin:0,marche:0,dons:{},
+    troc:0,veine:0,ligne:0,lettre:0,bourse:0};
   for(const k in (S.eq||{})){
     const it=S.eq[k];
     if(!it||!it.aff)continue;
@@ -116,6 +135,11 @@ function util(){
       else if(a.id==='faim')u.faim+=p.p/100;
       else if(a.id==='soin')u.soin+=p.p/100;
       else if(a.id==='marche')u.marche+=p.p/100;
+      else if(a.id==='troc')u.troc+=p.p/100;
+      else if(a.id==='veine')u.veine+=p.p/100;
+      else if(a.id==='ligne')u.ligne+=p.p/100;
+      else if(a.id==='lettre')u.lettre+=p.n;
+      else if(a.id==='bourse')u.bourse+=p.p/100;
       else if(d.don)u.dons[a.id]=true;
     });
   }
@@ -123,6 +147,10 @@ function util(){
      anneaux ne doivent pas supprimer une contrainte, seulement l'alléger */
   u.faim=Math.min(.6,u.faim);
   u.marche=Math.min(.45,u.marche);
+  /* les memes bornes que la faim et la marche : une parure allege, elle ne
+     supprime pas — deux anneaux ne doivent pas doubler un gisement */
+  u.troc=Math.min(.5,u.troc);u.veine=Math.min(.6,u.veine);
+  u.ligne=Math.min(.5,u.ligne);u.bourse=Math.min(.6,u.bourse);
   utilCache=u;
   return u;
 }

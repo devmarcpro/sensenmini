@@ -84,7 +84,8 @@ function pecheDelai(){
   const bateau=vehUtile()&&vehDef().eau?.55:1;
   /* un fleuve rend plus qu'un ruisseau : la largeur compte */
   const cours=1-Math.min(.35,rivDe(here())*.12);
-  return Math.max(1.2,(7-lv('peche')*.06)*bateau*cours);
+  return Math.max(1.2,(7-lv('peche')*.06)*bateau*cours
+    *(1-(typeof util==='function'?util().ligne:0)));
 }
 function pecheTirage(){
   const t=PECHE[here().b]||{poisson:5};

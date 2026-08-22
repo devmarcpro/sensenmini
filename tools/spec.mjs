@@ -3686,6 +3686,25 @@ test('parures — six emplacements qui ne recevaient rien',()=>{
       /* et la carte, telle que le panneau la dessine */
       const html=pMonde();
       v.push(html.length,(html.match(/class="poi"/g)||[]).length);
+      /* CINQ DIMENSIONS DE PLUS, parce que cinq effets neufs les touchent :
+         le prix qu'on obtient, le fond d'un gisement, la patience d'une
+         ligne, la marge d'un lecteur, l'or qu'un mort laisse. L'empreinte
+         ne mesurait rien de tout cela — et l'a dit, ce qui est exactement
+         son travail : elle a refuse les cinq comme inertes. */
+      S.mat.fer=10;
+      v.push(typeof priceMat==='function'?priceMat('fer',10):0);
+      const cc=here();cc.stock=null;
+      v.push(typeof stockMax==='function'?stockMax(cc,cc.b?BIOME[cc.b].mats[0]:'fer'):0);
+      v.push(typeof pecheDelai==='function'?+pecheDelai().toFixed(3):0);
+      v.push(+readBonus().toFixed(3));
+      /* L'OR D'UN MORT SE MESURE SUR UN MORT QUI EN PORTE. Sur une case
+         propre, un loup laisse UNE piece — et un quart de piece en plus
+         s'arrondit a zero. La sonde disait donc « sans effet » d'un effet
+         parfaitement branche : elle mesurait au mauvais endroit. */
+      const cr0=cc.corr,dp0=cc.depth;cc.corr=90;cc.depth=3;
+      const kk=mkEnemy('loup',3,false,false);kk.hp=0;kk.or=6;
+      const or0=S.or;kill(kk);v.push(S.or-or0);
+      cc.corr=cr0;cc.depth=dp0;
     }finally{
       Math.random=R0;
       for(const k in S)delete S[k];

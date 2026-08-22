@@ -123,6 +123,12 @@ const MUT=[
   ['module : la fiche annonce l etat pose','modificateurs',[['src/35-panel-magie.js',"          +(c.status&&STATUS[c.status.k]?' · '+STATUS[c.status.k].g+' '+STATUS[c.status.k].n.toLowerCase()",'          +(false?'+"''"]]],
   ['prose : l annee garde son nom','prose',[['src/29-render.js','Math.floor(S.day/ANNEE)+1,jr=Math.floor(S.day%ANNEE)+1','Math.floor(S.day/120)+1,jr=Math.floor(S.day%120)+1']]],
   ['prose : quatre saisons font une annee','prose',[['src/18-weather.js','const ANNEE=120,SAISON=ANNEE/4;','const ANNEE=120,SAISON=25;']]],
+  /* les parures utilitaires */
+  ['parure : le troc paie','parures',[['src/12-npc.js',"    *(1+(typeof util==='function'?util().troc:0)));}","    );}"]]],
+  ['parure : la veine nourrit le gisement','parures',[['src/07-worldgen.js',"    *(1+(typeof util==='function'?util().veine:0)));",'  );']]],
+  ['parure : la ligne mord plus vite','parures',[['src/26b-peche.js',"    *(1-(typeof util==='function'?util().ligne:0)));",'  );']]],
+  ['parure : la bourse gonfle le butin','parures',[['src/24-combat.js',"    *(1+(typeof util==='function'?util().bourse:0)));",'  );']]],
+  ['parure : la lettre aide a lire','parures',[['src/25-modules.js',"  +(typeof util==='function'?util().lettre:0);",';']]],
   /* les postures */
   ['posture : le souffle se paie','postures',[['src/24-combat.js','  let cost=(heavy?18:sd.end)*(1+PA.endcost);','  let cost=(heavy?18:8)*(1+PA.endcost);']]],
   ['posture : les touches comptent les postures','postures',[['src/50-input.js','&&+e.code.slice(5)<=STANCE.length','&&+e.code.slice(5)<=4']]],
@@ -212,7 +218,7 @@ const MUT=[
   ['residents : le creux coute','residents',[['src/13-kingdom.js','*creux;   /* 2 semaines','; /* 2 semaines']]],
   /* les meubles */
   ['meuble : bibliotheque','meubles',[['src/25-modules.js',
-    "+(typeof meubleIci==='function'?Math.min(6,meubleIci('bibliotheque')*3):0);",';']]],
+    "+(typeof meubleIci==='function'?Math.min(6,meubleIci('bibliotheque')*3):0)",'']]],
   ['meuble : autel domestique','meubles',[['src/24-combat.js',"(autels?.05:.1)",'.1']]],
   ['meuble : garde-manger','meubles',[['src/13-kingdom.js',
     "-(typeof meubleTerritoire==='function'?meubleTerritoire('gardemanger'):0));",');']]],

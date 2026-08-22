@@ -214,7 +214,8 @@ function buyerHere(){
 function priceMat(k,n){
   const t=townAt(S.pos[0],S.pos[1]),kg=kingdomAt(S.pos[0],S.pos[1]);
   return Math.round(MAT[k].v*n*repFactor()*prixContrebande(k)
-    *(t?townPrice(t,k):1)*douane(kg,k)*(1+lv('negociation')*.008));}
+    *(t?townPrice(t,k):1)*douane(kg,k)*(1+lv('negociation')*.008)
+    *(1+(typeof util==='function'?util().troc:0)));}
 /* ===== LE TROC (A.8.1 / 7.6) =====
    « Un marchand à sec REFUSE d'acheter en or au-delà de son stock — il
    propose un troc en objets de valeur équivalente plutôt qu'un refus

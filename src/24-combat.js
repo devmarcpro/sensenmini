@@ -772,7 +772,8 @@ function kill(who){
   if(K.gard)collecte('gardien',K.gard==='__majeur'?'majeur':K.gard);
   const c=here();
   /* les bêtes ne portent pas de bourse : quelques pièces au mieux — les humains, si (7.6) */
-  const g=Math.round((1+c.corr*.08+c.depth*1.5)*(K.rare?4:1)*(K.boss?6:1)*(1+(K.or||0)));
+  const g=Math.round((1+c.corr*.08+c.depth*1.5)*(K.rare?4:1)*(K.boss?6:1)*(1+(K.or||0))
+    *(1+(typeof util==='function'?util().bourse:0)));
   S.or+=g;
   /* tout le bestiaire vu : on sait ou trancher */
   const ercre=(typeof colComplete==='function'&&colComplete('creature'))?1:0;

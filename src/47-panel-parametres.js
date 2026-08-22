@@ -26,6 +26,17 @@ function tricher(quoi,fn){
 function pParam(){
   let h='<p class="hint">Tout ce qui touche à la partie elle-même : la sauvegarde, le confort de jeu, et de quoi tordre les règles si l\'envie prend. C\'est un jeu solo — personne n\'a rien à prouver à personne.</p>';
 
+  /* ----- les touches ----- */
+  h+=foldHead('param','kb','鍵','TOUCHES',navigator&&navigator.maxTouchPoints>0?'clavier, si tu en as un':'clavier','kb');
+  if(foldOpen('param','kb','kb')){
+    h+='<div class="card"><div class="meta">'
+     +'<b>Partout</b> — <kbd>[</kbd> et <kbd>]</kbd> : onglet précédent, onglet suivant, dans l\'ordre des familles. '
+     +'<kbd>Échap</kbd> : revenir au monde. Hors combat, <kbd>←</kbd> et <kbd>→</kbd> font la même chose que les crochets.'
+     +'</div><div class="meta"><b>En combat</b> — <kbd>espace</kbd> : garde et parade. <kbd>D</kbd> : frappe lourde. '
+     +'<kbd>1</kbd> à <kbd>4</kbd> : posture. <kbd>Tab</kbd>, <kbd>←</kbd>, <kbd>→</kbd> : changer de cible. <kbd>F</kbd> : rompre.'
+     +'</div><div class="meta">Rien ne se déclenche pendant que tu écris dans un champ.</div></div>';
+  }
+
   /* ----- sauvegarde ----- */
   h+=foldHead('param','sv','保','SAUVEGARDE',S.nom+' · semaine '+S.week,'sv');
   if(foldOpen('param','sv','sv')){

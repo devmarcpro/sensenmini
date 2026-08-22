@@ -231,6 +231,34 @@ addEventListener('keydown',e=>{
   if(enCombat&&(e.code==='Tab'||e.code==='ArrowRight')){e.preventDefault();cycleFocus(1);}
   if(enCombat&&e.code==='ArrowLeft'){e.preventDefault();cycleFocus(-1);}
   if(enCombat&&e.code==='KeyF'){e.preventDefault();disengage();paint();}
+
+  /* ==================================================================
+     DIX-NEUF ONGLETS, ET PAS UNE TOUCHE POUR EN CHANGER.
+     Le combat a ses raccourcis depuis le debut — espace pour parer, D
+     pour la lourde, les chiffres pour la posture, les fleches pour la
+     cible. Hors combat, rien : on parcourait la barre a la souris,
+     onglet par onglet, ce qui est exactement le geste qu'un clavier
+     evite. Sur un ecran d'ordinateur ou tout est visible, changer de
+     panneau doit couter une touche.
+
+     Les crochets vont d'un onglet a l'autre, dans l'ordre des FAMILLES
+     — c'est celui de la barre, donc celui qu'on lit. Echap ramene au
+     monde, qui est l'endroit d'ou tout part. Et rien ne se declenche
+     pendant qu'on ecrit dans un champ : un jeu qui change d'onglet
+     quand on tape « 3 » dans une rotation est un jeu qui se bat contre
+     son joueur.
+     ================================================================== */
+  const t2=e.target,dansUnChamp=t2&&(t2.tagName==='INPUT'||t2.tagName==='TEXTAREA'||t2.tagName==='SELECT');
+  if(dansUnChamp)return;
+  const ONG=[...document.querySelectorAll('#tabs button')].map(b=>b.dataset.tab);
+  const bouge=d=>{const i=ONG.indexOf(tab);if(i<0)return;
+    tab=ONG[(i+d+ONG.length)%ONG.length];paint();};
+  if(e.code==='BracketRight'){e.preventDefault();bouge(1);}
+  if(e.code==='BracketLeft'){e.preventDefault();bouge(-1);}
+  /* hors combat les fleches ne servent a rien d'autre : elles suivent */
+  if(!enCombat&&e.code==='ArrowRight'){e.preventDefault();bouge(1);}
+  if(!enCombat&&e.code==='ArrowLeft'){e.preventDefault();bouge(-1);}
+  if(e.code==='Escape'&&tab!=='monde'){e.preventDefault();tab='monde';paint();}
 });
 addEventListener('keyup',e=>{if(e.code==='Space')S.guard=false;});
 $('gate').addEventListener('click',e=>{

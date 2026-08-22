@@ -2042,6 +2042,26 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('touches — un raccourci qu on n annonce pas n existe pas',()=>{
+  /* Le combat a ses raccourcis depuis le debut, ecrits sur ses boutons. Les
+     onglets n'en avaient aucun, et pas de bouton ou les ecrire : on parcourait
+     la barre a la souris, onglet par onglet — le geste meme qu'un clavier
+     evite. Les touches vivent donc dans les reglages, avec ce qui se regle. */
+  const c=nouveau();
+  const inp=readFileSync(join(root,'src','50-input.js'),'utf8');
+  /* les touches existent */
+  ok(inp.indexOf("e.code==='BracketRight'")>0,'crochet droit : onglet suivant');
+  ok(inp.indexOf("e.code==='BracketLeft'")>0,'crochet gauche : onglet precedent');
+  ok(inp.indexOf("e.code==='Escape'")>0,'echap : retour au monde');
+  /* et rien ne se declenche dans un champ de saisie */
+  ok(inp.indexOf("t2.tagName==='INPUT'")>0,'aucune touche ne mord pendant qu on ecrit');
+  /* et elles sont ANNONCEES : le panneau des reglages les nomme */
+  R(c,"S.fold=S.fold||{};S.fold.param='kb';globalThis.__pp=pParam();");
+  const pp=G(c,'__pp');
+  ['[',']','Échap','espace'].forEach(k=>
+    ok(pp.indexOf('<kbd>'+k+'</kbd>')>0,'les réglages annoncent la touche '+k));
+});
+
 test('deux colonnes — la carte est une piece, pas une copie',()=>{
   /* Sur un ecran d'ordinateur, la carte vit a gauche en permanence et
      l'onglet MONDE ne la repete pas. Le danger d'une mise en page a deux

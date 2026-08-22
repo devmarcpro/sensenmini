@@ -35,6 +35,21 @@ const GESTES={
   garde:{n:'lever la garde',g:'守',d:'un temps d\'arrêt : le souffle revient plus vite qu\'il ne part',
     peut:()=>true,
     fais:()=>{S.guard=true;return true;}},
+  /* L'ENCHAINEMENT NE SAVAIT PARLER QUE D'ATTAQUE. Sept gestes, tous
+     offensifs sauf « lever la garde » — qui, depuis que la garde a une
+     HAUTEUR, ne dit plus que la moitie de ce qu'il faut dire. Un joueur qui
+     ecrit sa rotation d'avance doit pouvoir y ecrire sa defense : « je
+     couvre le haut, je frappe deux fois, je passe en bas ». C'est la meme
+     idee que le reste de l'onglet — decider une fois pour toutes ce qu'on
+     ferait a la main. */
+  hauteur:{n:'garder',g:'護',arg:'hauteur',d:'choisir la hauteur de garde — haut, latéral ou bas',
+    peut:()=>true,
+    fais:g=>{S.gdir=(GARDES.some(x=>x.k===g)?g:'haut');S.guard=true;return true;}},
+  /* et le contraire : suivre ce que la creature annonce, un temps */
+  lire:{n:'lire le geste',g:'読',d:'placer la garde sur ce que la créature annonce — si elle a commencé',
+    absent:()=>!E,
+    peut:()=>!!E&&!!patOf(E).dir,
+    fais:()=>{S.gdir=patOf(E).dir;S.guard=true;return true;}},
   relacher:{n:'baisser la garde',g:'開',d:'reprendre l\'initiative',
     peut:()=>true,
     fais:()=>{S.guard=false;return true;}},

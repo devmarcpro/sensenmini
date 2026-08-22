@@ -97,6 +97,9 @@ const MUT=[
   ['symetrie : la depense','symetrie',[['src/28-loop.js','{creDepense(e);resolveHit(S.guard?1:0,e);}','resolveHit(S.guard?1:0,e);']]],
   ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,zk):tgt.arm)",'tgt.arm']]],
   ['collection : la boucle balaie','titres',[['src/28-loop.js',"    if(typeof colBalayer==='function')colBalayer();}",'  }']]],
+  ['rotation : le geste pose la hauteur','rotation',[['src/24b-sequence.js',"    fais:g=>{S.gdir=(GARDES.some(x=>x.k===g)?g:'haut');S.guard=true;return true;}},","    fais:()=>{S.guard=true;return true;}},"]]],
+  ['rotation : lire place la garde','rotation',[['src/24b-sequence.js',"    fais:()=>{S.gdir=patOf(E).dir;S.guard=true;return true;}},","    fais:()=>{S.guard=true;return true;}},"]]],
+  ['rotation : ce qui ne s annonce pas ne se lit pas','rotation',[['src/24b-sequence.js','    peut:()=>!!E&&!!patOf(E).dir,','    peut:()=>!!E,']]],
   /* la garde directionnelle */
   ['garde : la hauteur ouvre la fenetre','garde',[['src/24-combat.js',"  return parryWin()*(P.win||1)*(a>=1?1.6:a>0?1.15:.55);",'  return parryWin()*(P.win||1);']]],
   ['garde : la hauteur encaisse','garde',[['src/24-combat.js',"    const inc=raw*(q===1?(acc>=1?.12:acc>0?.17:.30):1);",'    const inc=raw*(q===1?.20:1);']]],

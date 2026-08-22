@@ -2003,6 +2003,38 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('rotation defensive — l enchainement sait enfin parler de garde',()=>{
+  /* Sept gestes programmables, tous offensifs sauf « lever la garde » — qui,
+     depuis que la garde a une HAUTEUR, ne disait plus que la moitie de ce
+     qu'il fallait dire. Ecrire sa rotation d'avance doit inclure sa defense :
+     « je couvre le haut, je frappe deux fois, je passe en bas ». */
+  const c=nouveau();
+  eq(G(c,'!!GESTES.hauteur&&!!GESTES.lire'),true,'les deux gestes de garde existent');
+  eq(G(c,'GESTES.hauteur.arg'),'hauteur','et la hauteur se choisit dans la ligne');
+  /* aucun geste ne doit promettre un argument que l interface ne propose pas */
+  eq(G(c,'Object.keys(GESTES).every(k=>!GESTES[k].arg||["arme","sort","temps","hauteur"].includes(GESTES[k].arg))'),
+    true,'aucun geste ne demande un argument inconnu');
+
+  R(c,"S.occ='combat';E=null;EE=[];spawn();S.gdir='haut';");
+  R(c,"GESTES.hauteur.fais('bas');");
+  eq(G(c,'S.gdir'),'bas','le geste pose la hauteur demandee');
+  eq(G(c,'S.guard'),true,'et leve la garde du meme mouvement');
+  R(c,"GESTES.hauteur.fais('nimportequoi');");
+  eq(G(c,'S.gdir'),'haut','une hauteur inconnue retombe sur la haute, jamais sur rien');
+
+  /* --- LIRE : la garde suit ce que la creature annonce --- */
+  R(c,"E.pats=['morsure'];armePattern(E);S.gdir='haut';");
+  eq(G(c,'GESTES.lire.peut()'),true,'on peut lire un geste commence');
+  R(c,'GESTES.lire.fais();');
+  eq(G(c,'S.gdir'),'bas','et la garde se place ou la morsure arrive');
+  eq(G(c,'gardeAccord(E)'),1,'l accord est parfait');
+  /* ce qui n'annonce rien ne se lit pas — et le geste doit le dire, pas attendre */
+  R(c,"E.pats=['souffle'];armePattern(E);");
+  eq(G(c,'GESTES.lire.peut()'),false,'un souffle ne s annonce d aucune hauteur');
+  R(c,'E=null;EE=[];');
+  eq(G(c,'GESTES.lire.absent()'),true,'et sans personne en face, le geste est ABSENT — il se saute, il n attend pas');
+});
+
 test('enchainement — l ordre des coups se decide enfin',()=>{
   /* Le plan dit QUOI faire ; l'enchainement dit COMMENT frapper. Une fois le
      combat engage, tout se jouait tout seul et toujours pareil : on frappait

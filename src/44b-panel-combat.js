@@ -69,6 +69,8 @@ function pCombat(){
          +(g.t==='sort'?'<select data-seqv="'+i+'" style="flex:none;width:110px">'
              +(S.spells||[]).map((sp,si)=>'<option value="'+si+'"'+(si===+g.v?' selected':'')+'>compétence '+(si+1)
                +(sp&&sp.length?'':' (vide)')+'</option>').join('')+'</select>':'')
+         +(g.t==='hauteur'?'<select data-seqv="'+i+'" style="flex:1">'+GARDES.map(x=>'<option value="'+x.k+'"'
+             +(g.v===x.k?' selected':'')+'>'+x.g+' '+x.n+'</option>').join('')+'</select>':'')
          +(g.t==='attendre'?'<input type="number" data-seqv="'+i+'" value="'+(g.v||1)+'" min="1" max="9" '
              +'style="width:56px;flex:none;background:var(--sumi);color:var(--bone);border:1px solid var(--line2);'
              +'font-family:var(--px);font-size:11px;padding:5px">':'')

@@ -96,6 +96,12 @@ const MUT=[
   ['symetrie : le souffle des creatures','symetrie',[['src/28-loop.js',"    if(e.w<0&&!crePeutFrapper(e))continue;",'']]],
   ['symetrie : la depense','symetrie',[['src/28-loop.js','{creDepense(e);resolveHit(S.guard?1:0,e);}','resolveHit(S.guard?1:0,e);']]],
   ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,zk):tgt.arm)",'tgt.arm']]],
+  /* les boyaux */
+  ['boyau : le rythme casse','boyaux',[['src/24-combat.js','    *(geneIci()?1/1.4:1);','    ;']]],
+  ['boyau : pas de balayage','boyaux',[['src/24-combat.js',"  if(swp&&etroitIci()){swp=0;if(hitN<=1)log('<span class=\"bd\">La hampe cogne la paroi — pas de place pour faucher.</span>');}",'']]],
+  ['boyau : le clang se paie','boyaux',[['src/24-combat.js','  if(geneIci())cost*=1.25;','']]],
+  ['boyau : une grande salle n en est pas un','boyaux',[['src/24-combat.js',"  if(typeof caverne==='function'&&caverne(here())===1)return true;","  if(typeof caverne==='function'&&caverne(here())>=1)return true;"]]],
+  ['boyau : une lame courte ne subit rien','boyaux',[['src/24-combat.js','  return !F.dist&&F.reach>=2;','  return !F.dist;']]],
   /* le scriptorium */
   ['scriptorium : on comble sa lacune','scriptorium',[['src/14b-consommables.js','      doms.sort((a,b)=>connus[a]-connus[b]);','      doms.sort((a,b)=>connus[b]-connus[a]);']]],
   ['scriptorium : la difficulte suit la lecture','scriptorium',[['src/14b-consommables.js',"      const diff=Math.max(2,Math.min(12,2+Math.floor(lv('lecture')/6)));",'      const diff=4;']]],

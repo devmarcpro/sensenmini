@@ -108,12 +108,49 @@ const engaged=()=>EE.filter(e=>e&&e.hp>0);
 const backMul=()=>(S.stance===2?1.10:1.30);
 const maxHp=()=>Math.round(40+st('endu')*8+lv('encaissement')*4+(typeof gemVie==='function'?gemVie():0));
 const weapon=()=>S.eq.main1&&S.eq.main1.kind==='arme'?S.eq.main1:null;
+/* ==================================================================
+   OU L'ON SE BAT N'AVAIT AUCUNE IMPORTANCE (E.3.2)
+
+   « La lame qui rencontre un bloc REBONDIT — la frappe passe en recuperation
+   RALLONGEE, clang, leger cout d'endurance supplementaire. Se battre dans un
+   tunnel avec une hallebarde devient exactement le probleme que Mount &
+   Blade promet ; l'estoc devient l'arme des couloirs PAR LA GEOMETRIE. »
+
+   Nous n'avons ni lame balayee ni bloc a heurter, mais nous avons des
+   GALERIES et des culs-de-basse-fosse, et une arme y garde son allonge
+   comme en plaine. Une hallebarde valait autant sous terre qu'au grand jour,
+   ce qui rendait le choix d'arme independant du lieu — un axe entier de
+   decision qui n'existait pas.
+
+   La regle transposee tient en une phrase : dans un boyau, une hampe cogne
+   les parois. Elle ne perd pas ses degats — elle perd son RYTHME et son
+   balayage, et elle coute plus cher a manier. La lame courte, elle, ne subit
+   rien : c'est l'absence de penalite qui fait d'elle l'arme des couloirs, et
+   non un bonus qu'on lui accorderait. */
+const ETROIT_DJ=['cellule','cache','puits','piege'];
+function etroitIci(){
+  /* une galerie, oui ; une grande salle, non — c'est toute la difference
+     entre un boyau et une nef */
+  if(typeof caverne==='function'&&caverne(here())===1)return true;
+  if(typeof djRoom==='function'){const r=djRoom();if(r&&ETROIT_DJ.includes(r.t))return true;}
+  return false;
+}
+/* ce qui cogne les parois : une hampe. Un arc n'a pas d'arc lateral, une
+   dague non plus — et c'est le trait qui compte, pas le nom de l'arme. */
+function armeGene(w){
+  w=w||weapon();
+  if(!w||!FUNC[w.fn])return false;
+  const F=FUNC[w.fn];
+  return !F.dist&&F.reach>=2;
+}
+const geneIci=()=>etroitIci()&&armeGene();
 const stanceNow=()=>STANCE[S.stance||0];
 function wSpeed(){
   const w=weapon();if(!w)return 1.2;
   const F=FUNC[w.fn];
   return F.spd*Math.pow(20/Math.max(5,w.de),0.75/2)*stanceNow().spd*(1+(st('dex')-5)*.015)*(1+passives().spd)
-    *(hasStatus(S,'hate')?1.25:1)*(hasStatus(S,'ralenti')?.75:1);
+    *(hasStatus(S,'hate')?1.25:1)*(hasStatus(S,'ralenti')?.75:1)
+    *(geneIci()?1/1.4:1);          /* « recuperation rallongee x1,4 » (E.3.2) */
 }
 /* la fenêtre de parade : l'esquive l'ouvre, le bouclier la double presque,
    et l'arc la ferme — on ne pare pas une massue avec une corde (5.1) */
@@ -344,6 +381,9 @@ function attack(heavy){
        change le rythme — on la place deux fois plus souvent */
     if(a.id==='lourdeur'&&heavy)cost*=1-a.p.p/100;
   });
+  /* « leger cout d'endurance supplementaire » : ramener une hampe qui a
+     touche la roche coute plus que la lancer */
+  if(geneIci())cost*=1.25;
   if(heavy&&S.end<cost)return;
   const gasping=S.end<cost;
   S.end=Math.max(0,S.end-cost);endLock=1.5;
@@ -436,7 +476,10 @@ function attack(heavy){
      exactement ce que le module promet : une epee bien tenue balaie comme une
      lance. */
   const port=F.reach+(PA.reach||0);
-  const swp=tir?(PA.sweep||0):Math.max(port>=2?.4:0,PA.sweep||0);
+  let swp=tir?(PA.sweep||0):Math.max(port>=2?.4:0,PA.sweep||0);
+  /* on ne fauche pas dans un boyau : la hampe rencontre la paroi avant la
+     deuxieme cible */
+  if(swp&&etroitIci()){swp=0;if(hitN<=1)log('<span class="bd">La hampe cogne la paroi — pas de place pour faucher.</span>');}
   const cibles=[[E,1]];
   if(swp)engaged().forEach(x=>{if(x!==E)cibles.push([x,swp]);});
   let premier=true,mortes=[],critVu=false;

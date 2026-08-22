@@ -1136,6 +1136,54 @@ test('anatomie — le coup vaut ce qu il touche, et la visee remplace le de',()=
   ok(torse>pieds&&torse<tete,'et le torse est entre les deux');
 });
 
+test('boyaux — une hampe cogne les parois, une lame courte non',()=>{
+  /* E.3.2 : « la lame qui rencontre un bloc rebondit — recuperation
+     rallongee, clang, cout d'endurance supplementaire. Se battre dans un
+     tunnel avec une hallebarde devient exactement le probleme que Mount &
+     Blade promet ; l'estoc devient l'arme des couloirs PAR LA GEOMETRIE. »
+     Chez nous une hallebarde valait autant sous terre qu'au grand jour : le
+     lieu ne pesait sur aucun choix d'arme. */
+  const c=nouveau();
+  R(c,`globalThis.__arme=(fn)=>{S.eq={};S.items=[];
+      const parts=FUNC[fn].comp.map(ct=>partFor(ct,['fer','chene','cuir']));
+      S.items.push(mkItem('arme',fn,parts,1));equipItem(0);};
+    globalThis.__etroit=(v)=>{caverne=()=>v?1:0;};`);
+
+  /* --- ce qui compte est le TRAIT, pas le nom --- */
+  eq(G(c,'(__arme("hallebarde"),armeGene())'),true,'une hallebarde a une hampe');
+  eq(G(c,'(__arme("dague"),armeGene())'),false,'une dague, non');
+  eq(G(c,'(__arme("arc"),armeGene())'),false,'un arc non plus — il n a pas d arc latéral');
+
+  /* --- le rythme, et lui seul : les degats ne bougent pas --- */
+  R(c,'__arme("hallebarde");__etroit(false);globalThis.__v1=wSpeed();');
+  R(c,'__etroit(true);globalThis.__v2=wSpeed();');
+  ok(G(c,'__v2')<G(c,'__v1')*.85,'dans un boyau, la hampe se ramène plus lentement — '
+    +G(c,'__v1').toFixed(2)+' puis '+G(c,'__v2').toFixed(2));
+  R(c,'__arme("dague");__etroit(false);globalThis.__d1=wSpeed();__etroit(true);globalThis.__d2=wSpeed();');
+  eq(G(c,'__d1'),G(c,'__d2'),'la lame courte ne subit rien — c est ce qui en fait l arme des couloirs');
+
+  /* --- et le balayage n a plus la place --- */
+  R(c,`__arme("hallebarde");__etroit(false);S.occ='combat';E=null;EE=[];spawn();
+    globalThis.__fauche=()=>{EE.forEach(x=>{x.hp=1e9;x.max=1e9;});
+      const av=EE.map(x=>x.hp);S.end=100;hitN=0;attack(false);
+      return EE.filter((x,i)=>x.hp<av[i]).length;};`);
+  R(c,'while(EE.length<2){E=mkEnemy("loup",4,false,false);EE.push(E);}foc=0;E=EE[0];');
+  const large=G(c,'__fauche()');
+  R(c,'__etroit(true);');
+  const boyau=G(c,'__fauche()');
+  ok(large>1,'au grand jour, la hampe fauche plusieurs cibles — '+large);
+  eq(boyau,1,'dans un boyau, une seule');
+
+  /* --- et cela coute plus cher a manier --- */
+  R(c,'__etroit(false);S.end=100;hitN=0;attack(false);globalThis.__c1=100-S.end;');
+  R(c,'__etroit(true);S.end=100;hitN=0;attack(false);globalThis.__c2=100-S.end;');
+  ok(G(c,'__c2')>G(c,'__c1'),'le clang se paie en souffle — '+G(c,'__c1')+' puis '+G(c,'__c2'));
+
+  /* --- une grande salle n est pas un boyau --- */
+  R(c,'caverne=()=>2;');
+  eq(G(c,'etroitIci()'),false,'une grande salle laisse la place de faucher');
+});
+
 test('scriptorium — on peut enfin ECRIRE un livre, pas seulement en trouver',()=>{
   /* Les livres sont la seule porte vers les modules, et toutes leurs sources
      se subissent : un butin, un etal, un don de guilde. Le scriptorium en

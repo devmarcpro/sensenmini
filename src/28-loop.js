@@ -149,7 +149,8 @@ function combatTick(dt){
     /* à distance, on tient la créature à l'écart : elle met plus de temps à revenir au
        contact — sauf si son geste porte lui aussi à distance */
     const kite=(isDist(weapon())&&e===E&&!patOf(e).dist)?.62:1;
-    const lent=(hasStatus(e,'ralenti')?.6:1)*(hasStatus(e,'enracine')?.75:1)*kite;
+    const lent=(hasStatus(e,'ralenti')?.6:1)*(hasStatus(e,'enracine')?.75:1)*kite
+      *((typeof etroitIci==='function'&&etroitIci()&&e.eqReel&&armeGene(e.eqReel.arme))?.8:1);
     if(e.w<0){e.tt+=dt*lent;
       if(e.tt>=e.delay){e.w=0;armePattern(e);}}   /* le geste se choisit au moment de s'armer */
     else{

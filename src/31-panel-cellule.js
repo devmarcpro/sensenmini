@@ -49,7 +49,8 @@ function pCell(){
     h+='<div class="card"><div class="meta">'
      +(cav>=2?'Une salle spacieuse ouverte dans la roche. On y trouve ce que les galeries ne donnent pas'
         +(cavEau(c)?', et son eau dormante se pêche — ni le gel ni la tempête n\'y entrent.':'.')
-      :'Une galerie sinueuse. Les concrétions s\'y récoltent : stalactite, calcite, guano, salpêtre.')
+      :'Une galerie sinueuse. Les concrétions s\'y récoltent : stalactite, calcite, guano, salpêtre. '
+        +'Une hampe y cogne les parois — pas de balayage, un rythme cassé : c\'est le couloir de la lame courte.')
      +'</div></div>';
   }
   const riv=rivDe(c);

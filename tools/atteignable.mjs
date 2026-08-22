@@ -448,6 +448,46 @@ bilan('effets cites par les pieces nommees',
   new Set(G('AFF.map(a=>a.id)')),
   'un effet disparu ferait tomber une piece qui ne fait rien');
 
+/* ---------- 6ter. la collection peut-elle atteindre cent pour cent ? ----------
+   L'OBJECTIF ANNONCE DU JOUEUR EST CENT POUR CENT. Le banc d'essai verifie
+   qu'aucune famille n'est BLOQUEE — qu'on peut y inscrire toutes ses entrees.
+   Il ne verifie pas que le MONDE les produit : ce sont deux questions
+   differentes, et c'est ici qu'on pose la seconde. Une culture, une race,
+   une prise, un gardien que la generation ne pose jamais rendrait le cent
+   pour cent impossible, et personne ne s'en apercevrait avant d'avoir joue
+   cent heures. */
+{
+  const vus=partout(`(()=>{
+    const out=[];
+    kingdomsNear().forEach(k=>{out.push('c:'+k.cult);out.push('r:'+k.race);
+      kTowns(k).forEach(t=>{ (t.halls||[]).forEach(h=>out.push('h:'+h)); });});
+    (S.npcs||[]).forEach(n=>{if(n.cult)out.push('c:'+n.cult);if(n.race)out.push('r:'+n.race);});
+    /* on peuple quelques cases pour voir sortir les races des habitants */
+    for(let i=0;i<40;i++){const cc=cell((i%9)-4,Math.floor(i/9)-4);
+      if(cc.poi==='village'){const n=mkNpc(key(cc.x,cc.y));if(n){out.push('r:'+n.race);out.push('c:'+n.cult);}}}
+    return out;})()`);
+  /* LE TIRAGE NE PROUVE PAS L'INATTEIGNABLE. Six mondes donnent une vingtaine
+     de royaumes ; douze cultures humaines tirees vingt fois en laissent deux
+     ou trois de cote par pur hasard — c'est le probleme du collectionneur de
+     vignettes, pas un defaut du jeu. Pour les cultures, la bonne question est
+     STRUCTURELLE : une culture est atteignable si une RACE la porte, et si
+     cette race peut peupler le monde. On verifie donc la construction, et
+     l'echantillon ne sert plus qu'a informer. */
+  const racesVues=sous(vus,'r:');
+  const cultOk=new Set();
+  G('Object.keys(RACE)').forEach(r=>{
+    if(!racesVues.has(r))return;
+    G('RACE["'+r+'"].cult').forEach(k=>cultOk.add(k));
+  });
+  bilan('cultures qu une race porte',G('Object.keys(CULT)'),cultOk,
+    'une culture que nulle race ne porte ne sera jamais nommee');
+  const jamaisVues=G('Object.keys(CULT)').filter(k=>!sous(vus,'c:').has(k));
+  if(jamaisVues.length&&VERBOSE)
+    console.log('      (non tirees sur cet echantillon, sans que cela prouve rien : '+jamaisVues.join(', ')+')');
+  bilan('races que le monde peuple',G('Object.keys(RACE)'),sous(vus,'r:'),
+    'une race que personne n incarne bloque le cent pour cent');
+}
+
 /* ---------- 6bis. le monde est-il trop plein ? ---------- */
 /* ATTEIGNABLE N'EST PAS LA SEULE QUESTION. Un lieu qu'on croise une case sur
    deux cesse d'etre un lieu : il devient le decor. En posant six points

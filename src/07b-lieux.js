@@ -139,7 +139,8 @@ const LIEU={
       const mats=['salpetre','calcite','sel','argile','cristalmana','quartz'];
       let pris=[];
       tirerN(mats.filter(m=>MAT[m]),2).forEach(m=>{
-        const n=ri(3,7);S.mat[m]=(S.mat[m]||0)+n;pris.push(n+' × '+matName(m));});
+        const n=ri(3,7)+Math.floor(lv('minage')/10);
+        S.mat[m]=(S.mat[m]||0)+n;pris.push(n+' × '+matName(m));});
       /* on descend vraiment : un puits ouvre la strate suivante sans percer */
       let bas='';
       if(c.depth<5){c.depth++;c.dug=0;bas=' · tu debouches dans la strate '+c.depth+' ('+STRATA[c.depth].n+')';}
@@ -154,11 +155,11 @@ const LIEU={
       const graines=Object.keys(MAT).filter(m=>MAT[m].crop&&MAT[m].nutr>0&&!MAT[m].tox);
       let pris=[];
       tirerN(graines,2).forEach(m=>{
-        const n=ri(2,4);S.mat[m]=(S.mat[m]||0)+n;
+        const n=ri(2,4)+Math.floor(lv('agriculture')/14);S.mat[m]=(S.mat[m]||0)+n;
         if(typeof addFood==='function')addFood(m,n);
         pris.push(n+' × '+matName(m));});
       const bois=['chene','if','ebene','frene','tilleul'].filter(m=>MAT[m]);
-      const bm=pick(bois),bn=ri(4,9);S.mat[bm]=(S.mat[bm]||0)+bn;
+      const bm=pick(bois),bn=ri(4,9)+Math.floor(lv('bucheronnage')/10);S.mat[bm]=(S.mat[bm]||0)+bn;
       gainXp('herboristerie',120);gainXp('agriculture',90);
       return 'semences : '+pris.join(' · ')+' · '+bn+' × '+matName(bm)+' de branche morte';
     }},
@@ -171,9 +172,9 @@ const LIEU={
       const cts=Object.keys(COMP);
       tirerN(cts,3).forEach(ct=>{
         const mk=pick(['fer','bronze','cuir','chene','acier'].filter(m=>MAT[m]));
-        const q=Math.max(.3,.5+Math.random()*.4);
+        const q=Math.max(.3,.5+Math.random()*.4+lv('assemblage')/220);
         const kk=ct+'|brut|'+mk+'|'+(Math.round(q*4)/4);
-        const nb=ri(1,3);
+        const nb=ri(1,3)+Math.floor(lv('assemblage')/18);
         const cc=S.comp[kk];
         if(cc){cc.q=(cc.q*cc.n+q*nb)/(cc.n+nb);cc.n+=nb;}else S.comp[kk]={ct,f:'brut',mk,q,n:nb};
         n+=nb;});
@@ -202,7 +203,8 @@ const LIEU={
       const mats=['soufre','obsidienne','sel','cendre','basalte'].filter(m=>MAT[m]);
       let pris=[];
       tirerN(mats,2).forEach(m=>{
-        const n=ri(3,8);S.mat[m]=(S.mat[m]||0)+n;pris.push(n+' × '+matName(m));});
+        const n=ri(3,8)+Math.floor(lv('alchimie')/10);
+        S.mat[m]=(S.mat[m]||0)+n;pris.push(n+' × '+matName(m));});
       /* la chaleur reste dans les vetements : c'est un abri portatif */
       poserBuff('isofroid',40,1200,'Vapeurs chaudes');
       /* et l'on s'y brule si l'on s'attarde sans rien pour se couvrir */

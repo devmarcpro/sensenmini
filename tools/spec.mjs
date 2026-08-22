@@ -2234,6 +2234,26 @@ test('six lieux — chacun nourrit un systeme qui manquait de source',()=>{
   R(c,'S.mat={};S.buffs=[];');
   eq(G(c,'__visite("fumerolle")').buffs,true,'les vapeurs posent une protection contre le froid');
 
+  /* --- UN LIEU QUI REND LA MEME CHOSE AU NIVEAU SOIXANTE QU'AU PREMIER JOUR
+     CESSE D'EXISTER A MI-PARTIE. Il reste sur la carte, on cesse simplement
+     de s'y arreter. On mesure chaque lieu deux fois : joueur neuf, puis
+     joueur aguerri, et l'on exige que la seconde visite rapporte plus. --- */
+  R(c,`globalThis.__poids=(k,niveau)=>{
+      Object.keys(S.sk).forEach(s=>{S.sk[s].lv=niveau;});
+      S.mat={};S.comp={};S.or=0;S.gems=[];S.books=[];S.food={};
+      here().poi=k;here().lieuW=0;here().depth=0;S.week=9;S.hp=maxHp();
+      const r=Math.random;Math.random=()=>.5;                 /* on fige le hasard : c'est la COMPETENCE qu'on mesure */
+      try{lieuVisiter();}catch(e){}
+      Math.random=r;
+      const mats=Object.values(S.mat).reduce((a,b)=>a+b,0);
+      const comps=Object.values(S.comp).reduce((a,x)=>a+(x.n||0),0);
+      return mats+comps+S.or/40+(S.gems||[]).length*8+(S.books||[]).length*8
+        +Object.values(S.food||{}).reduce((a,b)=>a+b,0);};`);
+  const figes=['epave','puits','arbre','bataille','mine','fumerolle','ruine','carcasse']
+    .filter(k=>G(c,'__poids("'+k+'",1)')>=G(c,'__poids("'+k+'",60)'));
+  ok(figes.length===0,'chaque lieu rend davantage a un joueur aguerri',
+    figes.length?'figes : '+figes.join(', '):'');
+
   /* --- tous se referment pour la semaine : un lieu sans limite est une mine d or --- */
   R(c,"here().poi='epave';here().lieuW=S.week+1;");
   eq(G(c,'lieuPret(here())'),false,'et chacun se referme jusqu à la semaine suivante');

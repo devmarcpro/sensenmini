@@ -128,6 +128,9 @@ const MUT=[
   ['module : le modificateur multiplie','modificateurs',[['src/25-modules.js',"      if(def.mul){for(const k in def.mul)pend[k]=(k==='count')?pend[k]*def.mul[k]:(k==='echo'?pend.echo+def.mul[k]:pend[k]*def.mul[k]);}",'']]],
   ['module : le statut passe au suivant','modificateurs',[['src/25-modules.js','      if(def.status)pend.status=def.status;','']]],
   ['module : le cout en vie se paie','modificateurs',[['src/25-modules.js','      if(def.hp)pend.hp+=def.hp;','']]],
+  ['lieu : le puits suit le mineur','six lieux',[['src/07b-lieux.js',"        const n=ri(3,7)+Math.floor(lv('minage')/10);",'        const n=ri(3,7);']]],
+  ['lieu : la fumerolle suit l alchimiste','six lieux',[['src/07b-lieux.js',"        const n=ri(3,8)+Math.floor(lv('alchimie')/10);",'        const n=ri(3,8);']]],
+  ['lieu : le champ suit l assembleur','six lieux',[['src/07b-lieux.js',"        const nb=ri(1,3)+Math.floor(lv('assemblage')/18);",'        const nb=ri(1,3);']]],
   /* les six lieux */
   ['lieu : le puits descend','six lieux',[['src/07b-lieux.js',"      if(c.depth<5){c.depth++;c.dug=0;bas=' · tu debouches dans la strate '+c.depth+' ('+STRATA[c.depth].n+')';}",'']]],
   ['lieu : l arbre donne des semences','six lieux',[['src/07b-lieux.js','      const graines=Object.keys(MAT).filter(m=>MAT[m].crop&&MAT[m].nutr>0&&!MAT[m].tox);',"      const graines=['fer'];"]]],

@@ -174,6 +174,30 @@ function offline(sec){
     for(let i=0;i<n;i++){const b=explorePulseSilent();if(b)vu++;}
     if(vu)r.push(vu+' cellules dévoilées');
   }
+  /* ==================================================================
+     LA MOITIE MANQUANTE DU MEME DEFAUT.
+     J'ai corrige le fait que la collection ne s'inscrivait qu'en ouvrant
+     l'onglet, en la balayant dans la boucle. Mais l'ABSENCE n'est pas la
+     boucle : c'est un resume, qui abat des creatures, recolte, devoile des
+     cellules et fait tomber du butin sans jamais passer par elle. Dans un
+     jeu qui tourne quand on n'est pas la, c'est justement la que la moitie
+     de la partie se joue — et rien ne s'y collectionnait.
+
+     Et un titre decroche pendant qu'on dormait doit se DIRE au retour : le
+     rapport d'absence est le seul endroit ou l'on regarde ce qui s'est
+     passe. Un titre qui tombe en silence n'a jamais ete gagne. */
+  if(typeof colBalayer==='function'){
+    /* hfAcquis rend les titres DANS L'ORDRE DE LA TABLE, pas dans celui ou on
+       les a gagnes : comparer les longueurs et couper la fin donnerait les
+       mauvais noms des qu'un titre du milieu tombe. On compare les listes. */
+    const avant=typeof hfAcquis==='function'?hfAcquis():[];
+    colBalayer();
+    if(typeof hfAcquis==='function'){
+      const gagnes=hfAcquis().filter(k=>avant.indexOf(k)<0);
+      if(gagnes.length)r.push('titre'+(gagnes.length>1?'s':'')+' décroché'+(gagnes.length>1?'s':'')
+        +' : '+gagnes.map(k=>HAUTFAIT[k]?HAUTFAIT[k].n:k).join(', '));
+    }
+  }
   if(sec>capH*3600)r.push('(plafonné à '+capH+' h)');
   return r;
 }

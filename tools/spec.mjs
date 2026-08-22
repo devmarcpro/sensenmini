@@ -1286,6 +1286,20 @@ test('titres — chacun se decroche, aucun ne se contemple',()=>{
   ok(rates.length===0,'dans un état maximal, les '+G(c,'HFK.length')+' titres tombent',
     rates.length?'jamais atteignables : '+rates.join(', '):'');
 
+  /* --- ET L'ABSENCE AUSSI, qui n'est PAS la boucle : c'est un resume, qui
+     abat des creatures, recolte et devoile des cellules sans jamais y passer.
+     Dans un jeu qui tourne quand on n'est pas la, c'est justement la que la
+     moitie de la partie se joue. --- */
+  R(c,`S.hf={};S.col={};S.occ='combat';E=null;EE=[];spawn();
+    S.rate={kill:8,harv:0,craft:0};S.mat={fer:5};
+    globalThis.__rap=offline(3600);`);
+  ok(G(c,'Object.keys(S.col||{}).length')>0,'une absence inscrit ce qu on y a gagne');
+  /* et un titre decroche pendant qu on dormait doit se DIRE au retour */
+  R(c,`S.hf={};S.bes=S.bes||{};S.bes.loup={v:9,t:9,a:0};
+    globalThis.__rap2=offline(3600).join(' | ');`);
+  ok(String(G(c,'__rap2')).indexOf('titre')>=0,
+    'et le rapport d absence nomme les titres tombes pendant le sommeil');
+
   /* --- ET LA BOUCLE DU JEU LE FAIT SEULE. Tout ce qui se DEDUIT de l'etat
      n'etait releve que par l'onglet : un jeu qui tourne tout seul ne
      collectionnait rien, et depuis que les titres suivent le meme balayage,

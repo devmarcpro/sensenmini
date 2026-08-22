@@ -97,6 +97,10 @@ const MUT=[
   ['symetrie : la depense','symetrie',[['src/28-loop.js','{creDepense(e);resolveHit(S.guard?1:0,e);}','resolveHit(S.guard?1:0,e);']]],
   ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,zk):tgt.arm)",'tgt.arm']]],
   ['collection : la boucle balaie','titres',[['src/28-loop.js',"    if(typeof colBalayer==='function')colBalayer();}",'  }']]],
+  /* les gestes */
+  ['geste : il s inscrit quand il s arme','gestes',[['src/24-combat.js',"  if(typeof collecte==='function')collecte('geste',e.pat);",'']]],
+  ['geste : le souffle porte loin','gestes',[['src/23c-creatures.js',"souffle: {n:'souffle',g:'息',wm:1.7,dm:1.05,hits:1,aoe:1,dist:1,st:'brulure'},","souffle: {n:'souffle',g:'息',wm:1.7,dm:1.05,hits:1,aoe:1,st:'brulure'},"]]],
+  ['geste : la variete n est pas une remise','gestes',[['src/23c-creatures.js',"harcele: {n:'harcèlement',g:'翔',wm:.55,dm:.58,","harcele: {n:'harcèlement',g:'翔',wm:.55,dm:.20,"]]],
   /* les titres */
   ['titre : ils se decrochent','titres',[['src/48-collection.js',"  if(typeof hfBalayer==='function')hfBalayer();",'']]],
   ['titre : le bestiaire compte les morts','titres',[['src/49-hautsfaits.js','const hfMorts=()=>Object.values(S.bes||{}).reduce((a,b)=>a+(b.t||0),0);','const hfMorts=()=>0;']]],

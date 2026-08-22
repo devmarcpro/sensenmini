@@ -228,6 +228,7 @@ function mkEnemy(ck,power,rare,boss,suffixe){
 /* le geste choisi pour ce cycle, et ce qu'il change */
 function armePattern(e){
   e.pat=pick(e.pats||['simple']);
+  if(typeof collecte==='function')collecte('geste',e.pat);
   const P=PATTERN[e.pat];
   e.wEff=e.wind*P.wm;
   return P;

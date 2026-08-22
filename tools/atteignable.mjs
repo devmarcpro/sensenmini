@@ -113,6 +113,14 @@ bilan('biomes poses par le monde',Object.keys(G('BIOME')),bio,
   MONDES+' x 8 100 cellules balayees');
 bilan('points d interet',Object.keys(G('POI')),poi);
 
+/* ---------- 1bis. les gestes de creature ---------- */
+/* Le telegraphe est la seule information que le joueur ait en combat. Un
+   geste declare qu'aucune creature ne porte est une ligne de table que
+   personne ne verra jamais s'armer. */
+bilan('gestes de creature',G('Object.keys(PATTERN)'),
+  new Set(G('[].concat(...CK.map(k=>CREATURE[k].pat||[]))')),
+  'un geste sans porteur ne s arme jamais');
+
 /* ---------- 2. les matieres ---------- */
 /* Une matiere s'obtient de trois facons : on la RECOLTE quelque part, on
    l'ALLIE a l'atelier, ou on l'ACHETE. Les trois comptent, et il faut les

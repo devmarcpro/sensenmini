@@ -12,30 +12,30 @@
    ================================================================== */
 const CREATURE={
   /* plaines et forêts tempérées */
-  loup:{n:'Loup',g:'狼',cat:'bete',bio:['plaine','foret','taiga','steppe'],lv:6,vec:{0:.6,3:.4},dt:'tranchant',delay:2.0,wind:1.0,hp:.8,dmg:.85,arm:.6,pack:[1,4],nuit:2,tame:1,pat:['simple','morsure','double'],mats:['cuir','os','fourrure']},
-  sanglier:{n:'Sanglier',g:'猪',cat:'bete',bio:['plaine','foret','steppe'],lv:8,vec:{2:.7,0:.3},dt:'contondant',delay:2.8,wind:1.3,hp:1.15,dmg:1.1,arm:1.1,tame:1,pat:['simple','lourd'],mats:['cuir','os']},
+  loup:{n:'Loup',g:'狼',cat:'bete',bio:['plaine','foret','taiga','steppe'],lv:6,vec:{0:.6,3:.4},dt:'tranchant',delay:2.0,wind:1.0,hp:.8,dmg:.85,arm:.6,pack:[1,4],nuit:2,tame:1,pat:['simple','morsure','double','saut'],mats:['cuir','os','fourrure']},
+  sanglier:{n:'Sanglier',g:'猪',cat:'bete',bio:['plaine','foret','steppe'],lv:8,vec:{2:.7,0:.3},dt:'contondant',delay:2.8,wind:1.3,hp:1.15,dmg:1.1,arm:1.1,tame:1,pat:['simple','lourd','ruade'],mats:['cuir','os']},
   cerf:{n:'Cerf',g:'鹿',cat:'bete',bio:['plaine','foret','taiga','foretmana','steppe'],lv:3,vec:{0:1},dt:'contondant',delay:3.2,wind:1.2,hp:.7,dmg:.6,arm:.4,fuit:1,tame:1,pack:[1,2],pat:['simple','lourd'],mats:['cuir','os']},
   renard:{n:'Renard',g:'狐',cat:'bete',bio:['plaine','foret','foretmana','steppe'],lv:3,vec:{1:.6,0:.4},dt:'percant',delay:1.8,wind:.9,hp:.55,dmg:.6,arm:.3,fuit:1,tame:1,pack:[1,2],pat:['simple','double'],mats:['fourrure']},
-  abeilles:{n:'Essaim d\'abeilles',g:'蜂',cat:'vermine',bio:['plaine','foret','foretmana','jungle','oasis'],lv:4,vec:{0:.5,1:.5},dt:'percant',delay:1.4,wind:.6,hp:.55,dmg:.3,arm:0,nuee:1,pat:['double','balayage'],mats:['ambre']},
-  chauvesouris:{n:'Nuée de chauves-souris',g:'蝠',cat:'vermine',bio:['karst','marecage'],lv:5,vec:{4:.5,0:.5},dt:'percant',delay:1.3,wind:.6,hp:.5,dmg:.32,arm:0,nuee:1,nuit:2.5,pack:[1,3],pat:['double','balayage'],mats:['guano','os']},
+  abeilles:{n:'Essaim d\'abeilles',g:'蜂',cat:'vermine',bio:['plaine','foret','foretmana','jungle','oasis'],lv:4,vec:{0:.5,1:.5},dt:'percant',delay:1.4,wind:.6,hp:.55,dmg:.3,arm:0,nuee:1,pat:['double','balayage','triple'],mats:['ambre']},
+  chauvesouris:{n:'Nuée de chauves-souris',g:'蝠',cat:'vermine',bio:['karst','marecage'],lv:5,vec:{4:.5,0:.5},dt:'percant',delay:1.3,wind:.6,hp:.5,dmg:.32,arm:0,nuee:1,nuit:2.5,pack:[1,3],pat:['double','balayage','harcele'],mats:['guano','os']},
   /* désert */
-  scorpion:{n:'Scorpion',g:'蠍',cat:'bete',bio:['desert','cendres','badlands','salines'],lv:7,vec:{2:.6,1:.4},dt:'percant',delay:2.4,wind:1.0,hp:.8,dmg:.9,arm:1.3,venin:1,tame:1,pat:['simple','morsure'],mats:['ecaille','os']},
-  vautour:{n:'Vautour',g:'鷲',cat:'bete',bio:['desert','montagne','cendres','badlands','salines'],lv:5,vec:{4:.4,3:.6},dt:'tranchant',delay:2.2,wind:.9,hp:.65,dmg:.75,arm:.3,tame:1,pack:[1,3],pat:['simple','double'],mats:['os']},
+  scorpion:{n:'Scorpion',g:'蠍',cat:'bete',bio:['desert','cendres','badlands','salines'],lv:7,vec:{2:.6,1:.4},dt:'percant',delay:2.4,wind:1.0,hp:.8,dmg:.9,arm:1.3,venin:1,tame:1,pat:['simple','morsure','venimeux'],mats:['ecaille','os']},
+  vautour:{n:'Vautour',g:'鷲',cat:'bete',bio:['desert','montagne','cendres','badlands','salines'],lv:5,vec:{4:.4,3:.6},dt:'tranchant',delay:2.2,wind:.9,hp:.65,dmg:.75,arm:.3,tame:1,pack:[1,3],pat:['simple','double','harcele'],mats:['os']},
   chameau:{n:'Chameau sauvage',g:'駝',cat:'bete',bio:['desert','oasis'],lv:6,vec:{2:1},dt:'contondant',delay:3.0,wind:1.3,hp:1.2,dmg:.7,arm:.6,fuit:1,tame:1,pack:[1,2],pat:['simple','lourd'],mats:['cuir','laine']},
   /* toundra et taïga */
-  ourspolaire:{n:'Ours polaire',g:'熊',cat:'bete',bio:['toundra','montcris','banquise'],lv:18,vec:{4:.7,2:.3},dt:'tranchant',delay:3.4,wind:1.6,hp:1.8,dmg:1.6,arm:1.4,tame:1,pat:['simple','lourd','balayage'],mats:['fourrure','cuir','os']},
+  ourspolaire:{n:'Ours polaire',g:'熊',cat:'bete',bio:['toundra','montcris','banquise'],lv:18,vec:{4:.7,2:.3},dt:'tranchant',delay:3.4,wind:1.6,hp:1.8,dmg:1.6,arm:1.4,tame:1,pat:['simple','lourd','balayage','ruade'],mats:['fourrure','cuir','os']},
   loupblanc:{n:'Loup blanc',g:'狼',cat:'bete',bio:['toundra','taiga','banquise'],lv:8,vec:{4:.6,3:.4},dt:'tranchant',delay:1.9,wind:1.0,hp:.85,dmg:.9,arm:.6,pack:[1,3],nuit:2,tame:1,pat:['simple','morsure','double'],mats:['fourrure','os']},
-  renne:{n:'Renne',g:'鹿',cat:'bete',bio:['toundra','taiga'],lv:4,vec:{0:.6,4:.4},dt:'contondant',delay:3.0,wind:1.2,hp:.8,dmg:.6,arm:.5,fuit:1,tame:1,pack:[1,3],pat:['simple','lourd'],mats:['cuir','os','laine']},
+  renne:{n:'Renne',g:'鹿',cat:'bete',bio:['toundra','taiga'],lv:4,vec:{0:.6,4:.4},dt:'contondant',delay:3.0,wind:1.2,hp:.8,dmg:.6,arm:.5,fuit:1,tame:1,pack:[1,3],pat:['simple','lourd','ruade'],mats:['cuir','os','laine']},
   morse:{n:'Morse',g:'海',cat:'bete',bio:['cote','toundra','banquise'],lv:12,vec:{4:1},dt:'percant',delay:3.6,wind:1.5,hp:1.6,dmg:1.1,arm:1.2,tame:1,pat:['simple','lourd'],mats:['cuir','os']},
   /* marécage */
-  crocodile:{n:'Crocodile',g:'鰐',cat:'bete',bio:['marecage','marcorr','cote','jungle','oasis'],lv:14,vec:{4:.6,2:.4},dt:'percant',delay:3.2,wind:1.4,hp:1.5,dmg:1.4,arm:1.5,embuscade:1,tame:1,pat:['morsure','lourd'],mats:['ecaille','cuir']},
-  moustiques:{n:'Nuée de moustiques',g:'蚊',cat:'vermine',bio:['marecage','marcorr','jungle'],lv:4,vec:{4:.6,0:.4},dt:'percant',delay:1.2,wind:.55,hp:.45,dmg:.28,arm:0,nuee:1,pat:['double','balayage'],mats:[]},
-  serpent:{n:'Serpent venimeux',g:'蛇',cat:'bete',bio:['marecage','foret','desert','marcorr','cendres','foretmana','jungle','badlands','karst','oasis'],lv:8,vec:{4:.5,0:.5},dt:'percant',delay:2.6,wind:.8,hp:.7,dmg:.8,arm:.5,venin:1,tame:1,pat:['morsure','simple'],mats:['ecaille']},
+  crocodile:{n:'Crocodile',g:'鰐',cat:'bete',bio:['marecage','marcorr','cote','jungle','oasis'],lv:14,vec:{4:.6,2:.4},dt:'percant',delay:3.2,wind:1.4,hp:1.5,dmg:1.4,arm:1.5,embuscade:1,tame:1,pat:['morsure','lourd','etreinte','queue'],mats:['ecaille','cuir']},
+  moustiques:{n:'Nuée de moustiques',g:'蚊',cat:'vermine',bio:['marecage','marcorr','jungle'],lv:4,vec:{4:.6,0:.4},dt:'percant',delay:1.2,wind:.55,hp:.45,dmg:.28,arm:0,nuee:1,pat:['double','balayage','triple','harcele'],mats:[]},
+  serpent:{n:'Serpent venimeux',g:'蛇',cat:'bete',bio:['marecage','foret','desert','marcorr','cendres','foretmana','jungle','badlands','karst','oasis'],lv:8,vec:{4:.5,0:.5},dt:'percant',delay:2.6,wind:.8,hp:.7,dmg:.8,arm:.5,venin:1,tame:1,pat:['morsure','simple','venimeux','etreinte'],mats:['ecaille']},
   /* montagne */
-  aigle:{n:'Aigle',g:'鷲',cat:'bete',bio:['montagne','montcris','steppe','oasis'],lv:7,vec:{3:.5,0:.5},dt:'tranchant',delay:2.0,wind:.9,hp:.7,dmg:.9,arm:.3,tame:1,pack:[1,2],pat:['simple','double'],mats:['os']},
+  aigle:{n:'Aigle',g:'鷲',cat:'bete',bio:['montagne','montcris','steppe','oasis'],lv:7,vec:{3:.5,0:.5},dt:'tranchant',delay:2.0,wind:.9,hp:.7,dmg:.9,arm:.3,tame:1,pack:[1,2],pat:['simple','double','saut','harcele'],mats:['os']},
   oursbrun:{n:'Ours brun',g:'熊',cat:'bete',bio:['montagne','foret','taiga','karst'],lv:16,vec:{2:.6,0:.4},dt:'contondant',delay:3.4,wind:1.6,hp:1.7,dmg:1.5,arm:1.3,tame:1,pat:['simple','lourd','balayage'],mats:['fourrure','cuir','os']},
   bouquetin:{n:'Bouquetin',g:'羊',cat:'bete',bio:['montagne','montcris'],lv:4,vec:{2:.7,3:.3},dt:'contondant',delay:2.8,wind:1.2,hp:.75,dmg:.7,arm:.6,fuit:1,tame:1,pack:[1,2],pat:['simple','lourd'],mats:['cuir','os','laine']},
-  lynx:{n:'Lynx',g:'猫',cat:'bete',bio:['montagne','foret','taiga','montcris','foretmana','jungle','karst'],lv:9,vec:{3:.5,0:.5},dt:'tranchant',delay:1.8,wind:.8,hp:.8,dmg:1.0,arm:.5,embuscade:1,tame:1,pat:['double','morsure'],mats:['fourrure','os']},
+  lynx:{n:'Lynx',g:'猫',cat:'bete',bio:['montagne','foret','taiga','montcris','foretmana','jungle','karst'],lv:9,vec:{3:.5,0:.5},dt:'tranchant',delay:1.8,wind:.8,hp:.8,dmg:1.0,arm:.5,embuscade:1,tame:1,pat:['double','morsure','saut'],mats:['fourrure','os']},
   /* humains hostiles — ils portent une bourse et parfois du butin */
   bandit:{n:'Bandit',g:'賊',cat:'humain',bio:['plaine','foret','desert','cote','taiga','steppe','badlands','salines','oasis','ruines'],dj:1,camp:1,lv:10,vec:{3:.5,1:.5},dt:'tranchant',delay:2.6,wind:1.2,hp:1.0,dmg:1.0,arm:.9,or:3,loot:2,pack:[1,3],pat:['simple','double','lourd'],mats:['cuir']},
   chef:{n:'Chef de bande',g:'首',cat:'humain',bio:[],camp:1,lv:16,vec:{1:.5,3:.5},dt:'tranchant',delay:2.8,wind:1.2,hp:1.5,dmg:1.3,arm:1.2,or:6,loot:3,pat:['simple','lourd','balayage'],mats:['cuir']},
@@ -47,23 +47,23 @@ const CREATURE={
   rodeur:{n:'Rôdeur',g:'影',cat:'corrompu',bio:['marcorr','cendres','montcris','foretmana','karst','ruines'],corr:45,dj:1,lv:10,vec:null,dt:null,delay:2.9,wind:1.35,hp:1.0,dmg:1.0,arm:1.0,pack:[1,3],pat:['simple','double'],mats:['os','obsidienne','charbon']},
   eclat:{n:'Éclat',g:'晶',cat:'corrompu',bio:['montcris','karst'],corr:30,lv:12,vec:{3:.5,4:.5},dt:'percant',delay:2.6,wind:1.1,hp:.9,dmg:1.2,arm:1.6,pack:[1,2],pat:['simple','crachat'],mats:['quartz','cristalmana']},
   sylve:{n:'Sylve',g:'樹',cat:'corrompu',bio:['foretmana','foret'],corr:35,lv:11,vec:{0:.8,4:.2},dt:'contondant',delay:3.2,wind:1.4,hp:1.4,dmg:.9,arm:.8,pat:['lourd','balayage'],mats:['ebene','ambre']},
-  cendre:{n:'Cendre',g:'燼',cat:'corrompu',bio:['cendres','ruines'],corr:30,lv:11,vec:{1:.9,2:.1},dt:'tranchant',delay:2.4,wind:1.0,hp:.9,dmg:1.2,arm:.7,brule:1,pat:['crachat','simple','balayage'],mats:['cendre','charbon']},
+  cendre:{n:'Cendre',g:'燼',cat:'corrompu',bio:['cendres','ruines'],corr:30,lv:11,vec:{1:.9,2:.1},dt:'tranchant',delay:2.4,wind:1.0,hp:.9,dmg:1.2,arm:.7,brule:1,pat:['souffle','simple','balayage'],mats:['cendre','charbon']},
   suaire:{n:'Suaire',g:'帷',cat:'corrompu',bio:['marcorr','marecage','ruines'],corr:50,dj:1,lv:13,vec:{4:.5,2:.5},dt:'percant',delay:2.8,wind:1.2,hp:1.1,dmg:1.0,arm:.9,affaiblit:1,pack:[1,2],pat:['simple','crachat','morsure'],mats:['os','ecaille']},
   /* la côte était le biome le plus vide : quatre espèces, dont trois de passage */
   crabe:{n:'Crabe des galets',g:'蟹',cat:'bete',bio:['cote','salines'],lv:5,vec:{2:.5,4:.5},dt:'percant',delay:2.6,wind:1.1,hp:.7,dmg:.7,arm:1.8,tame:1,pack:[1,3],pat:['simple','morsure'],mats:['ecaille','coquillage']},
   goeland:{n:'Goéland pillard',g:'鴎',cat:'bete',bio:['cote','salines'],lv:4,vec:{4:.5,3:.5},dt:'tranchant',delay:1.9,wind:.8,hp:.5,dmg:.6,arm:.2,fuit:1,tame:1,pack:[1,4],pat:['simple','double'],mats:['os']},
   phoque:{n:'Phoque gris',g:'鰭',cat:'bete',bio:['cote','toundra','banquise'],lv:7,vec:{4:1},dt:'contondant',delay:3.0,wind:1.3,hp:1.1,dmg:.7,arm:.7,fuit:1,tame:1,pack:[1,2],pat:['simple','lourd'],mats:['cuir','os']},
   naufrageur:{n:'Naufrageur',g:'難',cat:'humain',bio:['cote','salines'],camp:1,lv:13,vec:{4:.5,1:.5},dt:'contondant',delay:2.7,wind:1.2,hp:1.2,dmg:1.2,arm:1.0,or:4,loot:2,pack:[1,3],pat:['simple','lourd','balayage'],mats:['cuir']},
-  crabetour:{n:'Crabe-tour',g:'甲',cat:'bete',bio:['cote','marecage'],minp:3,lv:19,vec:{2:.6,4:.4},dt:'contondant',delay:3.6,wind:1.7,hp:1.8,dmg:1.4,arm:2.4,pat:['lourd','balayage','simple'],mats:['ecaille','coquillage','os']},
+  crabetour:{n:'Crabe-tour',g:'甲',cat:'bete',bio:['cote','marecage'],minp:3,lv:19,vec:{2:.6,4:.4},dt:'contondant',delay:3.6,wind:1.7,hp:1.8,dmg:1.4,arm:2.4,pat:['lourd','balayage','simple','etreinte','queue'],mats:['ecaille','coquillage','os']},
   /* toundra et marécage : deux prédateurs et deux guetteurs de plus */
   harfang:{n:'Harfang des neiges',g:'梟',cat:'bete',bio:['toundra','taiga','banquise'],lv:6,vec:{4:.6,3:.4},dt:'tranchant',delay:2.1,wind:.9,hp:.6,dmg:.8,arm:.3,nuit:2.5,tame:1,pat:['simple','double'],mats:['os','fourrure']},
   glouton:{n:'Glouton',g:'貂',cat:'bete',bio:['toundra','taiga'],lv:13,vec:{2:.5,4:.5},dt:'tranchant',delay:1.7,wind:.8,hp:.9,dmg:1.25,arm:.8,embuscade:1,tame:1,pat:['morsure','double','simple'],mats:['fourrure','os','cuir']},
-  sangsues:{n:'Grappe de sangsues',g:'蛭',cat:'vermine',bio:['marecage','marcorr','jungle'],lv:6,vec:{4:.7,0:.3},dt:'percant',delay:1.3,wind:.6,hp:.5,dmg:.35,arm:0,nuee:1,venin:1,pack:[1,3],pat:['double','morsure'],mats:[]},
+  sangsues:{n:'Grappe de sangsues',g:'蛭',cat:'vermine',bio:['marecage','marcorr','jungle'],lv:6,vec:{4:.7,0:.3},dt:'percant',delay:1.3,wind:.6,hp:.5,dmg:.35,arm:0,nuee:1,venin:1,pack:[1,3],pat:['double','morsure','triple','venimeux'],mats:[]},
   heron:{n:'Héron cendré',g:'鷺',cat:'bete',bio:['marecage','cote','oasis'],lv:5,vec:{4:.6,3:.4},dt:'percant',delay:2.3,wind:1.0,hp:.6,dmg:.75,arm:.3,fuit:1,tame:1,pack:[1,2],pat:['simple','double'],mats:['os']},
-  salamandre:{n:'Salamandre de braise',g:'蜥',cat:'bete',bio:['cendres'],minp:2,lv:15,vec:{1:.8,2:.2},dt:'tranchant',delay:2.5,wind:1.1,hp:.9,dmg:1.3,arm:.9,brule:1,tame:1,pat:['morsure','crachat','simple'],mats:['ecaille','soufre','cendre']},
+  salamandre:{n:'Salamandre de braise',g:'蜥',cat:'bete',bio:['cendres'],minp:2,lv:15,vec:{1:.8,2:.2},dt:'tranchant',delay:2.5,wind:1.1,hp:.9,dmg:1.3,arm:.9,brule:1,tame:1,pat:['morsure','crachat','simple','souffle','queue'],mats:['ecaille','soufre','cendre']},
   /* le haut du bestiaire : rien ne dépassait le loup blanc et l'ours polaire */
   mercenaire:{n:'Mercenaire franc',g:'傭',cat:'humain',bio:['plaine','montagne','cote','steppe','ruines'],camp:1,dj:1,minp:3,lv:20,vec:{3:.7,1:.3},dt:'tranchant',delay:2.5,wind:1.1,hp:1.5,dmg:1.4,arm:1.6,or:8,loot:3,pack:[1,2],pat:['simple','double','lourd'],mats:['cuir']},
-  mammouth:{n:'Mammouth des glaces',g:'象',cat:'bete',bio:['toundra','montcris','banquise'],minp:4,lv:24,vec:{4:.6,2:.4},dt:'contondant',delay:3.8,wind:1.9,hp:2.4,dmg:2.0,arm:1.8,pat:['lourd','balayage','simple'],mats:['fourrure','cuir','os','laine']},
+  mammouth:{n:'Mammouth des glaces',g:'象',cat:'bete',bio:['toundra','montcris','banquise'],minp:4,lv:24,vec:{4:.6,2:.4},dt:'contondant',delay:3.8,wind:1.9,hp:2.4,dmg:2.0,arm:1.8,pat:['lourd','balayage','simple','ruade','queue'],mats:['fourrure','cuir','os','laine']},
   colosse:{n:'Colosse d\'obsidienne',g:'巌',cat:'corrompu',bio:['cendres','montcris','ruines'],corr:60,dj:1,minp:4,lv:26,vec:{2:.5,3:.5},dt:'contondant',delay:3.6,wind:1.8,hp:2.2,dmg:1.9,arm:2.2,pat:['lourd','balayage'],mats:['obsidienne','basalte','onyx']},
   /* ================================================================
      LE HAUT DU BESTIAIRE (12.4 / E.16)
@@ -134,6 +134,26 @@ const PATTERN={
   balayage:{n:'balayage',g:'薙',wm:1.3,dm:.85,hits:1,aoe:1},
   morsure: {n:'morsure',g:'咬',wm:.85,dm:1.15,hits:1,st:'saignement'},
   crachat: {n:'crachat',g:'吐',wm:1.35,dm:.95,hits:1,dist:1},
+  /* ==================================================================
+     SIX GESTES POUR SOIXANTE-TROIS CREATURES.
+     C'est la table la plus maigre du jeu, et c'est celle que le joueur LIT
+     a chaque seconde de combat : le telegraphe est tout ce qu'il a pour
+     decider s'il pare, s'il recule ou s'il frappe. Six gestes, cela veut
+     dire qu'un ours polaire et un bandit se lisent pareil.
+
+     Huit de plus, et pas un champ nouveau : le moteur sait deja tout faire
+     — plusieurs coups, un balayage, une portee, un statut, une fenetre de
+     parade plus ou moins large. Ce qui manquait n'etait pas de la
+     mecanique, c'etait des COMBINAISONS, et chacune se lit differemment.
+     ================================================================== */
+  triple:  {n:'rafale',g:'三',wm:.5, dm:.40,hits:3},
+  saut:    {n:'bond',g:'跳',wm:1.45,dm:1.35,hits:1,win:.8,st:'etourdi'},
+  venimeux:{n:'crocs venimeux',g:'毒',wm:.95,dm:.95,hits:1,st:'poison'},
+  souffle: {n:'souffle',g:'息',wm:1.7,dm:1.05,hits:1,aoe:1,dist:1,st:'brulure'},
+  etreinte:{n:'étreinte',g:'絡',wm:1.25,dm:1.05,hits:1,st:'enracine'},
+  ruade:   {n:'ruade',g:'蹴',wm:1.05,dm:1.30,hits:1,win:1.3,st:'etourdi'},
+  queue:   {n:'coup de queue',g:'尾',wm:1.2,dm:1.00,hits:1,aoe:1},
+  harcele: {n:'harcèlement',g:'翔',wm:.55,dm:.58,hits:2,dist:1},
 };
 const patOf=e=>PATTERN[e&&e.pat]||PATTERN.simple;
 /* thèmes de donjon (E.29) : ils choisissent le peuplement et le nom */

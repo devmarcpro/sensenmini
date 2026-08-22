@@ -1136,6 +1136,37 @@ test('anatomie — le coup vaut ce qu il touche, et la visee remplace le de',()=
   ok(torse>pieds&&torse<tete,'et le torse est entre les deux');
 });
 
+test('gestes — quatorze telegraphes, tous portes et tous lisibles',()=>{
+  /* Six gestes pour soixante-trois creatures : la table la plus maigre du
+     jeu, et celle que le joueur LIT a chaque seconde de combat. Un ours
+     polaire et un bandit se lisaient pareil. */
+  const c=nouveau();
+  ok(G(c,'Object.keys(PATTERN).length')>=14,'quatorze gestes au moins — '+G(c,'Object.keys(PATTERN).length'));
+  eq(G(c,'Object.keys(PATTERN).every(k=>!!PATTERN[k].n&&!!PATTERN[k].g&&PATTERN[k].dm>0)'),true,
+    'chacun a un nom, un glyphe et des degats');
+  /* un geste sans porteur ne s arme jamais */
+  const orphelins=G(c,'Object.keys(PATTERN).filter(k=>!CK.some(x=>(CREATURE[x].pat||[]).includes(k)))');
+  ok(orphelins.length===0,'chaque geste est porte par au moins une creature',
+    orphelins.length?'sans porteur : '+orphelins.join(', '):'');
+  /* LA VARIETE N EST PAS UNE REMISE : aucun geste ne doit rendre nettement
+     moins que les anciens, sinon en ajouter ADOUCIT le bestiaire */
+  R(c,'globalThis.__att=k=>PATTERN[k].dm*(PATTERN[k].hits||1);');
+  const faibles=G(c,'Object.keys(PATTERN).filter(k=>__att(k)<0.82)');
+  ok(faibles.length===0,'aucun geste ne rend nettement moins que les autres',
+    faibles.length?'trop doux : '+faibles.join(', '):'');
+  /* un statut annonce doit exister */
+  const st=G(c,'Object.keys(PATTERN).filter(k=>PATTERN[k].st&&!STATUS[PATTERN[k].st])');
+  ok(st.length===0,'aucun geste ne pose un etat qui n existe pas');
+  /* le geste s inscrit quand la creature l arme : c est la qu on le VOIT */
+  R(c,`S.col={};S.occ='combat';E=null;EE=[];spawn();
+    E.pats=['souffle'];armePattern(E);`);
+  eq(G(c,'(S.col.geste||{}).souffle'),1,'un geste arme s inscrit a la collection');
+  /* et la fenetre de parade suit le geste */
+  R(c,"E.pats=['lourd'];armePattern(E);globalThis.__pl=parryWinVs(E);E.pats=['souffle'];armePattern(E);");
+  eq(G(c,'parryWinVs(E)'),0,'un souffle ne se pare pas — il porte a distance');
+  ok(G(c,'__pl')>0,'une charge, si');
+});
+
 test('titres — chacun se decroche, aucun ne se contemple',()=>{
   /* Un titre n'est pas une recompense : il NOMME. C'est la seule forme
      d'objectif qui ne desequilibre rien — on ne farme pas un nom. Mais un

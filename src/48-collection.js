@@ -71,6 +71,11 @@ const COLLECTION={
   /* Vingt-sept familles disaient ce qu'on n'avait pas VU ; aucune ne disait
      ce qu'on n'avait pas FAIT. Voir demande d'aller quelque part, accomplir
      demande d'y rester — ce ne sont pas les memes joueurs. */
+  /* Les gestes de creature : le telegraphe est tout ce que le joueur a pour
+     decider s'il pare, s'il recule ou s'il frappe. Les avoir tous vus, c'est
+     savoir lire un combat. */
+  geste:{n:'Gestes de créature',g:'型',tout:()=>Object.keys(PATTERN),
+    nom:k=>PATTERN[k].g+' '+PATTERN[k].n},
   titre:{n:'Titres',g:'名',tout:()=>HFK,nom:k=>HAUTFAIT[k].n+' — '+HAUTFAIT[k].d,
     vus:()=>typeof hfAcquis==='function'?hfAcquis():[]},
 };

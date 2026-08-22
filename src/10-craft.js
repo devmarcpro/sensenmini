@@ -3,7 +3,30 @@
    Chargé dans l'ordre par index.html ; portée globale partagée. */
 
 /* ===== CRAFT COMPOSITIONNEL (4.2.1 / A.3 / A.4 / A.4.7) ===== */
-const quality=n=>Math.max(.1,(n/(n+25))*2*(0.85+Math.random()*0.30));
+/* ==================================================================
+   IL FALLAIT LE NIVEAU VINGT-CINQ POUR EGALER L'EPEE QU'ON RECOIT A LA
+   NAISSANCE.
+   La courbe corrigee de l'atelier l'a montre d'un coup : un forgeron de
+   niveau cinq assemblait une epee a 3,5 quand l'arme de depart en vaut
+   15,3. Il fallait atteindre VINGT-CINQ dans les trois competences de
+   craft — forge, menuiserie, assemblage — pour egaler ce qu'on porte au
+   premier jour. Autrement dit : le craft, qui est un pilier du document,
+   ne servait a rien pendant le premier tiers d'une partie. Pire, l'Artisan
+   commence avec ces competences a cinq : la classe qui fabrique etait
+   punie a son propre jeu.
+
+   La faute etait dans le bas de la courbe, pas dans le haut. n/(n+25)
+   part de zero — un debutant absolu produisait litteralement du dechet.
+   Un homme qui sait tenir un marteau n'est pas a zero ; il est mediocre.
+   Huit points de plancher, et trente au denominateur pour ne pas gonfler
+   le sommet :
+     niveau  1 :  0,9 → 7,2      niveau 20 : 13,2 → 18,7
+     niveau  5 :  3,5 → 10,2     niveau 40 : 21,3 → 25,6
+     niveau 15 : 10,3 → 16,3     niveau 80 : 30,2 → 32,7
+   Le forge egale desormais l'arme de depart vers le niveau quinze, et le
+   sommet ne bouge que de huit pour cent.
+   ================================================================== */
+const quality=n=>Math.max(.1,((n+8)/(n+30))*2*(0.85+Math.random()*0.30));
 const hasStation=k=>!k||stationsHere().has(k);
 const refKey=(f,m)=>f+':'+m;
 /* Le nom d une forme travaillee. Certaines portent deja leur matiere —

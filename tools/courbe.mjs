@@ -207,6 +207,16 @@ if(aMax<bMax)alertes.push('l\'atelier plafonne sous le butin : forger ne sert a 
 if(sommetButin<dep.sc*2)alertes.push('le butin ne double meme pas l\'arme de depart sur toute la courbe');
 if(out.boutique[3].s.med<out.boutique[0].s.med*1.2)alertes.push('une capitale ne vend pas mieux qu\'un hameau');
 if(out.atelier[5].s.med<out.atelier[0].s.med*3)alertes.push('la competence et la matiere pesent trop peu a l\'atelier');
+/* ET L'ENTREE DANS LA VOIE, pas seulement son sommet. Un atelier dont le
+   plafond est le plus haut du jeu ne sert a rien si son premier barreau est
+   sous l'arme qu'on recoit a la naissance : le joueur n'y monte jamais. On
+   demande qu'un forgeron DEBUTANT tienne au moins la moitie de l'arme de
+   depart, et qu'un CONFIRME la depasse. Sans quoi le craft, pilier du
+   document, reste decoratif pendant le premier tiers d'une partie. */
+if(out.atelier[0].s.med<dep.sc*.5)alertes.push('un forgeron debutant fabrique moins de la moitie de l arme de depart : '
+  +out.atelier[0].s.med.toFixed(1)+' contre '+dep.sc.toFixed(1));
+if(out.atelier[1].s.med<dep.sc)alertes.push('un forgeron confirme ne depasse pas l arme de depart : '
+  +out.atelier[1].s.med.toFixed(1)+' contre '+dep.sc.toFixed(1));
 /* « La richesse suit toujours le danger » (GDD 3.0) : une terre mortelle doit
    rapporter visiblement mieux qu'une case paisible, pas a un affixe pres. */
 /* la MOYENNE, pas la mediane : le score d'une arme depend surtout du type

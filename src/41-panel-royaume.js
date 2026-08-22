@@ -37,7 +37,7 @@ function pRoyaume(){
        +(cc.claim===r?' selected':'')+'>'+ROLES[r].n+'</option>').join('')+'</select>'
        +'<div class="meta">'+ROLES[cc.claim].d+'</div></div>';}).join('');
   }
-  h+=grp('築','CONSTRUCTION','seize parcelles par cellule');
+  h+=grp('築','CONSTRUCTION',nomNombre(NPLOTS)+' parcelles par cellule');
   h+='<div class="card"><div class="meta">'+PK.map(k=>PLOT[k].g+' '+PLOT[k].n+' '+countPlot(k)).join(' · ')+'</div>'
    +'<div class="meta">lits '+beds()+' · étals '+countSlot('etal')+' · halls '+countSlot('hall')
    +' · confort du meilleur logement +'+comfort()+'</div>'

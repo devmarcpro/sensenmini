@@ -100,6 +100,9 @@ const MUT=[
   ['rotation : le geste pose la hauteur','rotation',[['src/24b-sequence.js',"    fais:g=>{S.gdir=(GARDES.some(x=>x.k===g)?g:'haut');S.guard=true;return true;}},","    fais:()=>{S.guard=true;return true;}},"]]],
   ['rotation : lire place la garde','rotation',[['src/24b-sequence.js',"    fais:()=>{S.gdir=patOf(E).dir;S.guard=true;return true;}},","    fais:()=>{S.guard=true;return true;}},"]]],
   ['rotation : ce qui ne s annonce pas ne se lit pas','rotation',[['src/24b-sequence.js','    peut:()=>!!E&&!!patOf(E).dir,','    peut:()=>!!E,']]],
+  ['prose : les postures se comptent','prose',[['src/44b-panel-combat.js',"'+nomNombreCap(STANCE.length)+' postures","Trois postures"]]],
+  ['prose : les parcelles se comptent','prose',[['src/40-panel-batir.js',"'+nomNombre(NPLOTS)+' parcelles","douze parcelles"]]],
+  ['prose : un nombre au-dela de vingt reste un chiffre','prose',[['src/01-core.js','const nomNombre=n=>NOMBRES[n]!==undefined?NOMBRES[n]:String(n);',"const nomNombre=n=>NOMBRES[n]||'quelques';"]]],
   ['conseil : les gestes se calculent','conseils',[['src/46-tips.js',"      +Object.keys(PATTERN).map(k=>{const P=PATTERN[k];","      +['simple','double'].map(k=>{const P=PATTERN[k];"]]],
   ['conseil : un corps peut se calculer','conseils',[['src/46-tips.js',"const tipCorps=t=>typeof t.d==='function'?t.d():t.d;",'const tipCorps=t=>t.d;']]],
   /* la garde directionnelle */

@@ -29,3 +29,19 @@ function melange(l){
 }
 /* n elements distincts d'une liste, sans repetition et sans biais */
 const tirerN=(l,n)=>melange(l).slice(0,n);
+
+/* ==================================================================
+   UN COMPTE RECOPIE FINIT TOUJOURS PAR MENTIR.
+   Le conseil des gestes en listait six quand la table en portait
+   quatorze ; l'onglet COMBAT annoncait « trois postures » alors qu'il
+   y en a quatre depuis longtemps. Ce sont des COPIES, et une copie ne
+   se met pas a jour toute seule.
+
+   La prose du jeu s'ecrit en toutes lettres — « trois postures » se
+   lit mieux que « 3 postures » — mais le nombre doit venir de la
+   table. Ces deux lignes suffisent a rendre les deux compatibles.
+   ================================================================== */
+const NOMBRES=['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix',
+  'onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf','vingt'];
+const nomNombre=n=>NOMBRES[n]!==undefined?NOMBRES[n]:String(n);
+const nomNombreCap=n=>{const s=nomNombre(n);return s.charAt(0).toUpperCase()+s.slice(1);};

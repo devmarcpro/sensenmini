@@ -2022,6 +2022,31 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('prose — aucun onglet ne recopie un compte qu il pourrait lire',()=>{
+  /* Le conseil des gestes en listait six quand la table en portait quatorze ;
+     l'onglet COMBAT annoncait « trois postures » alors qu'il y en a quatre
+     depuis longtemps ; « seize parcelles » etait ecrit a trois endroits, dont
+     deux en toutes lettres. Ce sont des COPIES, et une copie ne se met pas a
+     jour toute seule. La prose garde ses lettres, le nombre vient de la table. */
+  const c=nouveau();
+  eq(G(c,'nomNombre(4)'),'quatre','les nombres s ecrivent en lettres');
+  eq(G(c,'nomNombre(16)'),'seize','jusqu a vingt, au-dela le chiffre');
+  eq(G(c,'nomNombre(42)'),'42','et le chiffre au-dela, plutot qu un mot faux');
+
+  /* --- l onglet COMBAT dit le nombre de postures qu il affiche --- */
+  R(c,"S.fold=S.fold||{};S.fold.combat='st';globalThis.__pc=pCombat();");
+  const pc=G(c,'__pc');
+  ok(pc.indexOf(G(c,'nomNombreCap(STANCE.length)')+' postures')>0,
+    'COMBAT annonce autant de postures qu il en existe — '+G(c,'STANCE.length'));
+  ok(pc.indexOf('Trois postures')<0,'et plus le compte d hier');
+
+  /* --- BATIR dit le nombre de parcelles qu une cellule tient VRAIMENT --- */
+  R(c,'globalThis.__pb=pBatir();globalThis.__np=plots(here()).length;');
+  const pb=G(c,'__pb');
+  ok(pb.indexOf(G(c,'nomNombre(NPLOTS)')+' parcelles')>0,'BATIR annonce le bon nombre de parcelles');
+  eq(G(c,'__np'),G(c,'NPLOTS'),'et une cellule en porte exactement autant');
+});
+
 test('rotation defensive — l enchainement sait enfin parler de garde',()=>{
   /* Sept gestes programmables, tous offensifs sauf « lever la garde » — qui,
      depuis que la garde a une HAUTEUR, ne disait plus que la moitie de ce

@@ -64,7 +64,11 @@ function payCost(cost){
   return true;
 }
 const costTxt=c=>c.map(([w,n])=>n+' '+(w.startsWith('form:')?FORM[w.slice(5)].n:CAT[w].n)).join(' + ');
-function plots(c){if(!c.plots)c.plots=Array.from({length:16},()=>null);return c.plots;}
+/* les deux seuls nombres de la construction : une cellule tient tant de
+   parcelles, un batiment tant d'emplacements. Ils etaient ecrits en chiffres
+   dans le code et en toutes lettres dans deux onglets — trois copies. */
+const NPLOTS=16,NSLOTS=16;
+function plots(c){if(!c.plots)c.plots=Array.from({length:NPLOTS},()=>null);return c.plots;}
 function buildPlot(i,k){
   const c=here();
   if(!c.claim)return toast('Cellule non revendiquée');
@@ -73,7 +77,7 @@ function buildPlot(i,k){
   const P=plots(c);
   if(P[i])return toast('Parcelle occupée');
   if(!payCost(PLOT[k].cost))return toast('Matériaux insuffisants : '+costTxt(PLOT[k].cost));
-  P[i]=k==='batiment'?{t:'batiment',slots:Array.from({length:16},()=>null)}:{t:k};
+  P[i]=k==='batiment'?{t:'batiment',slots:Array.from({length:NSLOTS},()=>null)}:{t:k};
   gainXp(k==='batiment'?'menuiserie':'taille',140);
   questTick('build',1);
   log('Bâti : '+PLOT[k].n+' (parcelle '+(i+1)+')');

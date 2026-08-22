@@ -17,7 +17,7 @@ function pCombat(){
   /* --- la posture : elle se choisissait dans la scene de combat seulement --- */
   h+=foldHead('combat','st','構','POSTURE',stanceNow().n,'st');
   if(foldOpen('combat','st','st')){
-    h+='<div class="meta" style="margin-bottom:6px">Trois postures, et le prix de chacune. Elle se change aussi d\'un geste dans la scene de combat.</div>';
+    h+='<div class="meta" style="margin-bottom:6px">'+nomNombreCap(STANCE.length)+' postures, et le prix de chacune. Elle se change aussi d\'un geste dans la scene de combat.</div>';
     h+='<div class="matlist">'+STANCE.map((s,i)=>
       '<button class="mat'+(S.stance===i?' sel':'')+'" data-stance="'+i+'"><b>'+(s.g||'構')+'</b>'+s.n
       +'<small>'+(s.d||'')+'</small>'

@@ -3,7 +3,7 @@
 
 function pBatir(){
   const c=here();
-  let h='<p class="hint">Une cellule tient en seize parcelles. Une parcelle porte un bâtiment, une route, un champ, un mur ou une tourelle — et un bâtiment tient lui-même en seize emplacements, un par station ou par meuble. Tout se paie en matériaux, jamais en or.</p>';
+  let h='<p class="hint">Une cellule tient en '+nomNombre(NPLOTS)+' parcelles. Une parcelle porte un bâtiment, une route, un champ, un mur ou une tourelle — et un bâtiment tient lui-même en '+nomNombre(NSLOTS)+' emplacements, un par station ou par meuble. Tout se paie en matériaux, jamais en or.</p>';
   if(!c.claim){
     h+='<div class="card"><div class="meta" style="color:var(--zhu)">Cellule non revendiquée — rien ne tiendra ici.</div>'
      +'<div class="row"><button class="btn pri" data-claim="1">Revendiquer · '+claimCost()+' or</button></div></div>';

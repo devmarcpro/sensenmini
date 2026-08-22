@@ -448,6 +448,46 @@ bilan('effets cites par les pieces nommees',
   new Set(G('AFF.map(a=>a.id)')),
   'un effet disparu ferait tomber une piece qui ne fait rien');
 
+/* ---------- 6quater. les quatre familles que rien ne surveillait ----------
+   En listant ce que l'audit couvre, quatre familles de la collection n'avaient
+   aucune regle : les ARMES, les CONSOMMABLES, les STATIONS et les PRISES DE
+   PECHE. Trois d'entre elles se fabriquent, et une entree dont le cout demande
+   une forme qu'aucune station ne produit est une case a jamais grise. */
+{
+  /* une arme est fabricable si chacun de ses composants existe et se fait */
+  const armesOk=new Set(G('FK2').filter((k,i)=>{
+    const comp=G('FUNC[FK2['+i+']].comp');
+    return comp.every(ct=>G('!!COMP["'+ct+'"]'));
+  }));
+  bilan('armes assemblables',G('FK2'),armesOk,
+    'une arme dont un composant n existe pas ne s assemble jamais');
+
+  /* un consommable : sa station si elle est demandee, et ses matieres */
+  const consoOk=new Set(G('CONSK').filter((k,i)=>{
+    const D=G('CONSO[CONSK['+i+']]');
+    if(D.st&&!G('!!STATION["'+D.st+'"]'))return false;
+    return D.cout.every(([r])=>r.startsWith('form:')?G('!!FORM["'+r.slice(5)+'"]'):G('!!CAT["'+r+'"]'));
+  }));
+  bilan('consommables fabricables',G('CONSK'),consoOk,
+    'un consommable dont le cout demande une forme inexistante ne se fait jamais');
+
+  /* une station : ses matieres, et son ainee si elle en a une */
+  const statOk=new Set(G('Object.keys(STATION)').filter(k=>{
+    const D=G('STATION["'+k+'"]');
+    if(D.base&&!G('!!STATION["'+D.base+'"]'))return false;
+    return D.cost.every(([r])=>r.startsWith('form:')?G('!!FORM["'+r.slice(5)+'"]'):G('!!CAT["'+r+'"]'));
+  }));
+  bilan('stations batissables',G('Object.keys(STATION)'),statOk,
+    'une station dont l ainee n existe pas ne se bat jamais');
+
+  /* une prise : elle doit figurer sous un biome que le monde pose */
+  const prises=G('[...new Set(Object.keys(PECHE).flatMap(b=>Object.keys(PECHE[b])))]');
+  const prisesOk=new Set(G(`(()=>{const s=[];Object.keys(PECHE).forEach(b=>{
+      if(!BIOME[b]&&b!=='defaut')return;Object.keys(PECHE[b]).forEach(k=>s.push(k));});return s;})()`));
+  bilan('prises de peche atteignables',prises,prisesOk,
+    'une prise rangee sous un biome qui n existe pas ne mord jamais');
+}
+
 /* ---------- 6ter. la collection peut-elle atteindre cent pour cent ? ----------
    L'OBJECTIF ANNONCE DU JOUEUR EST CENT POUR CENT. Le banc d'essai verifie
    qu'aucune famille n'est BLOQUEE — qu'on peut y inscrire toutes ses entrees.

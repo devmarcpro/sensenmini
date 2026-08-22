@@ -20,11 +20,26 @@ function pTable(){
   const harm=els.size>=5;
   const nutr=infos.reduce((a,i)=>a+i.nutr,0)*q*(harm?1.2:1);
   h+=grp('厨','PRÉPARATION',selFood.length+' ingrédients choisis');
+  /* les recettes connues : on ne deverrouille rien, mais on se souvient */
+  const vus=(typeof colAvoir==='function'?colAvoir('plat'):[]);
+  h+='<div class="card"><div class="meta">Recettes reconnues : <b>'+vus.length+' / '+PLAT.length+'</b> — '
+   +PLAT.map(pl=>vus.indexOf(pl.k)>=0
+     ?'<b title="'+pl.d+'">'+pl.g+'</b>'
+     :'<span style="opacity:.32" title="'+pl.d+'">'+pl.g+'</span>').join(' ')
+   +'</div><div class="meta">Un plat ne se debloque pas : il se reconnait a ce qu on met dans la marmite.</div></div>';
   h+='<div class="card"><div class="meta">'+(selFood.length?infos.map(i=>i.n).join(' + '):'rien de choisi')+'</div>'
    +'<div class="meta">éléments couverts : '+[0,1,2,3,4].map(e=>els.has(e)
      ?'<b style="color:'+EL[e].c+'">'+EL[e].g+'</b>':'<span style="opacity:.3">'+EL[e].g+'</span>').join(' ')
    +(harm?' — <b style="color:var(--terre)">harmonie des cinq ×1.2</b>':'')+'</div>'
-   +'<div class="meta">Cuisine niv '+lv('cuisine')+' → qualité moyenne '+QNAME(q)+' · nutrition estimée '+Math.round(nutr)+'</div>'
+   +'<div class="meta">Cuisine niv '+lv('cuisine')+' → qualité moyenne '+QNAME(q)+' · nutrition estimée '+Math.round(nutr*(selFood.length?platDe(infos).nutr:1))+'</div>'
+   /* CE QUE LA MARMITE VA SORTIR, AVANT DE LA LANCER. Seize plats se
+      reconnaissent a ce qu'on met dedans ; si le panneau n'annonce pas
+      lequel, le joueur ne peut ni viser une recette ni comprendre pourquoi
+      celle d'hier etait meilleure. On le dit avant, pas apres. */
+   +(selFood.length?(()=>{const pl=platDe(infos);
+       return '<div class="meta">Cela donnera : <b>'+pl.g+' '+pl.n+'</b> — '+pl.d
+         +' · nutrition ×'+pl.nutr.toFixed(2)+' · potentiel ×'+pl.pot.toFixed(2)
+         +(pl.soin?' · soin +'+Math.round(pl.soin*100)+' %':'')+'</div>';})():'')
    +'<div class="row"><button class="btn pri" data-cook="1" '+(selFood.length&&hasStation('cuisine')?'':'disabled')+'>'
    +(hasStation('cuisine')?'Cuisiner':'cuisine manquante')+'</button>'
    +'<button class="btn" data-distill="1" '+(selFood.length&&hasStation('alambic')?'':'disabled')+'>'

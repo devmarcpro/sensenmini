@@ -129,6 +129,8 @@ const MUT=[
   ['parure : la ligne mord plus vite','parures',[['src/26b-peche.js',"    *(1-(typeof util==='function'?util().ligne:0)));",'  );']]],
   ['parure : la bourse gonfle le butin','parures',[['src/24-combat.js',"    *(1+(typeof util==='function'?util().bourse:0)));",'  );']]],
   ['parure : la lettre aide a lire','parures',[['src/25-modules.js',"  +(typeof util==='function'?util().lettre:0);",';']]],
+  ['plat : le panneau l annonce','plats',[['src/36-panel-table.js',"       return '<div class=\"meta\">Cela donnera : <b>'+pl.g+' '+pl.n+'</b> — '+pl.d","       return '';const z=pl.d"]]],
+  ['plat : le compte des recettes','plats',[['src/36-panel-table.js',"  h+='<div class=\"card\"><div class=\"meta\">Recettes reconnues : <b>'+vus.length+' / '+PLAT.length+'</b> — '","  h+='<div class=\"card\"><div class=\"meta\">'+('"]]],
   /* les plats */
   ['plat : le plus exigeant gagne','plats',[['src/14-food.js','  for(const p of PLAT){let ok=false;try{ok=!!p.quand(t);}catch(e){ok=false;}if(ok)return p;}','  return PLAT[PLAT.length-1];']]],
   ['plat : il entre dans la collection','plats',[['src/14-food.js',"  collecte('plat',plat.k);",'']]],

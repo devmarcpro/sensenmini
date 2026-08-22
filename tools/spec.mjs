@@ -2140,6 +2140,17 @@ test('plats — seize recettes qui se reconnaissent, aucune qui se debloque',()=
     'et il nourrit nettement plus que les mêmes ingrédients sans recette — '
     +G(c,'__r.brut').toFixed(1)+' contre '+G(c,'__r.g').toFixed(1));
 
+  /* --- ET LE PANNEAU L'ANNONCE AVANT DE LANCER LA MARMITE. Si le joueur ne
+     sait pas quel plat va sortir, il ne peut ni viser une recette ni
+     comprendre pourquoi celle d'hier etait meilleure. --- */
+  R(c,`S.carry=['cuisine'];S.food={};
+    for(let i=0;i<3;i++)addFood(foodKey('viande',0,MEATGRP[0]),1);
+    selFood=[Object.keys(S.food)[0],Object.keys(S.food)[0],Object.keys(S.food)[0]];
+    globalThis.__pt=pTable();selFood=[];`);
+  const pt=G(c,'__pt');
+  ok(pt.indexOf('Rôti entier')>0,'le panneau annonce le plat que la marmite va sortir');
+  ok(pt.indexOf('Recettes reconnues')>0,'et le compte de celles qu on a deja reconnues');
+
   /* et la collection le porte */
   eq(G(c,'COLLECTION.plat.tout().length'),G(c,'PLATK.length'),'la collection porte tous les plats');
 });

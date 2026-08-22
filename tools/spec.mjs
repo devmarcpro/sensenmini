@@ -5220,6 +5220,70 @@ test('publication — feuille de style et code du même âge',()=>{
     'la version du cache est un condensé du contenu');
 });
 
+test('corruption — le monde ne fait plus que noircir',()=>{
+  /* E.20 donne quatre mouvements ; il n en existait qu un et demi. Un foyer
+     poussait la corruption sans plafond et sans retour : une case gagnee
+     restait gagnee pour toujours. */
+  const c=nouveau();
+  const poser=`(o)=>{S.world[key(o.x,o.y)]=Object.assign(
+    {x:o.x,y:o.y,b:'plaine',corr:o.corr,corr0:o.corr0===undefined?o.corr:o.corr0,
+     cleared:0,vide:0,mats:[],stock:{}},o);}`;
+  R(c,`globalThis.__pose=${poser};S.world={};`);
+
+  /* --- UN FOYER RAYONNE SUR LES HUIT VOISINES, PAS QUATRE --- */
+  R(c,`S.world={};__pose({x:0,y:0,corr:10,poi:'camp'});
+    for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)
+      if(dx||dy)__pose({x:dx,y:dy,corr:10});
+    weekly();`);
+  const diag=G(c,`S.world[key(1,1)].corr`);
+  gt(diag,10,'la diagonale aussi se corrompt — un foyer rayonne, il ne pousse pas en croix');
+
+  /* --- ET IL A UN PLAFOND : un camp ne noircit pas une plaine autant qu une faille --- */
+  R(c,`S.world={};__pose({x:0,y:0,corr:10,poi:'camp'});
+    for(let i=0;i<200;i++)weekly();
+    globalThis.__camp=S.world[key(0,0)].corr;
+    S.world={};__pose({x:0,y:0,corr:10,poi:'donjon'});
+    for(let i=0;i<200;i++)weekly();
+    globalThis.__dj=S.world[key(0,0)].corr;`);
+  eq(G(c,'__camp'),20,'un camp plafonne dix au-dessus du bruit de sa case');
+  eq(G(c,'__dj'),35,'une faille, vingt-cinq — le foyer majeur pese plus lourd');
+
+  /* --- LE MONDE REVIENT A LUI-MEME --- */
+  R(c,`S.world={};__pose({x:5,y:5,corr:60,corr0:20});
+    for(let i=0;i<10;i++)weekly();`);
+  eq(G(c,`S.world[key(5,5)].corr`),50,
+    'loin de tout foyer, la corruption reflue vers le bruit de base, un point par semaine');
+  R(c,`for(let i=0;i<200;i++)weekly();`);
+  eq(G(c,`S.world[key(5,5)].corr`),20,'et elle s arrete au bruit, elle ne descend pas dessous');
+
+  /* --- MAIS PAS TANT QUE LE FOYER EST LA --- */
+  R(c,`S.world={};__pose({x:0,y:0,corr:60,corr0:20,poi:'donjon'});
+    __pose({x:1,y:0,corr:60,corr0:20});
+    for(let i=0;i<10;i++)weekly();`);
+  eq(G(c,`S.world[key(1,0)].corr`),60,
+    'une case voisine d une faille active ne se nettoie pas toute seule');
+
+  /* --- LA CIVILISATION REPOUSSE ---
+     On l isole d abord de la decroissance naturelle : la case observee est
+     DEJA a son bruit de base, donc rien ne la ferait descendre toute seule.
+     Ce qui la fait reculer ne peut alors venir que de la case tenue. */
+  R(c,`S.world={};__pose({x:1,y:0,corr:40,corr0:40});
+    for(let i=0;i<10;i++)weekly();`);
+  eq(G(c,`S.world[key(1,0)].corr`),40,
+    'une case deja au bruit de base ne descend pas toute seule');
+  R(c,`S.world={};__pose({x:0,y:0,corr:20,corr0:20,claim:'base'});
+    __pose({x:1,y:0,corr:40,corr0:40});
+    for(let i=0;i<10;i++)weekly();`);
+  eq(G(c,`S.world[key(1,0)].corr`),30,
+    'a cote d une case que tu tiens, elle recule d un point par semaine');
+
+  /* --- ET UN VILLAGE FAIT LE MEME TRAVAIL, SANS LE JOUEUR --- */
+  R(c,`S.world={};__pose({x:0,y:0,corr:20,corr0:20,poi:'village'});
+    __pose({x:1,y:0,corr:60,corr0:60});
+    for(let i=0;i<10;i++)weekly();`);
+  ok(G(c,`S.world[key(1,0)].corr`)<60,'un village PNJ presse lui aussi sur ses voisines');
+});
+
 test('territoire — une case raclée se dépeuple, et se repeuple',()=>{
   const c=nouveau();
   R(c,'S.pos=[0,0];here().cleared=0;here().kills=0;here().vide=0;');

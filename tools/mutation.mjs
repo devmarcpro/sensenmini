@@ -200,6 +200,11 @@ const MUT=[
   /* le scriptorium */
   ['collection : le filtre retire ce qu on a deja','collection',[['src/48b-panel-collection.js',"    h+='<div class=\"matlist\">'+tout.filter(k=>!seulManque||!eus.includes(k)).map(k=>{","    h+='<div class=\"matlist\">'+tout.map(k=>{"]]],
   ['collection : le plus pres du bout vient en premier','collection',[['src/48b-panel-collection.js','    .filter(f=>f.m>0).sort((x,y)=>x.m-y.m);','    .filter(f=>f.m>0);']]],
+  ['corruption : le foyer rayonne sur les diagonales','corruption',[['src/27-clock.js','        if(!dx&&!dy)continue;'+String.fromCharCode(10)+'        monte(S.world[key(c.x+dx,c.y+dy)],1);','        if(dx&&dy)continue;'+String.fromCharCode(10)+'        monte(S.world[key(c.x+dx,c.y+dy)],1);']]],
+  ['corruption : le foyer a un plafond','corruption',[['src/27-clock.js','      const plaf=Math.min(100,(c.corr0||0)+(maj?25:10));','      const plaf=100;']]],
+  ['corruption : le monde revient a son bruit','corruption',[['src/27-clock.js','    if(z.corr>base)z.corr=Math.max(base,z.corr-1);','    if(false)z.corr=Math.max(base,z.corr-1);']]],
+  ['corruption : ce que tu tiens repousse','corruption',[['src/27-clock.js',"    if(presse[k]&&z.corr>Math.max(0,base-40)){z.corr=Math.max(0,z.corr-1);civ++;continue;}","    if(presse[k]&&z.corr>Math.max(0,base-40)){civ++;continue;}"]]],
+  ['corruption : un village presse aussi','corruption',[['src/27-clock.js',"    if(!z.claim&&z.poi!=='village'&&!z.town)continue;","    if(!z.claim)continue;"]]],
   ['rare : le trophee tombe a coup sur','monstre rare',[['src/24-combat.js',"  if(K.rare&&!K.gard&&!K.boss&&typeof mkParure==='function'){","  if(false&&K.rare&&!K.gard&&!K.boss&&typeof mkParure==='function'){"]]],
   ['rare : le budget renforce est tenu','monstre rare',[['src/10c-bijoux.js','    if(a.don){if(donPris)continue;donPris=true;}','    if(a.don){if(donPris)break;donPris=true;}']]],
   ['rare : le plafond ordinaire ne bouge pas','monstre rare',[['src/10c-bijoux.js','  const n=budget||Math.min(P.aff[1],Math.max(P.aff[0],Math.round(P.aff[0]+(q-1)*1.2)));','  const n=budget||Math.max(P.aff[0],Math.round(P.aff[0]+(q-1)*1.2));']]],

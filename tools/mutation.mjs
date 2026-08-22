@@ -200,6 +200,11 @@ const MUT=[
   /* le scriptorium */
   ['collection : le filtre retire ce qu on a deja','collection',[['src/48b-panel-collection.js',"    h+='<div class=\"matlist\">'+tout.filter(k=>!seulManque||!eus.includes(k)).map(k=>{","    h+='<div class=\"matlist\">'+tout.map(k=>{"]]],
   ['collection : le plus pres du bout vient en premier','collection',[['src/48b-panel-collection.js','    .filter(f=>f.m>0).sort((x,y)=>x.m-y.m);','    .filter(f=>f.m>0);']]],
+  ['rare : le trophee tombe a coup sur','monstre rare',[['src/24-combat.js',"  if(K.rare&&!K.gard&&!K.boss&&typeof mkParure==='function'){","  if(false&&K.rare&&!K.gard&&!K.boss&&typeof mkParure==='function'){"]]],
+  ['rare : le budget renforce est tenu','monstre rare',[['src/10c-bijoux.js','    if(a.don){if(donPris)continue;donPris=true;}','    if(a.don){if(donPris)break;donPris=true;}']]],
+  ['rare : le plafond ordinaire ne bouge pas','monstre rare',[['src/10c-bijoux.js','  const n=budget||Math.min(P.aff[1],Math.max(P.aff[0],Math.round(P.aff[0]+(q-1)*1.2)));','  const n=budget||Math.max(P.aff[0],Math.round(P.aff[0]+(q-1)*1.2));']]],
+  ['rare : la matiere vient de la bete','monstre rare',[['src/24-combat.js','      const mat=sien.length?pick(sien):pick(dispo);','      const mat=pick(dispo);']]],
+  ['rare : un sac plein reste plein','monstre rare',[['src/24-combat.js','    if(sacPlein()){','    if(false){']]],
   ['munitions : la pointe de fer perce','munitions',[['src/24-combat.js',"  let pierce=PA.pierce+(MU?MU.pierce:0);",'  let pierce=PA.pierce;']]],
   ['munitions : le trait porte ce qu on encoche','munitions',[['src/24-combat.js','  if(MU)base*=1+MU.dmg;','  if(MU)base*=1;']]],
   ['munitions : le carquois se vide','munitions',[['src/24-combat.js','  if(MU)muniConsommer();','  if(0)muniConsommer();']]],

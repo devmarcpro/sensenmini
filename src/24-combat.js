@@ -800,6 +800,42 @@ function kill(who){
     if(b2){S.items.push(b2);questTick('loot',1,0);
       cutIn('取',b2.nom,'pris sur '+K.nom.toLowerCase(),false,b2);}
   }
+  /* ==================================================================
+     LE TROPHEE DU MONSTRE RARE (12.4).
+     « Drop garanti : un objet a effets au budget renforce (3-4 effets au
+     lieu de 0-2) systematiquement a la mort. » La variante rare existait
+     depuis longtemps — deux pour cent des apparitions, epithete, statistiques
+     multipliees — et tout ce qu'elle rapportait de plus, c'etait de l'or.
+     Quatre fois de l'or. Une rencontre sur cinquante, memorable a l'ecran,
+     dont il ne restait rien le lendemain.
+
+     Trois a quatre effets, quand une parure de marchand en porte deux au
+     plus : c'est la SEULE source de ce budget dans le jeu, et le plafond
+     ordinaire ne bouge pas — ajouter n'est pas remplacer.
+
+     LA MATIERE VIENT DE LA BETE. Un trophee pris sur une chose des cendres
+     n'est pas en laine : on tire d'abord dans ce qu'elle laisse, et la
+     parure porte alors le vecteur de son element. */
+  if(K.rare&&!K.gard&&!K.boss&&typeof mkParure==='function'){
+    if(sacPlein()){
+      log('<span class="bd">Le trophée du '+K.nom.toLowerCase()+' reste au sol : ton sac est plein.</span>');
+    }else{
+      const C=K.cre?CREATURE[K.cre]:null;
+      const kinds=Object.keys(PARURE);
+      const kind=pick(kinds);
+      const dispo=PARURE[kind].mats;
+      /* ce que la bete laisse, si c'est une matiere que cette parure accepte */
+      const sien=(C&&C.mats||[]).filter(m=>dispo.includes(m));
+      const mat=sien.length?pick(sien):pick(dispo);
+      const q=1.15+Math.min(.55,(C?C.lv:10)*.006)+Math.random()*.25;
+      const it=mkParure(kind,mat,q,3+(Math.random()<.35?1:0));
+      if(it){
+        it.nom=it.nom+" du "+(C?C.n.toLowerCase():'rare');
+        S.items.push(it);questTick('loot',1,0);
+        cutIn('稀',it.nom,(it.aff||[]).length+" effets — ce qu'un marchand ne vend jamais",false,it);
+      }
+    }
+  }
   /* la statue 1:1 — trophée de chasse ultime (F.3) */
   if(Math.random()<.0005&&K.cre){const C=CREATURE[K.cre];
     S.items.push({id:'i'+(S.nid++),kind:'statue',nom:'Statue de '+C.n.toLowerCase()+' (1:1)',parts:[],q:1,dur:0,durBase:0,de:0,mana:0,vec:[.2,.2,.2,.2,.2],rar:3,val:C.lv*40+40,slots:0});

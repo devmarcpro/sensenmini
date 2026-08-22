@@ -83,18 +83,29 @@ const PARURE={
 const PARK=Object.keys(PARURE);
 /* Une gemme sertie ne se voit pas ici : une parure n'a pas de sertissure —
    elle EST déjà l'effet. C'est ce qui la distingue d'une arme. */
-function mkParure(kind,mk,q){
+/* `budget` : un nombre d'effets IMPOSE, qui passe outre le plafond de la piece.
+   Il n'a qu'un seul emploi et il vient du GDD (12.4) : le trophee garanti d'un
+   monstre rare, « 3-4 effets au lieu de 0-2 ». On ne releve donc PAS le plafond
+   des parures ordinaires — ajouter n'est pas remplacer : une amulette trouvee
+   chez un marchand en porte toujours au plus deux, et c'est ce qui fait du
+   trophee un trophee. */
+function mkParure(kind,mk,q,budget){
   const P=PARURE[kind];
   if(!P)return null;
   const mat=MAT[mk]?mk:P.mats[0];
-  const n=Math.min(P.aff[1],Math.max(P.aff[0],Math.round(P.aff[0]+(q-1)*1.2)));
+  const n=budget||Math.min(P.aff[1],Math.max(P.aff[0],Math.round(P.aff[0]+(q-1)*1.2)));
   /* les dons sont rares : ils ne sortent qu'au-dessus d'une certaine qualité,
      et jamais deux sur la même pièce — sinon un seul anneau règle tout */
   const pool=AFFU.filter(a=>!a.don||q>=1.35);
-  const tirs=tirerN(pool,n+2);
+  const tirs=tirerN(pool,pool.length);
   const choisis=[];let donPris=false;
   for(const a of tirs){
     if(choisis.length>=n)break;
+    /* jamais deux dons sur la meme piece : on PASSE le second, on ne s'arrete
+       pas. Une version precedente tirait n+2 entrees et abandonnait sur un
+       don en trop — une piece a qui l'on demandait quatre effets en portait
+       parfois deux. Le budget est un contrat : on puise dans tout le pool
+       jusqu'a l'avoir tenu. */
     if(a.don){if(donPris)continue;donPris=true;}
     choisis.push({id:a.id,p:a.r()});
   }

@@ -3912,6 +3912,72 @@ test('meubles — sept de plus, et chacun change une regle',()=>{
   eq(G(c,'eclaireIci()'),true,'une torchère l\'éclaire');
 });
 
+test('monstre rare — deux pour cent des rencontres, et un trophee',()=>{
+  /* « Drop garanti : un objet a effets au budget renforce (3-4 effets au lieu
+     de 0-2) systematiquement a la mort » (12.4). La variante rare existait, et
+     tout ce qu'elle rapportait de plus etait de l'or. */
+  const c=nouveau();
+  R(c,`S.occ='combat';S.items=[];spawn();`);
+
+  /* --- LE PLAFOND ORDINAIRE NE BOUGE PAS --- */
+  const ord=G(c,`(()=>{let mx=0;for(let i=0;i<400;i++){
+    const k=Object.keys(PARURE)[i%Object.keys(PARURE).length];
+    /* on pousse la qualite bien au-dela de ce que le jeu produit : le
+       plafond doit tenir MEME la, sinon il ne tient que par accident */
+    const it=mkParure(k,PARURE[k].mats[0],1.4+(i%20)*.13);
+    if(it)mx=Math.max(mx,it.aff.length);}return mx;})()`);
+  ok(ord<=2,'une parure ordinaire porte au plus deux effets, quelle que soit sa qualite',
+    'vu : '+ord);
+
+  /* --- ET LE TROPHEE EN PORTE TROIS OU QUATRE --- */
+  const tro=G(c,`(()=>{const n=[];for(let i=0;i<200;i++){
+    const k=Object.keys(PARURE)[i%Object.keys(PARURE).length];
+    const it=mkParure(k,PARURE[k].mats[0],1.4,3+(i%3===0?1:0));
+    if(it)n.push(it.aff.length);}return n;})()`);
+  ok(tro.every(x=>x>=3&&x<=4),'le budget impose donne trois a quatre effets',
+    'vu : '+[...new Set(tro)].join(', '));
+
+  /* --- IL TOMBE A COUP SUR --- */
+  R(c,`globalThis.__tro=[];
+    for(let i=0;i<25;i++){
+      S.items=[];                       /* le sac ne doit pas se remplir : ce
+                                           qu'on mesure ici est le butin, pas
+                                           la capacite de portage */
+      const e=mkEnemy('loup',1,true,false,'');
+      EE=[e];E=e;e.hp=0;kill(e);
+      /* un humanoide peut aussi laisser une piece de son propre equipement :
+         on ne compte donc pas les parures, on cherche celle qui porte le
+         budget renforce */
+      __tro.push(S.items.filter(x=>x.kind==='parure'&&x.aff.length>=3).length);
+    }`);
+  eq(G(c,'__tro.filter(x=>x>=1).length'),25,
+    'vingt-cinq rares abattus, vingt-cinq trophees — c est un butin garanti');
+  ok(G(c,'__tro.every(x=>x>=1)'),'et chacun porte au moins trois effets');
+
+  /* --- MAIS PAS D UNE BETE ORDINAIRE --- */
+  R(c,`S.items=[];
+    for(let i=0;i<25;i++){const e=mkEnemy('loup',1,false,false,'');EE=[e];E=e;e.hp=0;kill(e);}`);
+  eq(G(c,'S.items.filter(x=>x.kind==="parure"&&x.aff.length>=3).length'),0,
+    'une bete ordinaire n en laisse aucun');
+
+  /* --- LA MATIERE VIENT DE LA BETE --- */
+  const sienne=G(c,`(()=>{S.items=[];let ok=0,tot=0;
+    for(let i=0;i<200;i++){const e=mkEnemy('loup',1,true,false,'');EE=[e];E=e;e.hp=0;
+      S.items=[];kill(e);
+      const it=S.items.find(x=>x.kind==='parure');
+      if(!it)continue;tot++;
+      if((CREATURE.loup.mats||[]).includes(it.parts[0].mk))ok++;}
+    return tot?ok/tot:0;})()`);
+  gt(sienne,.5,'le trophee est fait de ce que la bete laisse, quand la parure l accepte'
+    +' ('+Math.round(sienne*100)+' %)');
+
+  /* --- SAC PLEIN : on le dit, on ne triche pas avec la place --- */
+  R(c,`S.items=[];while(!sacPlein())S.items.push(mkParure('anneau','argent',1.0));
+    globalThis.__n0=S.items.length;
+    const e=mkEnemy('loup',1,true,false,'');EE=[e];E=e;e.hp=0;kill(e);`);
+  eq(G(c,'S.items.length'),G(c,'__n0'),'un sac plein reste plein — le trophee reste au sol, et le journal le dit');
+});
+
 test('parures — six emplacements qui ne recevaient rien',()=>{
   /* La fiche d'equipement declare quatorze emplacements. Huit se
      remplissaient. Les six autres — deux anneaux, une amulette, le dos, deux

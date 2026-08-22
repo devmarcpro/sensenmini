@@ -76,6 +76,93 @@ function poisonBy(k){
   addStatus(S,'poison',10,Math.max(1,maxHp()*.012));
   cutIn('毒',matName(k)+' — empoisonné','le poison ronge pendant 10 s ; une cuisine ne l\'aurait pas servi');
 }
+/* ==================================================================
+   ON CUISINAIT SANS JAMAIS RIEN CUISINER.
+   La marmite prenait des ingredients et rendait « un plat » : de la
+   nutrition, du potentiel, et un nom generique. Aucune RECETTE, donc
+   aucune raison de choisir ce qu'on met dedans au-dela du compte de
+   points — et, dans un jeu dont l'objectif annonce est une collection a
+   cent pour cent, un systeme entier sans une seule chose a collectionner.
+
+   Seize plats nommes. Aucun ne se debloque, aucun ne s'achete : ils se
+   RECONNAISSENT. On met ce qu'il faut dans la marmite, le plat sort, et
+   il entre dans la collection. C'est le contraire d'un arbre de recettes
+   — on ne deverrouille rien, on decouvre ce qui existait deja.
+
+   Chacun donne un BONUS propre, et le bonus dit la recette : un ragout
+   nourrit, une soupe claire soigne, un festin des cinq porte l'harmonie
+   plus loin que le simple multiplicateur. Le plat le plus exigeant qui
+   correspond gagne — sinon un banquet complet serait toujours annonce
+   comme une simple potee.
+   ================================================================== */
+const PLAT=[
+  /* --- les grands, ceux qui demandent de l'harmonie --- */
+  {k:'festin',n:'Festin des cinq',g:'宴',d:'les cinq elements dans une seule marmite',
+   quand:t=>t.els>=5&&t.n>=5,nutr:1.35,pot:1.35,soin:.25},
+  {k:'harmonie',n:'Table harmonieuse',g:'和',d:'quatre elements, et de quoi tenir',
+   quand:t=>t.els>=4&&t.n>=4,nutr:1.2,pot:1.2,soin:.18},
+  /* --- la viande --- */
+  {k:'roti',n:'Rôti entier',g:'焼',d:'trois pieces de viande, rien d autre',
+   quand:t=>t.viande>=3,nutr:1.3,pot:1.05,soin:.1},
+  {k:'ragout',n:'Ragoût',g:'鍋',d:'de la viande et des legumes',
+   quand:t=>t.viande>=2&&t.plante>=1,nutr:1.25,pot:1.1,soin:.12},
+  {k:'brochette',n:'Brochettes',g:'串',d:'viande et champignon',
+   quand:t=>t.viande>=1&&t.champ>=1,nutr:1.12,pot:1.12,soin:.06},
+  /* --- l eau --- */
+  {k:'bouillon',n:'Court-bouillon',g:'汁',d:'du poisson et un legume',
+   quand:t=>t.poisson>=1&&t.plante>=1,nutr:1.15,pot:1.15,soin:.16},
+  {k:'grillade',n:'Grillade de rivière',g:'魚',d:'deux prises sur le feu',
+   quand:t=>t.poisson>=2,nutr:1.22,pot:1.05,soin:.1},
+  {k:'algues',n:'Bouillon d algues',g:'藻',d:'ce que la mer donne sans se battre',
+   quand:t=>t.algue>=1&&t.n>=2,nutr:1.05,pot:1.25,soin:.14},
+  /* --- le vegetal --- */
+  {k:'potee',n:'Potée',g:'菜',d:'trois legumes, la cuisine des pauvres',
+   quand:t=>t.plante>=3,nutr:1.18,pot:1.1,soin:.08},
+  {k:'soupe',n:'Soupe claire',g:'椀',d:'deux legumes, et rien qui pese',
+   quand:t=>t.plante>=2&&t.viande===0,nutr:1.05,pot:1.05,soin:.22},
+  {k:'compote',n:'Compote',g:'果',d:'un fruit sucre, longuement mijote',
+   quand:t=>t.fruit>=1&&t.n>=2,nutr:1.1,pot:1.18,soin:.1},
+  /* --- les curiosites : ce qu'un chasseur rapporte de bizarre --- */
+  {k:'abats',n:'Abats braisés',g:'臓',d:'ce que les autres jettent',
+   quand:t=>t.abat>=2,nutr:1.08,pot:1.3,soin:.05},
+  {k:'moelle',n:'Moelle et os',g:'骨',d:'on casse l os pour ce qu il y a dedans',
+   quand:t=>t.abat>=1&&t.viande>=1,nutr:1.15,pot:1.15,soin:.12},
+  {k:'infusion',n:'Infusion',g:'茶',d:'une seule plante, patiemment',
+   quand:t=>t.n===1&&t.plante===1,nutr:.9,pot:1.4,soin:.2},
+  /* --- et les deux fonds de marmite --- */
+  {k:'gamelle',n:'Gamelle',g:'皿',d:'deux choses, n importe lesquelles',
+   quand:t=>t.n>=2,nutr:1,pot:1,soin:.04},
+  {k:'ordinaire',n:'Ordinaire',g:'匙',d:'ce qu on mange quand il n y a rien a dire',
+   quand:t=>true,nutr:1,pot:1,soin:0},
+];
+const PLATK=PLAT.map(p=>p.k);
+/* Ce que la marmite contient, compte par compte : c'est la seule chose dont
+   une recette a besoin pour se reconnaitre. */
+function platTable(infos){
+  const t={n:infos.length,els:new Set(infos.map(i=>i.el)).size,
+    viande:0,poisson:0,algue:0,plante:0,fruit:0,champ:0,abat:0};
+  infos.forEach(i=>{
+    if(i.part==='viande')t.viande++;
+    else if(i.part==='poisson'||i.part==='anguille')t.poisson++;
+    else if(i.part==='algue')t.algue++;
+    else if(i.part)t.abat++;
+    if(i.plante){
+      t.plante++;
+      const nm=String(i.n||'').toLowerCase();
+      if(/pomme|poire|raisin|fraise|baie|figue|prune|cerise/.test(nm))t.fruit++;
+      if(/champignon|morille|cepe|truffe/.test(nm))t.champ++;
+    }
+  });
+  return t;
+}
+/* le plus exigeant qui corresponde : la table est rangee du plus rare au
+   plus banal, donc le premier qui accepte est le bon */
+function platDe(infos){
+  const t=platTable(infos);
+  for(const p of PLAT){let ok=false;try{ok=!!p.quand(t);}catch(e){ok=false;}if(ok)return p;}
+  return PLAT[PLAT.length-1];
+}
+
 /* ===== CUISINE ===== */
 function cook(sel2){
   if(!hasStation('cuisine'))return toast('Il faut une cuisine');
@@ -88,15 +175,17 @@ function cook(sel2){
   const q=quality(lv('cuisine'));
   const els=new Set(infos.map(i=>i.el));
   const harmonie=els.size>=5?1.2:1;
-  const nutr=infos.reduce((a,i)=>a+i.nutr,0)*q*harmonie;
+  const plat=platDe(infos);
+  const nutr=infos.reduce((a,i)=>a+i.nutr,0)*q*harmonie*plat.nutr;
   S.faim=Math.min(100,S.faim+nutr);
-  S.hp=Math.min(maxHp(),S.hp+maxHp()*.15);
+  S.hp=Math.min(maxHp(),S.hp+maxHp()*(.15+plat.soin));
+  collecte('plat',plat.k);
   /* potentiel = Σ bonus des ingrédients × nutrition/100 × qualité */
   const gain={};
   infos.forEach(i=>{if(i.grp)gain[i.grp]=(gain[i.grp]||0)+i.nutr;});
   const lignes=[];
   for(const g in gain){
-    const pts=gain[g]*(nutr/100)*harmonie*2.4;
+    const pts=gain[g]*(nutr/100)*harmonie*2.4*plat.pot;
     let n2=0,moy=0;
     SK.filter(k=>SKILLS[k].grp===g).forEach(k=>{
       /* rendements décroissants : plus le potentiel est haut, moins un plat rend */
@@ -116,7 +205,7 @@ function cook(sel2){
   }
   gainXp('cuisine',infos.reduce((a,i)=>a+i.nutr,0)*12);
   S.plats=(S.plats||0)+1;questTick('cook',1);
-  cutIn('厨',QNAME(q)+' — nutrition '+Math.round(nutr),
+  cutIn(plat.g,plat.n+' — '+QNAME(q).toLowerCase()+' · nutrition '+Math.round(nutr),
     (harmonie>1?'harmonie des cinq ×1.2 · ':'')+(lignes.join(' · ')||'aucun potentiel'));
 }
 /* ===== ALCHIMIE ===== */

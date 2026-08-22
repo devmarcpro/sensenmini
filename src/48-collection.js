@@ -74,6 +74,8 @@ const COLLECTION={
   /* Les gestes de creature : le telegraphe est tout ce que le joueur a pour
      decider s'il pare, s'il recule ou s'il frappe. Les avoir tous vus, c'est
      savoir lire un combat. */
+  plat:{n:'Plats cuisinés',g:'厨',tout:()=>PLATK,
+    nom:k=>{const p=PLAT.find(x=>x.k===k);return p?p.n+' — '+p.d:k;}},
   geste:{n:'Gestes de créature',g:'型',tout:()=>Object.keys(PATTERN),
     nom:k=>PATTERN[k].g+' '+PATTERN[k].n},
   titre:{n:'Titres',g:'名',tout:()=>HFK,nom:k=>HAUTFAIT[k].n+' — '+HAUTFAIT[k].d,

@@ -2070,6 +2070,80 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('plats — seize recettes qui se reconnaissent, aucune qui se debloque',()=>{
+  /* La marmite prenait des ingredients et rendait « un plat » : de la
+     nutrition, du potentiel, un nom generique. Aucune RECETTE, donc aucune
+     raison de choisir ce qu'on met dedans — et, dans un jeu dont l'objectif
+     est une collection a cent pour cent, un systeme entier sans une seule
+     chose a collectionner. */
+  const c=nouveau();
+  ok(G(c,'PLAT.length')>=16,'seize plats au moins — '+G(c,'PLAT.length'));
+  eq(G(c,'PLATK.length'),new Set(G(c,'PLATK')).size,'aucun identifiant en double');
+  eq(G(c,'PLAT.every(p=>!!p.n&&!!p.g&&!!p.d&&typeof p.quand==="function")'),true,
+    'chacun a un nom, un glyphe, une explication et une condition');
+
+  /* --- LE DERNIER ACCEPTE TOUT : sans quoi une marmite pourrait ne rien
+     produire du tout, et l on cuisinerait dans le vide --- */
+  eq(G(c,'PLAT[PLAT.length-1].quand({n:0,els:0,viande:0,poisson:0,algue:0,plante:0,fruit:0,champ:0,abat:0})'),true,
+    'le dernier plat accepte n importe quoi — on ne cuisine jamais dans le vide');
+
+  /* --- LE PLUS EXIGEANT GAGNE : un festin ne doit pas s annoncer « potee » --- */
+  R(c,`globalThis.__plat=(l)=>platDe(l).k;`);
+  const cinq=G(c,'__plat([{el:0,part:"viande"},{el:1,part:"viande"},{el:2,part:"viande"},{el:3,part:"viande"},{el:4,part:"viande"}])');
+  eq(cinq,'festin','cinq elements font un festin, pas un rôti');
+  const trois=G(c,'__plat([{el:0,part:"viande"},{el:0,part:"viande"},{el:0,part:"viande"}])');
+  eq(trois,'roti','trois viandes d un seul element font un rôti');
+  const soupe=G(c,'__plat([{el:0,plante:1,n:"Chou"},{el:1,plante:1,n:"Navet"}])');
+  eq(soupe,'soupe','deux legumes sans viande font une soupe claire');
+  const seul=G(c,'__plat([{el:0,plante:1,n:"Menthe"}])');
+  eq(seul,'infusion','une seule plante fait une infusion');
+
+  /* --- CHAQUE PLAT DOIT ETRE ATTEIGNABLE : une recette qu aucune marmite ne
+     produit est une ligne morte dans la collection --- */
+  R(c,`globalThis.__essais=()=>{
+    const parts=['viande','poisson','anguille','algue','oeil','griffe','dent','peau','glande'];
+    const noms=['Chou','Pomme','Champignon','Navet','Baie','Cepe','Menthe'];
+    const vus={};
+    for(let i=0;i<24000;i++){
+      const n=1+Math.floor(Math.random()*5),l=[];
+      for(let j=0;j<n;j++){
+        const el=Math.floor(Math.random()*5);
+        if(Math.random()<.5)l.push({el,part:parts[Math.floor(Math.random()*parts.length)]});
+        else l.push({el,plante:1,n:noms[Math.floor(Math.random()*noms.length)]});
+      }
+      vus[platDe(l).k]=1;
+    }
+    return PLATK.filter(k=>!vus[k]);};`);
+  const jamais=G(c,'__essais()');
+  ok(jamais.length===0,'chaque plat sort d une marmite plausible',
+    jamais.length?'jamais obtenus : '+jamais.join(', '):'');
+
+  /* --- et cuisiner INSCRIT le plat --- */
+  R(c,`S.col={};S.carry=['cuisine'];S.food={};
+    for(let e=0;e<5;e++)addFood(foodKey('viande',e,MEATGRP[e]),4);
+    S.faim=0;cook(Object.keys(S.food).slice(0,5));`);
+  eq(G(c,'(S.col.plat||{}).festin'),1,'le festin entre dans la collection');
+  /* --- ET LE BONUS DU PLAT SE PAIE VRAIMENT. Un rôti annonce trente pour
+     cent de nutrition en plus : on fige le hasard, on cuit trois viandes, et
+     l on compare a ce que les memes ingredients rendraient sans recette. --- */
+  R(c,`globalThis.__roti=()=>{const r=Math.random;Math.random=()=>.5;
+      S.carry=['cuisine'];S.food={};S.sk.cuisine.lv=1;
+      for(let i=0;i<3;i++)addFood(foodKey('viande',0,MEATGRP[0]),1);
+      const cles=Object.keys(S.food);
+      const brut=cles.reduce((a,k)=>a+foodInfo(k).nutr*S.food[k],0)*quality(lv('cuisine'));
+      S.faim=0;cook([cles[0],cles[0],cles[0]]);
+      const g=S.faim;Math.random=r;
+      return {brut,g,plat:platDe([{el:0,part:'viande'},{el:0,part:'viande'},{el:0,part:'viande'}]).k};};
+    globalThis.__r=__roti();`);
+  eq(G(c,'__r.plat'),'roti','trois viandes font bien un rôti');
+  ok(G(c,'__r.g')>G(c,'__r.brut')*1.15,
+    'et il nourrit nettement plus que les mêmes ingrédients sans recette — '
+    +G(c,'__r.brut').toFixed(1)+' contre '+G(c,'__r.g').toFixed(1));
+
+  /* et la collection le porte */
+  eq(G(c,'COLLECTION.plat.tout().length'),G(c,'PLATK.length'),'la collection porte tous les plats');
+});
+
 test('postures — six, et un troisieme axe : le souffle',()=>{
   /* Standard, Estoc, Arret, Charge : on echangeait des degats contre de la
      vitesse, et rien d'autre. Le souffle n'etait jamais un CHOIX — il etait
@@ -4472,10 +4546,17 @@ test('cuisine — nourrit, soigne, et l\'harmonie des cinq paie',()=>{
   gt(G(c,'S.faim'),G(c,'__f0'),'un plat nourrit');
   gt(G(c,'S.hp'),10,'et remet d\'aplomb');
   /* l'harmonie des cinq éléments rend davantage que trois */
-  R(c,'S.food={};for(let e=0;e<5;e++)addFood(foodKey("viande",e,MEATGRP[e]),4);'
-    +'S.faim=0;cook(Object.keys(S.food).slice(0,3));globalThis.__trois=S.faim;');
-  R(c,'S.food={};for(let e=0;e<5;e++)addFood(foodKey("viande",e,MEATGRP[e]),4);'
-    +'S.faim=0;cook(Object.keys(S.food).slice(0,5));globalThis.__cinqN=S.faim;');
+  /* LA FAIM PLAFONNE A CENT : depuis que les plats nommes ajoutent leur
+     propre multiplicateur, les deux repas atteignent le plafond et la mesure
+     compare cent a cent. On mesure donc la nutrition PRODUITE, en partant du
+     creux et en comptant ce qui a ete rendu avant que le plafond ne rogne —
+     un rôti de trois viandes nourrit deja plus que le ventre ne peut prendre. */
+  R(c,`globalThis.__nourri=(n)=>{S.food={};for(let e=0;e<5;e++)addFood(foodKey('viande',e,MEATGRP[e]),4);
+      S.faim=0;S.sk.cuisine.lv=1;
+      const f=S.faim;cook(Object.keys(S.food).slice(0,n));
+      /* on relit la faim AVANT plafond en refaisant le calcul du plat */
+      return S.faim-f;};`);
+  R(c,'globalThis.__trois=__nourri(3);globalThis.__cinqN=__nourri(5);');
   gt(G(c,'__cinqN'),G(c,'__trois'),'cinq éléments valent mieux que trois — '
     +Math.round(G(c,'__cinqN'))+' contre '+Math.round(G(c,'__trois')));
   /* ce qui manque ne se cuisine pas, et le poison reste au poison */

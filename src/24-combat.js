@@ -23,6 +23,23 @@ const STANCE=[
   {g:'進',n:'Estoc',   dmg:1.15,spd:0.95,end:8, t:'percant',  win:.85, d:'en avançant — perforant, allonge +1'},
   {g:'退',n:'Arrêt',   dmg:0.75,spd:1.45,end:6, t:null,       win:1.6, d:'en reculant — rapide, peu coûteux, garde ouverte'},
   {g:'駆',n:'Charge',  dmg:1.45,spd:0.70,end:15,t:'contondant',win:.7, d:'en sprintant — contondant, recul'},
+  /* ==================================================================
+     QUATRE POSTURES SUR UN SEUL AXE.
+     Standard, Estoc, Arret, Charge : on echangeait des degats contre de la
+     vitesse, et rien d'autre. Le souffle, lui, n'etait jamais un CHOIX — il
+     etait une consequence. Or c'est lui qui decide de la longueur d'un
+     combat : celui qui tient dix coups bat celui qui en place trois.
+
+     Deux postures sur l'axe du SOUFFLE, et rien d'autre de neuf :
+       静 GARDE BASSE — quatre de souffle au lieu de huit. On frappe moins
+         fort et moins vite, mais on ne s'arrete jamais. C'est la posture des
+         longs combats et des creatures a beaucoup de vie.
+       狂 FRENESIE — vingt-deux de souffle. Le plus fort et le plus rapide du
+         jeu, et l'on est a sec en quatre coups. C'est la posture de qui veut
+         finir avant d'etre fatigue.
+     ================================================================== */
+  {g:'静',n:'Garde basse',dmg:0.88,spd:0.90,end:4, t:null,       win:1.2, d:'économe — moitié moins de souffle, on ne s\'arrête jamais'},
+  {g:'狂',n:'Frénésie', dmg:1.30,spd:1.25,end:22,t:null,       win:.6, d:'tout donner — le plus fort et le plus rapide, et à sec en quatre coups'},
 ];
 const MOBN=['Rôdeur','Éclat','Racine','Brume','Gardien','Cendre','Veine','Sylve','Écho','Carcasse','Suaire','Ronce'];
 const MOBS=['de pierre','noueuse','mordante','fêlé','errante','de fer','muette','de jade','affamé','ancienne','sans nom','du seuil'];

@@ -2070,6 +2070,41 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('postures — six, et un troisieme axe : le souffle',()=>{
+  /* Standard, Estoc, Arret, Charge : on echangeait des degats contre de la
+     vitesse, et rien d'autre. Le souffle n'etait jamais un CHOIX — il etait
+     une consequence. Or c'est lui qui decide de la longueur d'un combat :
+     celui qui tient dix coups bat celui qui en place trois. */
+  const c=nouveau();
+  ok(G(c,'STANCE.length')>=6,'six postures au moins — '+G(c,'STANCE.length'));
+  /* chacune doit avoir un prix : ni la plus forte ni la plus rapide ne doit
+     etre aussi la moins couteuse */
+  const gratuite=G(c,`STANCE.filter((s,i)=>{
+    return STANCE.every((o,j)=>j===i||(s.dmg>=o.dmg&&s.spd>=o.spd&&s.end<=o.end&&(s.win||1)>=(o.win||1)));
+  }).map(s=>s.n)`);
+  ok(gratuite.length===0,'aucune posture ne domine toutes les autres',
+    gratuite.length?'dominantes : '+gratuite.join(', '):'');
+  /* l axe du souffle existe vraiment : du simple au quintuple */
+  const ends=G(c,'STANCE.map(s=>s.end)');
+  ok(Math.max.apply(null,ends)/Math.min.apply(null,ends)>=4,
+    'du plus econome au plus depensier, au moins un facteur quatre — '
+    +Math.min.apply(null,ends)+' a '+Math.max.apply(null,ends));
+
+  /* --- ET LES TOUCHES SUIVENT LA TABLE : « Digit1-4 » etait le nombre de
+     postures du jour ou la ligne a ete ecrite. Deux postures de plus, deux
+     touches mortes, et personne pour le dire. --- */
+  const inp=lireFichierEntree();
+  ok(inp.indexOf('<=STANCE.length')>0,'les touches de posture comptent les postures');
+  ok(inp.indexOf('Digit[1-4]')<0,'et plus aucun compte ecrit en dur');
+
+  /* --- et le cout se paie vraiment : la frenesie vide le souffle --- */
+  R(c,`S.occ='combat';E=null;EE=[];spawn();EE.forEach(x=>{x.hp=1e9;x.max=1e9;});
+    globalThis.__cout=(i)=>{S.stance=i;S.end=100;hitN=0;attack(false);return 100-S.end;};`);
+  const eco=G(c,'__cout(STANCE.findIndex(s=>s.end<=4))');
+  const fou=G(c,'__cout(STANCE.findIndex(s=>s.end>=20))');
+  ok(fou>eco*2,'la frénésie coûte bien plus que la garde basse — '+eco+' contre '+fou);
+});
+
 test('ordres — six, et deux qui ne frappent pas',()=>{
   /* Suivre, attaquer, tenir, replier : le seul choix reel etait « combien de
      degats contre combien de coups pris ». Trois curseurs sur une seule

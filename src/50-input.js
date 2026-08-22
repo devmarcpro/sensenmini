@@ -225,7 +225,7 @@ addEventListener('keydown',e=>{
   if(e.code==='Space'&&S.occ==='combat'){e.preventDefault();tryParry();}
   if(e.code==='KeyD'&&S.occ==='combat'){e.preventDefault();attack(true);}
   const enCombat=S.occ==='combat'||S.occ==='donjon';
-  if(/^Digit[1-4]$/.test(e.code)&&enCombat){S.stance=+e.code.slice(5)-1;
+  if(/^Digit[1-9]$/.test(e.code)&&enCombat&&+e.code.slice(5)<=STANCE.length){S.stance=+e.code.slice(5)-1;
     document.querySelectorAll('#stances button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.st===S.stance));}
   /* changer de cible : Tab, ou les flèches */
   if(enCombat&&(e.code==='Tab'||e.code==='ArrowRight')){e.preventDefault();cycleFocus(1);}

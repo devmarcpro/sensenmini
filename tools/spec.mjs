@@ -4761,8 +4761,42 @@ test('absence — chaque occupation y rapporte, pas seulement quatre',()=>{
   ok(pc.prof>0,'et fait franchir au moins une strate — '+pc.prof);
   ok(String(pc.r).indexOf('bloc')>=0,'et le rapport le dit aussi');
 
-  /* --- et une occupation sans cadence ne fabrique rien --- */
-  R(c,'S.rate={kill:0,harv:0,craft:0,djroom:0};S.occ="peche";S.mat={};S.food={};');
+  /* --- LA CADENCE VAUT POUR CE QU ON FAISAIT, PAS POUR CE QU ON FAIT ---
+     Le rythme etait garde par genre de geste : « harv » valait aussi bien
+     pour la mousse que pour le fer. Couper du bois puis passer au fer et
+     fermer l onglet appliquait la cadence du BOIS au FER. */
+  R(c,`S.occ='recolte';S.target='fer';S.rate={harv:60,harvSur:'bois'};
+    globalThis.__mauvaise=cadence('harv');
+    S.rate={harv:60,harvSur:'fer'};
+    globalThis.__bonne=cadence('harv');`);
+  eq(G(c,'__bonne'),60,'une cadence observee sur la matiere visee est reprise telle quelle');
+  ok(G(c,'__mauvaise')!==60,
+    'une cadence observee sur une AUTRE matiere est perimee — on recalcule',
+    'obtenu '+G(c,'__mauvaise'));
+  /* et la peche, qui partage le compteur sans viser de matiere, n est pas genee */
+  R(c,`S.occ='peche';S.target='fer';S.rate={harv:60,harvSur:'bois'};
+    globalThis.__peche=cadence('harv');`);
+  eq(G(c,'__peche'),60,'la peche partage le compteur sans viser de matiere : rien ne la perime');
+
+  /* --- LE PLAFOND SE DIT --- */
+  R(c,`S.occ='repos';S.rate={};globalThis.__long=offline(48*3600).join(' | ');`);
+  ok(G(c,'__long').indexOf('8 h créditées')>=0,
+    'une absence de deux jours annonce ce qui a ete credite et ce qui ne l a pas ete',
+    G(c,'__long'));
+  R(c,`globalThis.__court=offline(3600).join(' | ');`);
+  ok(G(c,'__court').indexOf('créditées')<0,'et une absence courte ne dit rien de tel');
+
+  /* --- UN FILON TARI LE DIT --- */
+  R(c,`S.occ='recolte';S.target='fer';S.rate={harv:60,harvSur:'fer'};
+    here().stock={fer:3};S.mat={};
+    globalThis.__sec=offline(3600).join(' | ');`);
+  ok(G(c,'__sec').indexOf('tari')>=0||G(c,'__sec').indexOf('sec')>=0,
+    'un filon qui s epuise pendant l absence le dit au retour',G(c,'__sec'));
+
+  /* --- et une occupation sans cadence ne fabrique rien ---
+     (on relache la matiere visee : sans elle, aucun calcul de repli ne
+     peut inventer une cadence) */
+  R(c,'S.rate={kill:0,harv:0,craft:0,djroom:0};S.occ="peche";S.target=null;S.mat={};S.food={};');
   R(c,'globalThis.__vide=offline(3600);');
   eq(G(c,'Object.values(S.mat).reduce((a,b)=>a+b,0)'),0,
     'sans cadence mesuree, l absence n invente rien');

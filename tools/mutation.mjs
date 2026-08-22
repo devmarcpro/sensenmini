@@ -200,6 +200,9 @@ const MUT=[
   /* le scriptorium */
   ['collection : le filtre retire ce qu on a deja','collection',[['src/48b-panel-collection.js',"    h+='<div class=\"matlist\">'+tout.filter(k=>!seulManque||!eus.includes(k)).map(k=>{","    h+='<div class=\"matlist\">'+tout.map(k=>{"]]],
   ['collection : le plus pres du bout vient en premier','collection',[['src/48b-panel-collection.js','    .filter(f=>f.m>0).sort((x,y)=>x.m-y.m);','    .filter(f=>f.m>0);']]],
+  ['veille : la cadence se perime en changeant de matiere','absence',[['src/19-idle.js',"  const bonne=k==='harv'?(S.occ!=='recolte'||R.harvSur===S.target)","  const bonne=k==='harv'?true"]]],
+  ['veille : le plafond de huit heures se dit','absence',[['src/19-idle.js','  if(sec>capH*3600+60)','  if(false)']]],
+  ['veille : le filon tari se dit','absence',[['src/19-idle.js','    if(n<veut)r.push(n?','    if(false)r.push(n?']]],
   ['corruption : le foyer rayonne sur les diagonales','corruption',[['src/27-clock.js','        if(!dx&&!dy)continue;'+String.fromCharCode(10)+'        monte(S.world[key(c.x+dx,c.y+dy)],1);','        if(dx&&dy)continue;'+String.fromCharCode(10)+'        monte(S.world[key(c.x+dx,c.y+dy)],1);']]],
   ['corruption : le foyer a un plafond','corruption',[['src/27-clock.js','      const plaf=Math.min(100,(c.corr0||0)+(maj?25:10));','      const plaf=100;']]],
   ['corruption : le monde revient a son bruit','corruption',[['src/27-clock.js','    if(z.corr>base)z.corr=Math.max(base,z.corr-1);','    if(false)z.corr=Math.max(base,z.corr-1);']]],

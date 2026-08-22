@@ -380,6 +380,51 @@ async function runScenario(scen){
   flushErrors('rechargement');
   if(!back)report(scen.name,'sauvegarde','la partie n\'est pas rechargee depuis localStorage — '
     +await evalJs('JSON.stringify({race:S.race,gate:document.getElementById("gate").hidden,saved:(localStorage.getItem(KEY)||"").length,ready:document.readyState})'));
+  /* ==================================================================
+     LE JEU DOIT TRAVAILLER PENDANT QU IL EST FERME.
+     C est la promesse d un idle, et elle ne se verifie pas dans un bac a
+     sable : elle passe par le vrai stockage du navigateur, la vraie date,
+     le vrai demarrage. On se met a miner du fer, on ferme, on recule
+     l horloge de la sauvegarde d une heure, et l on rouvre. Il faut
+     retrouver DEUX choses : le fer mine, et la pioche encore en main.
+     La seconde compte autant que la premiere — revenir a l arret oblige
+     a rappuyer sur un bouton a chaque session. */
+  await evalJs(`(()=>{const c=here();c.stock=c.stock||{};c.stock.fer=99999;
+    S.target='fer';S.occ='recolte';S.mat.fer=0;S.rate={};S.cnt={};
+    /* une pioche capable de mordre le fer, pour que la mesure porte sur
+       l absence et non sur l outil */
+    const p=OUTIL.pioche.comp.map(ct=>partFor(ct,['acier','chene']));
+    p.push(partFor('fixations',['fer']));
+    S.eq.outil=mkItem('outil','pioche',p,1.6);
+    save();return 1;})()`);
+  await sleep(200);
+  /* on recule l horodatage de la sauvegarde d une heure, sans y toucher autrement */
+  /* ON NEUTRALISE LA SAUVEGARDE AVANT DE RECULER L HORLOGE.
+     Premiere version : on reculait l horodatage, puis on naviguait — et
+     Page.navigate declenche pagehide, donc save(), qui reecrivait l heure
+     courante par-dessus. Le fer arrivait a zero et le probe accusait le jeu
+     d un defaut qui etait le sien. On coupe donc la sauvegarde de sortie
+     juste avant, ce qui est exactement ce qu on veut simuler : une partie
+     fermee il y a une heure. */
+  const recule=await evalJs(`(()=>{try{const d=JSON.parse(localStorage.getItem(KEY));
+    d.t=Date.now()-3600*1000;localStorage.setItem(KEY,JSON.stringify(d));
+    save=()=>{};
+    return d.occ+'/'+d.target;}catch(e){return 'erreur '+e.message;}})()`);
+  if(recule!=='recolte/fer')report(scen.name,'veille','l occupation ne survit pas a la sauvegarde — '+recule);
+  await cdp('Page.navigate',{url});
+  let repris=false;
+  for(let i=0;i<40&&!repris;i++){
+    await sleep(150);
+    repris=await evalJs('document.readyState==="complete"&&!!S&&!!S.race').catch(()=>false);
+  }
+  flushErrors('reprise apres absence');
+  const veille=await evalJs(`JSON.stringify({fer:S.mat.fer||0,occ:S.occ,cible:S.target,
+    outil:toolFor('metal').n,peut:canHarvest('fer'),cad:cadence('harv'),stock:stockOf(here(),'fer')})`);
+  const V=JSON.parse(veille||'{}');
+  if(!(V.fer>0))report(scen.name,'veille','une heure passee la pioche en main ne rapporte rien — '+veille);
+  if(V.occ!=='recolte'||V.cible!=='fer')
+    report(scen.name,'veille','on ne reprend pas la ou on s etait arrete — '+veille);
+
   /* export / import : le texte doit recharger la meme partie */
   const io=await evalJs(`(()=>{try{
     for(let x=-8;x<=8;x++)for(let y=-8;y<=8;y++)cell(x,y).seen=true;

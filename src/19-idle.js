@@ -84,6 +84,16 @@ function rotateRack(){
 function noteRate(k){S.cnt=S.cnt||{};S.cnt[k]=(S.cnt[k]||0)+1;}
 function rollRates(){
   S.rate=S.rate||{};S.cnt=S.cnt||{};
+  /* UNE CADENCE VAUT POUR CE QU'ON FAISAIT, PAS POUR CE QU'ON FAIT.
+     Le rythme etait garde par GENRE de geste : « harv » valait aussi bien
+     pour la mousse que pour le fer. Un joueur qui coupait du bois dix
+     minutes, passait au fer et fermait l'onglet repartait avec la cadence
+     du BOIS appliquee au FER — trois fois trop, et l'inverse tout aussi
+     faux dans l'autre sens. On note donc SUR QUOI la cadence a ete
+     observee ; changer de matiere la perime, et l'on retombe sur le
+     calcul exact, qui connait le temps d'un coup de pioche a la seconde. */
+  if(S.cnt.harv>0)S.rate.harvSur=S.target||null;
+  if(S.cnt.craft>0)S.rate.craftSur=S.craft?S.craft.mk:null;
   ['kill','harv','craft','djroom'].forEach(k=>{
     const v=S.cnt[k]||0;
     S.rate[k]=S.rate[k]===undefined?v:S.rate[k]*.5+v*.5;
@@ -96,8 +106,15 @@ function rollRates(){
    d'un tueur se déduit de son arme. Mieux vaut une estimation prudente
    qu'un rapport vide. */
 function cadence(k){
-  const r=(S.rate||{})[k];
-  if(r>0)return r;
+  const R=S.rate||{};
+  const r=R[k];
+  /* la cadence observee ne vaut que si elle a ete observee sur CE geste-la */
+  /* la peche et le percement partagent la cadence « harv » sans avoir de
+     matiere visee : la question ne se pose que pour la recolte */
+  const bonne=k==='harv'?(S.occ!=='recolte'||R.harvSur===S.target)
+             :k==='craft'?R.craftSur===(S.craft?S.craft.mk:null)
+             :true;
+  if(r>0&&bonne)return r;
   if(k==='harv'&&S.target&&canHarvest(S.target))return 60/harvestTime(S.target)*.8;
   if(k==='craft'&&S.craft&&craftCan()){
     const j=S.craft,skk=j.t==='form'?STATION[FORM[j.f].st].sk:STATION[COMP[j.ct].st].sk;
@@ -120,6 +137,14 @@ function offline(sec){
   const coupe=Math.min(sec,capH*3600);
   const min=coupe/60,eff=.6;
   const r=[];
+  /* LE PLAFOND NE SE DISAIT NULLE PART. On revenait apres deux jours, la
+     fenetre annoncait « Absence de 48 h », et les chiffres n'en couvraient
+     que huit. Rien ne l'expliquait : le joueur en concluait, a raison de son
+     point de vue, que le jeu ne travaille pas quand il est ferme. Huit
+     heures est une regle, pas un bug — mais une regle tue ment. */
+  if(sec>capH*3600+60)
+    r.push('<span class="bd">'+capH+' h créditées sur '+Math.round(sec/3600)
+      +' h d absence — au-dela, le monde t attend sans avancer</span>');
   S.day+=coupe/DAY;
   const w=Math.floor(S.day/WEEK);
   let nw=0;while(S.week<w&&nw<24){S.week++;weekly();nw++;}
@@ -155,12 +180,18 @@ function offline(sec){
       r.push(n+' créatures abattues, +'+g+' or');
     }
   } else if(S.occ==='recolte'&&S.target&&rt.harv>0){
-    const n=takeStock(c,S.target,Math.round(rt.harv*min*eff));
+    const veut=Math.round(rt.harv*min*eff);
+    const n=takeStock(c,S.target,veut);
     if(n>0){const m=MAT[S.target];
       S.mat[S.target]=(S.mat[S.target]||0)+n;
       if(PLANTE[S.target])addFood(S.target,n);
       gainXp(CAT[m.c].sk,n*m.d);
       r.push(n+' × '+matName(S.target)+' récoltés');}
+    /* UN FILON QUI S'EPUISE PENDANT L'ABSENCE NE LE DISAIT PAS. On revenait
+       avec un tiers de ce qu'on attendait, sans une ligne pour expliquer
+       pourquoi, et la pioche continuait de battre une case a sec. */
+    if(n<veut)r.push(n?"<span class=\"bd\">le filon s'est tari — il n'y avait plus que "+n+" à prendre</span>"
+                      :"<span class=\"bd\">le filon était déjà à sec — rien à prendre</span>");
   } else if(S.occ==='atelier'&&S.craft&&rt.craft>0){
     const n=Math.round(rt.craft*min*eff);
     let fait=0;

@@ -64,6 +64,10 @@ const COLLECTION={
     tout:()=>[...new Set(Object.keys(PECHE).flatMap(b=>Object.keys(PECHE[b])))],
     nom:k=>MAT[k]?matName(k):(PARTS.find(p=>p.k===k)||{n:k}).n},
   race:{n:'Races rencontrées',g:'民',tout:()=>Object.keys(RACE),nom:k=>RACE[k].n},
+  /* Douze cultures (C.9), et rien ne disait au joueur qu'elles existaient :
+     on lisait « culture Andine » sur la fiche d'un royaume sans savoir qu'il
+     y en avait onze autres a trouver. */
+  culture:{n:'Cultures croisées',g:'名',tout:()=>Object.keys(CULT),nom:k=>CULT[k].n},
 };
 const COLK=Object.keys(COLLECTION);
 
@@ -117,8 +121,10 @@ function colBalayer(){
     collecte('biome',c.b);
     if(c.poi)collecte('poi',c.poi);
   }
-  (S.npcs||[]).forEach(n=>{if(n.race)collecte('race',n.race);});
+  (S.npcs||[]).forEach(n=>{if(n.race)collecte('race',n.race);if(n.cult)collecte('culture',n.cult);});
   if(S.race)collecte('race',S.race);
+  /* les royaumes connus : c'est la qu'on rencontre le plus de cultures */
+  for(const k in (S.kd||{}))(S.kd[k]||[]).forEach(r=>{if(r&&r.cult)collecte('culture',r.cult);});
   /* ce qu'on porte et ce qu'on a en sac : armes, outils, parures, effets */
   const pieces=(S.items||[]).concat(Object.values(S.eq||{})).filter(Boolean);
   pieces.forEach(it=>{

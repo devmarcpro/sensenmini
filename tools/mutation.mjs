@@ -96,6 +96,9 @@ const MUT=[
   ['symetrie : le souffle des creatures','symetrie',[['src/28-loop.js',"    if(e.w<0&&!crePeutFrapper(e))continue;",'']]],
   ['symetrie : la depense','symetrie',[['src/28-loop.js','{creDepense(e);resolveHit(S.guard?1:0,e);}','resolveHit(S.guard?1:0,e);']]],
   ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,zk):tgt.arm)",'tgt.arm']]],
+  /* les cultures */
+  ['culture : douze pour un humain','cultures',[['src/05-data-social.js',"cult:['latine','nordique','germanique','hellenique','slave','celte','sino','nipponne','arabo','persane','bantoue','andine'],pot:{}},","cult:['latine','nordique'],pot:{}},"]]],
+  ['culture : la collection les compte','cultures',[['src/48-collection.js',"  for(const k in (S.kd||{}))(S.kd[k]||[]).forEach(r=>{if(r&&r.cult)collecte('culture',r.cult);});",'']]],
   /* les proies */
   ['proie : elle ne riposte pas','proies',[['src/28-loop.js',"    if(typeof creFuirTick==='function'&&creFuirTick(e,dt)){e.w=-1;e.tt=0;continue;}",'']]],
   ['proie : enracinee, plus de sortie','proies',[['src/24-combat.js',"  if(hasStatus(e,'enracine'))return 0;",'']]],

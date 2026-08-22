@@ -1136,6 +1136,32 @@ test('anatomie — le coup vaut ce qu il touche, et la visee remplace le de',()=
   ok(torse>pieds&&torse<tete,'et le torse est entre les deux');
 });
 
+test('cultures — douze, toutes reelles, toutes atteignables',()=>{
+  /* C.9 en annonce douze et nous en avions dix, dont trois inventees pour des
+     races inventees. Une culture ne porte AUCUNE regle de jeu, seulement des
+     sons : chacune elargit d'un coup les noms de royaume, de capitale, de
+     souverain, d'enfant et de villageois. */
+  const c=nouveau();
+  const reelles=['latine','nordique','germanique','hellenique','slave','celte',
+    'sino','nipponne','arabo','persane','bantoue','andine'];
+  reelles.forEach(k=>eq(G(c,'!!CULT.'+k),true,'la culture '+k+' existe'));
+  eq(G(c,'RACE.humain.cult.length'),12,'et un humain peut naître dans chacune des douze');
+  /* chacune doit VRAIMENT produire des noms, et des noms a elle */
+  R(c,`globalThis.__noms=k=>{const s={};for(let i=0;i<200;i++)s[cultName(k)]=1;return Object.keys(s).length;};`);
+  const pauvres=reelles.filter(k=>G(c,'__noms("'+k+'")')<20);
+  ok(pauvres.length===0,'chacune tire au moins vingt noms distincts',
+    pauvres.length?'trop pauvres : '+pauvres.join(', '):'');
+  /* et deux cultures ne doivent pas rendre le meme nom : ce sont des sons */
+  R(c,`globalThis.__croise=(a,b)=>{const s={};for(let i=0;i<300;i++)s[cultName(a)]=1;
+    let n=0;for(let i=0;i<300;i++)if(s[cultName(b)])n++;return n;};`);
+  ok(G(c,'__croise("germanique","bantoue")')===0,'deux cultures ne se confondent pas');
+  /* la collection les compte */
+  eq(G(c,'COLLECTION.culture.tout().length'),G(c,'Object.keys(CULT).length'),
+    'la collection porte toutes les cultures');
+  R(c,`S.col={};S.kd={r:[{cult:'andine'}]};colBalayer();`);
+  eq(G(c,'colAvoir("culture").length>0'),true,'un royaume croisé inscrit sa culture');
+});
+
 test('proies — ce qui fuit ne riposte pas, et se rattrape',()=>{
   /* E.3.6 : « fuit — herbivores et proies qui s'ecartent et NE RIPOSTENT
      JAMAIS, meme provoques ». Le drapeau existait et ne servait qu'a un repli

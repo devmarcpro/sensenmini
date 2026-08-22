@@ -4196,6 +4196,42 @@ test('affixes — chacun fait ce que sa fiche annonce',()=>{
   eq(G(c,'hasStatus(E,"poison")'),true,'« venin » empoisonne vraiment');
 });
 
+test('absence — chaque occupation y rapporte, pas seulement quatre',()=>{
+  /* Le resume d'absence connaissait QUATRE occupations : combat, recolte,
+     atelier, exploration. Il en manquait deux, et pas les moindres — la
+     PECHE, qui est une voie de subsistance entiere, et le PERCEMENT, la
+     seule facon de descendre. Fermer l'onglet la ligne a l'eau ne rapportait
+     rien ; le fermer la pioche en main rapportait plein. Et rien ne le
+     disait : aucune branche ne correspondait, le rapport se taisait. */
+  const c=nouveau();
+  R(c,`globalThis.__abs=(occ,avant)=>{S.mat={};S.food={};S.rate={kill:6,harv:6,craft:6,djroom:0};
+      S.occ=occ;if(avant)avant();
+      const r=offline(3600);
+      return {r:r.join(' | '),mats:Object.values(S.mat).reduce((a,b)=>a+b,0),
+        vivres:Object.values(S.food||{}).reduce((a,b)=>a+b,0),prof:here().depth};};`);
+
+  /* --- la peche --- */
+  R(c,"here().b='cote';here().poi=null;here().dj=null;meteo=()=>'clair';");
+  const pe=G(c,'__abs("peche")');
+  ok(pe.mats+pe.vivres>0,'une absence la ligne a l eau rapporte des prises');
+  ok(String(pe.r).indexOf('prise')>=0,'et le rapport le dit');
+
+  /* --- le percement --- */
+  R(c,`S.eq={};S.items=[{id:'p',kind:'outil',fn:'pioche',slot:'main1',
+      parts:[{ct:'fixations',f:'brut',mk:'adamant'}],q:3,dur:60,durBase:20,de:10,
+      mana:0,ela:8,vec:[.2,.2,.2,.2,.2],nom:'essai'}];`);
+  const pc=G(c,'__abs("percer",()=>{here().depth=0;here().dug=0;})');
+  ok(pc.mats>0,'une absence la pioche en main perce des blocs');
+  ok(pc.prof>0,'et fait franchir au moins une strate — '+pc.prof);
+  ok(String(pc.r).indexOf('bloc')>=0,'et le rapport le dit aussi');
+
+  /* --- et une occupation sans cadence ne fabrique rien --- */
+  R(c,'S.rate={kill:0,harv:0,craft:0,djroom:0};S.occ="peche";S.mat={};S.food={};');
+  R(c,'globalThis.__vide=offline(3600);');
+  eq(G(c,'Object.values(S.mat).reduce((a,b)=>a+b,0)'),0,
+    'sans cadence mesuree, l absence n invente rien');
+});
+
 test('absence — de la seconde au siècle, rien ne casse',()=>{
   const c=nouveau();
   /* Le cœur d'un jeu idle : ce qui se passe pendant qu'on n'est pas là.

@@ -169,6 +169,45 @@ function offline(sec){
       fait++;}
     if(fait)r.push(fait+' pièces façonnées');
     if(fait<n)r.push('l\'ouvrage s\'est arrêté faute de matière');
+  } else if(S.occ==='peche'&&rt.harv>0){
+    /* ==================================================================
+       PARTIR EN PECHANT NE RAPPORTAIT RIEN.
+       Le resume d'absence connait quatre occupations : le combat, la
+       recolte, l'atelier, l'exploration. Il en manquait DEUX, et pas les
+       moindres — la PECHE, qui est une voie de subsistance entiere, et le
+       PERCEMENT, qui est la seule facon de descendre. Un joueur qui ferme
+       l'onglet la ligne a l'eau revenait les mains vides, la ou celui qui
+       le fermait la pioche en main revenait charge. Rien ne le disait :
+       aucune branche ne correspondait, et le rapport se taisait.
+       ================================================================== */
+    const n=Math.round(rt.harv*min*eff);
+    let pris=0;
+    for(let i=0;i<Math.min(n,400);i++){
+      if(pecheBlocage())break;
+      const k=pecheTirage(),q=1+Math.floor(lv('peche')/14);
+      if(PECHE_FOOD[k])addFood(foodKey(k,domi(cellVec(c)),PECHEGRP[k]||'Vie'),q);
+      else if(MAT[k]){S.mat[k]=(S.mat[k]||0)+q;if(PLANTE[k])addFood(k,q);}
+      collecte('prise',k);gainXp('peche',6+(MAT[k]?MAT[k].d:2));
+      pris+=q;
+    }
+    if(pris)r.push(pris+' prises remontées');
+    else r.push('la ligne n\'a rien donné — l\'eau était fermée');
+  } else if(S.occ==='percer'&&rt.harv>0){
+    const next=Math.min(5,c.depth+1),rock=STRATA[next].rock;
+    if(!canPierce(rock))r.push('la roche a rebondi — il faut un meilleur outil');
+    else{
+      const n=Math.round(rt.harv*min*eff);
+      let blocs=0,strates=0;
+      for(let i=0;i<Math.min(n,600);i++){
+        c.dug=(c.dug||0)+1;S.mat[rock]=(S.mat[rock]||0)+1;blocs++;
+        gainXp('minage',MAT[rock].d*1.5);
+        if(c.dug>=pierceNeed(c.depth)){
+          c.dug=0;c.depth=Math.min(5,c.depth+1);strates++;
+          if(c.depth>=5)break;
+        }
+      }
+      r.push(blocs+' blocs perces'+(strates?' · '+strates+' strate'+(strates>1?'s':'')+' franchie'+(strates>1?'s':''):''));
+    }
   } else if(S.occ==='explore'){
     const n=Math.round(min/3*eff);let vu=0;
     for(let i=0;i<n;i++){const b=explorePulseSilent();if(b)vu++;}

@@ -141,6 +141,8 @@ const MUT=[
   ['geste : il s inscrit quand il s arme','gestes',[['src/24-combat.js',"  if(typeof collecte==='function')collecte('geste',e.pat);",'']]],
   ['geste : le souffle porte loin','gestes',[['src/23c-creatures.js',"souffle: {n:'souffle',g:'息',wm:1.7,dm:1.05,hits:1,aoe:1,dist:1,st:'brulure'},","souffle: {n:'souffle',g:'息',wm:1.7,dm:1.05,hits:1,aoe:1,st:'brulure'},"]]],
   ['geste : la variete n est pas une remise','gestes',[['src/23c-creatures.js',"harcele: {n:'harcèlement',g:'翔',wm:.55,dm:.58,","harcele: {n:'harcèlement',g:'翔',wm:.55,dm:.20,"]]],
+  ['absence : la peche rapporte','absence',[['src/19-idle.js',"  } else if(S.occ==='peche'&&rt.harv>0){","  } else if(false){"]]],
+  ['absence : le percement descend','absence',[['src/19-idle.js',"  } else if(S.occ==='percer'&&rt.harv>0){","  } else if(false){"]]],
   ['absence : elle collectionne aussi','titres',[['src/19-idle.js','    colBalayer();','']]],
   ['absence : elle nomme les titres tombes','titres',[['src/19-idle.js','      const gagnes=hfAcquis().filter(k=>avant.indexOf(k)<0);','      const gagnes=[];']]],
   /* les titres */

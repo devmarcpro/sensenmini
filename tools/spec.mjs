@@ -2070,6 +2070,41 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('attelages — huit, et le terrain decide',()=>{
+  /* Cinq attelages pour un monde de vingt biomes : trois roulants, deux
+     flottants, et rien qui reponde a ce que le monde a de particulier. La
+     neige avale une charrette ; une crete ne laisse passer ni roue ni voile ;
+     et les especes qui se dressent ne servaient qu'a se battre. */
+  const c=nouveau();
+  ok(G(c,'VEHK.length')>=8,'huit attelages au moins — '+G(c,'VEHK.length'));
+  /* chacun doit dire ou il sert */
+  eq(G(c,'VEHK.every(k=>{const D=VEHICULE[k];return !!D.n&&!!D.g&&!!D.d&&D.vit>0&&D.pv>0;})'),true,
+    'chacun a un nom, un glyphe, une explication, une vitesse et une structure');
+
+  /* --- LA ROUE NE PASSE PAS LA MONTAGNE, LA BETE SI --- */
+  R(c,`globalThis.__util=(k,biome)=>{S.vehicule={k,pv:VEHICULE[k].pv,crie:0};
+      here().b=biome;return vehUtile(here());};`);
+  eq(G(c,'__util("charrette","montagne")'),false,'une charrette ne monte pas en montagne');
+  R(c,"S.comps=[{id:'b',nom:'x',esc:1,type:'bete',lv:5,hp:20,max:20,mood:80}];");
+  eq(G(c,'__util("somme","montagne")'),true,'une bête de somme, si');
+  /* --- et une bete de somme demande une bete --- */
+  R(c,'S.comps=[];');
+  eq(G(c,'__util("somme","plaine")'),false,'sans bête apprivoisée, le harnais reste au sol');
+
+  /* --- LE TRAINEAU GLISSE SUR LA NEIGE ET RACLE AILLEURS --- */
+  R(c,`S.comps=[];S.vehicule={k:'traineau',pv:VEHICULE.traineau.pv,crie:0};S.day=45;
+    here().b='toundra';globalThis.__froid=vehVitesse(1,0,here());
+    here().b='desert';globalThis.__chaud=vehVitesse(1,0,here());`);
+  ok(G(c,'__froid')<G(c,'__chaud'),'le traîneau va plus vite sur la neige que sur le sable — '
+    +G(c,'__froid').toFixed(2)+' contre '+G(c,'__chaud').toFixed(2));
+
+  /* --- et un attelage sans station se batit quand meme --- */
+  eq(G(c,'!!VEHICULE.somme&&!VEHICULE.somme.st'),true,'la bête de somme ne demande aucun atelier');
+  R(c,"S.carry=[];S.vehicule=null;globalThis.__b=vehBlocage?vehBlocage('somme'):null;");
+  ok(String(G(c,'__b')||'').indexOf('atelier')<0&&String(G(c,'__b')||'').indexOf('Établi')<0,
+    'et le jeu ne reclame pas une station qu elle ne demande pas');
+});
+
 test('passifs — le resume les dit tous, pas seulement les sept d hier',()=>{
   /* Le resume des passifs nommait sept champs sur dix-huit. Un joueur qui
      equipait un passif d'ALLONGE ou de CRITIQUE ne voyait rien changer sur

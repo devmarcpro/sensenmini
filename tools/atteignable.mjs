@@ -230,7 +230,13 @@ bilan('statuts que quelque chose pose',Object.keys(G('STATUS')),new Set([
    forme qu'aucune station ne produit est une entree de catalogue. */
 const vehOk=new Set(G('VEHK').filter((k,i)=>{
   const D=G('VEHICULE[VEHK['+i+']]');
-  if(!G('!!STATION["'+D.st+'"]'))return false;
+  /* UN ATTELAGE SANS STATION N'EST PAS UN ATTELAGE SANS ORIGINE. La bete de
+     somme ne se batit pas a l'etabli : elle se harnache, et ce qu'elle demande
+     est une bete apprivoisee, pas un atelier. La regle « sa station existe »
+     devient donc « sa station existe, OU il n'en demande aucune » — sans quoi
+     l'audit condamne un contenu parfaitement atteignable au motif qu'il n'a
+     pas la forme des autres. */
+  if(D.st&&!G('!!STATION["'+D.st+'"]'))return false;
   return D.cout.every(([r])=>r.startsWith('form:')?G('!!FORM["'+r.slice(5)+'"]'):G('!!CAT["'+r+'"]'));
 }));
 bilan('vehicules constructibles',G('VEHK'),vehOk,

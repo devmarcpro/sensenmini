@@ -36,6 +36,30 @@ const VEHICULE={
   voilier:{n:'Voilier',g:'船',eau:1,vit:.40,cargo:34,pv:95,lv:26,voile:1,
     st:'etabli',cout:[['bois',34],['form:tissu',18],['form:lingot',8],['form:tanne',6]],
     d:'la côte devient une route : moitié moins de temps, et trente-quatre objets de plus'},
+  /* ==================================================================
+     CINQ ATTELAGES POUR UN MONDE DE VINGT BIOMES.
+     Trois roulants et deux flottants — et rien qui reponde a ce que le
+     monde a de particulier. La neige avale une charrette ; une crete ne
+     laisse passer ni roue ni voile ; et les vingt-sept especes qui se
+     dressent ne servaient qu'a se battre, jamais a porter.
+
+     Trois de plus, chacun pour un terrain que rien ne couvrait :
+       橇 LE TRAINEAU — la neige et la glace, la ou la roue s'enfonce.
+       駄 LA BETE DE SOMME — lente, mais elle passe PARTOUT, y compris la
+         montagne, et elle porte beaucoup. C'est le seul attelage qui ne
+         demande pas d'atelier : il demande une bete apprivoisee.
+       鞍 LA SELLE — legere, rapide, presque rien en charge : monter plutot
+         que trainer. Elle aussi tient a l'apprivoisement.
+     ================================================================== */
+  traineau:{n:'Traîneau',g:'橇',eau:0,vit:.55,cargo:20,pv:50,lv:12,neige:1,
+    st:'etabli',cout:[['bois',20],['form:tanne',8],['form:lingot',2]],
+    d:'sur la neige et la glace il glisse ; ailleurs il racle et vaut a peine mieux que les jambes'},
+  somme:{n:'Bête de somme',g:'駄',eau:0,vit:.66,cargo:30,pv:80,lv:10,bete:1,tout:1,
+    st:null,cout:[['form:tanne',10],['vegetal',12],['bois',6]],
+    d:'lente et sûre — elle passe partout, montagne comprise, et porte trente objets. Il faut une bête apprivoisée'},
+  selle:{n:'Selle',g:'鞍',eau:0,vit:.44,cargo:4,pv:55,lv:16,bete:1,tout:1,
+    st:'etabli',cout:[['form:tanne',12],['bois',4],['form:lingot',3]],
+    d:'monter au lieu de traîner : le plus rapide sur terre, et presque rien en charge. Il faut une bête apprivoisée'},
 };
 const VEHK=Object.keys(VEHICULE);
 /* Les biomes où l'on navigue. Une barque sur une plaine n'est pas lente :
@@ -73,7 +97,18 @@ function vehUtile(c){
   if(!v||v.pv<=0)return false;
   /* une voile dans une tempete ne sert a rien du tout */
   if(D.voile&&meteoVoile(c)<=0)return false;
-  return D.eau?surEau(c):!surEau(c);
+  if(D.eau)return surEau(c);
+  if(surEau(c))return false;
+  /* UNE BETE PASSE LA OU UNE ROUE NE PASSE PAS, et c'est tout ce qui la
+     distingue : montagne, cretes, karst, banquise. Un attelage roulant y
+     reste au pied de la pente. */
+  const z=c||here();
+  const rude=['montagne','montcris','karst','banquise','marecage','marcorr','jungle'].includes(z.b);
+  if(rude&&!D.tout)return false;
+  /* et une bete de somme demande une bete : sans escorte apprivoisee, la
+     selle est un objet de cuir pose dans un coin */
+  if(D.bete&&!(S.comps||[]).some(x=>x.esc&&!x.dead&&x.type==='bete'))return false;
+  return true;
 }
 /* ce que le véhicule ajoute au dos — et seulement là où il peut suivre */
 const vehCargo=()=>vehUtile()?vehDef().cargo:0;
@@ -85,6 +120,13 @@ function vehVitesse(dx,dy,c){
   let m=D.vit;
   /* l'usure compte : un essieu fendu ne va pas vite */
   m*= 1+(1-v.pv/D.pv)*.45;
+  /* LE TRAINEAU N'A DE SENS QUE SUR LA NEIGE. Ailleurs il racle : c'est un
+     attelage de saison et de terre froide, pas un attelage de plus. */
+  if(D.neige){
+    const z=c||here();
+    const froid=['toundra','banquise','montcris','taiga'].includes(z.b)||(typeof seasonIdx==='function'&&seasonIdx()===3);
+    m*=froid?.82:1.55;
+  }
   if(D.voile){
     /* « vent violent : vehicules a voiles ingouvernables » (E.24/E.28). Un
        zero ici veut dire qu'on ne prend pas la mer, pas qu'on y va lentement :
@@ -124,7 +166,7 @@ function vehReparer(){
   const v=vehicule(),D=vehDef();
   if(!v)return toast('Aucun véhicule');
   if(v.pv>=D.pv)return toast(D.n+' est en bon état');
-  if(!hasStation(D.st))return toast('Il faut '+STATION[D.st].n);
+  if(D.st&&!hasStation(D.st))return toast('Il faut '+STATION[D.st].n);
     const quart=D.cout.map(([r,n])=>[r,Math.max(1,Math.round(n/4))]);
   if(!payCost(quart))return toast('Il manque : '+costTxt(quart));
   v.pv=D.pv;v.crie=0;
@@ -137,7 +179,7 @@ function vehReparer(){
 function vehBlocage(k){
   const D=VEHICULE[k];
   if(!D)return 'inconnu';
-  if(!hasStation(D.st))return 'il faut '+STATION[D.st].n;
+  if(D.st&&!hasStation(D.st))return 'il faut '+STATION[D.st].n;
   if(lv('menuiserie')<D.lv)return 'Menuiserie '+D.lv+' (tu en as '+lv('menuiserie')+')';
   /* on ne paie pas ici : on regarde seulement si l on pourrait */
   if(!D.cout.every(([w,n])=>w.startsWith('form:')

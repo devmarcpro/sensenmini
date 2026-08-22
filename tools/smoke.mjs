@@ -120,9 +120,30 @@ async function runScenario(scen){
   };
 
   const url=DISTANT||('http://127.0.0.1:'+PORT+'/index.html');
-  await cdp('Page.navigate',{url});await sleep(600);
+  /* ==================================================================
+     UN DELAI FIXE APRES UNE NAVIGATION N'EST PAS UNE CONDITION.
+     Six cents millisecondes suffisaient presque toujours ; la fois ou
+     elles n'ont pas suffi, la sonde a evalue « localStorage.clear() »
+     sur une page a moitie chargee, KEY n'existait pas encore, et la
+     carte de naissance sortait a zero case. Elle a donc rapporte deux
+     defauts du JEU qui n'en etaient pas — c'est le pire genre de faux
+     positif, celui qui envoie chercher au mauvais endroit.
+
+     On attend que la page soit VRAIMENT prete : document complet, et le
+     code du jeu charge — KEY et S sont les deux derniers a apparaitre.
+     ================================================================== */
+  const attendrePret=async(ou)=>{
+    for(let i=0;i<60;i++){
+      const ok=await evalJs('document.readyState==="complete"&&typeof KEY!=="undefined"&&typeof S!=="undefined"&&!!document.getElementById("gate")');
+      if(ok)return true;
+      await sleep(100);
+    }
+    report(scen.name,'chargement','la page n est pas prete apres six secondes ('+ou+')');
+    return false;
+  };
+  await cdp('Page.navigate',{url});await attendrePret('premier chargement');
   await evalJs('localStorage.clear()');
-  await cdp('Page.navigate',{url});await sleep(900);
+  await cdp('Page.navigate',{url});await attendrePret('rechargement');
   flushErrors('chargement');
   await shot('1-gate');await checkOverflow('porte de creation');
   /* carte de naissance : un tap sur une case doit la selectionner */

@@ -87,7 +87,7 @@ const MUT=[
   ['vehicule : cargo','vehicules',[['src/10-craft.js',
     "+(typeof vehCargo==='function'?vehCargo():0);",';']]],
   ['vehicule : terrain','vehicules',[['src/22b-vehicules.js',
-    'return D.eau?surEau(c):!surEau(c);','return true;']]],
+    'if(D.eau)return surEau(c);','if(D.eau)return true;']]],
   ['vehicule : vent','vehicules',[['src/22b-vehicules.js','m*=(1+malus-aide)/Math.max(.2,mv2);','']]],
   ['vehicule : usure','vehicules',[['src/22b-vehicules.js',
     'm*= 1+(1-v.pv/D.pv)*.45;','']]],
@@ -132,6 +132,10 @@ const MUT=[
   ['plat : le panneau l annonce','plats',[['src/36-panel-table.js',"       return '<div class=\"meta\">Cela donnera : <b>'+pl.g+' '+pl.n+'</b> — '+pl.d","       return '';const z=pl.d"]]],
   ['plat : le compte des recettes','plats',[['src/36-panel-table.js',"  h+='<div class=\"card\"><div class=\"meta\">Recettes reconnues : <b>'+vus.length+' / '+PLAT.length+'</b> — '","  h+='<div class=\"card\"><div class=\"meta\">'+('"]]],
   ['passif : le resume se calcule','passifs',[['src/35-panel-magie.js','  const dits=Object.keys(PA).filter(k=>PA[k])',"  const dits=['dmg','pierce','win'].filter(k=>PA[k])"]]],
+  /* les attelages */
+  ['attelage : la roue ne monte pas','attelages',[['src/22b-vehicules.js','  if(rude&&!D.tout)return false;','']]],
+  ['attelage : une bete demande une bete','attelages',[['src/22b-vehicules.js',"  if(D.bete&&!(S.comps||[]).some(x=>x.esc&&!x.dead&&x.type==='bete'))return false;",'']]],
+  ['attelage : le traineau veut de la neige','attelages',[['src/22b-vehicules.js','    m*=froid?.82:1.55;','    m*=1;']]],
   /* les plats */
   ['plat : le plus exigeant gagne','plats',[['src/14-food.js','  for(const p of PLAT){let ok=false;try{ok=!!p.quand(t);}catch(e){ok=false;}if(ok)return p;}','  return PLAT[PLAT.length-1];']]],
   ['plat : il entre dans la collection','plats',[['src/14-food.js',"  collecte('plat',plat.k);",'']]],

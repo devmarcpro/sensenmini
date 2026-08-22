@@ -83,7 +83,7 @@ function render(){
   g('Hp',S.hp,maxHp());g('En',S.end,100);g('Ma',S.mana,maxMana());g('Fa',S.faim,100);
   const st2=$('hStat');
   if(st2)st2.innerHTML=(S.st&&S.st.length)?statusTxt(S):'';
-  if(sceneMode!==S.occ+(S.target||'')+(S.craft?S.craft.mk+(S.craft.ct||S.craft.f):'')+(EE.length>1?'g':''))buildScene();
+  if(sceneMode!==S.occ+(S.target||'')+(S.craft?S.craft.mk+(S.craft.ct||S.craft.f):'')+(EE.length>1?'g':'')+'|'+S.pos[0]+','+S.pos[1]+'|'+S.week)buildScene();
   if(S.occ==='combat'||S.occ==='donjon'){renderCombat();return;}
   if(S.occ==='recolte'&&S.target){
     const t=harvestTime(S.target),p=$('hProg');
@@ -232,7 +232,7 @@ function renderCombat(){
 
 let sceneMode='';
 function buildScene(){
-  sceneMode=S.occ+(S.target||'')+(S.craft?S.craft.mk+(S.craft.ct||S.craft.f):'')+(EE.length>1?'g':'');
+  sceneMode=S.occ+(S.target||'')+(S.craft?S.craft.mk+(S.craft.ct||S.craft.f):'')+(EE.length>1?'g':'')+'|'+S.pos[0]+','+S.pos[1]+'|'+S.week;
   const c=here();
   if(S.occ==='combat'||S.occ==='donjon'){$('scene').innerHTML=combatScene();return;}
   if(S.occ==='atelier'&&S.craft){
@@ -257,5 +257,10 @@ function buildScene(){
      +'<div class="floaters" id="floaters"></div></div>'
      +'<div class="bar2"><span id="hProg"></span><em id="hTxt"></em></div>'
      +'<div style="display:flex;gap:6px;margin-top:7px"><button class="btn" data-occ="repos" style="flex:1;background:#171C1A;color:var(--paper);border-color:#000">止 ARRÊTER</button></div></div>';
+  } else if(grandEcran()){
+    /* RIEN NE SE PASSE : c'est la carte qui occupe la scene. C'est la
+       moitie « monde » de l'ecran coupe en deux — a droite les menus, a
+       gauche l'endroit ou l'on est. */
+    $('scene').innerHTML='<div class="scene">'+carteHtml(5)+carteLegende()+carteActions()+'</div>';
   } else $('scene').innerHTML='';
 }

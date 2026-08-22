@@ -36,9 +36,19 @@ function blocVehicule(){
   }).join('')+'</div>';
   return h;
 }
-function pMonde(){
-  const R=5;
-  let h='<p class="hint">Une seule génération continue : la carte n\'est qu\'une fenêtre sur le monde voxel. Le danger sort des couches de bruit, jamais de la distance — et il dérive chaque semaine selon ce que tu nettoies ou laisses pourrir.</p>';
+/* ==================================================================
+   LA CARTE N'AVAIT QU'UNE PLACE : DANS L'ONGLET MONDE.
+   Sur un ecran d'ordinateur coupe en deux, elle doit vivre A GAUCHE,
+   en permanence, pendant qu'on agit a droite — sinon on regarde ses
+   menus en tournant le dos au monde. Elle sort donc du panneau et
+   devient une piece qu'on monte des deux cotes, sans etre ecrite deux
+   fois : ce sont les MEMES cellules, les memes clics, le meme rendu.
+   ================================================================== */
+const grandEcran=()=>typeof window==='object'&&window.matchMedia
+  ?window.matchMedia('(min-width:1080px)').matches:false;
+function carteHtml(R){
+  R=R||5;
+  let h='';
   h+='<div class="map" style="grid-template-columns:repeat('+(R*2+1)+',1fr)">';
   for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){
     const x=S.pos[0]+dx,y=S.pos[1]+dy,c=cell(x,y);
@@ -59,13 +69,22 @@ function pMonde(){
       +(kk?'<span class="kd" style="background:'+(myTowns().some(t2=>t2.x===x&&t2.y===y)?'#6FBFA0':'#C8332B')+'"></span>':'')
       +(c.seen?'<span class="dg" style="background:'+dgc+'"></span>':'?')+'</div>';
   }
-  const kh=kingdomAt(S.pos[0],S.pos[1]);
-  h+='</div><div class="legend">城 capitale · 市 ville · 村 village · filet gauche : territoire d\'un royaume<br>'
-   +Object.keys(POI).map(k=>POI[k].g+' '+POI[k].n).join(' · ')
-   +'<br>Filet inférieur : paisible · dangereuse · mortelle</div>';
-  h+='<div class="row"><button class="btn'+(S.occ==='combat'?' pri':'')+'" data-occ="combat">戦 Combattre</button>'
-   +'<button class="btn'+(S.occ==='explore'?' pri':'')+'" data-occ="explore">歩 Explorer</button>'
-   +'<button class="btn'+(S.occ==='repos'?' pri':'')+'" data-occ="repos">休 Se reposer</button></div>';
+  h+='</div>';
+  return h;
+}
+/* les trois occupations : elles suivent la carte, ou qu'elle soit */
+const carteActions=()=>'<div class="row"><button class="btn'+(S.occ==='combat'?' pri':'')+'" data-occ="combat">戦 Combattre</button>'
+  +'<button class="btn'+(S.occ==='explore'?' pri':'')+'" data-occ="explore">歩 Explorer</button>'
+  +'<button class="btn'+(S.occ==='repos'?' pri':'')+'" data-occ="repos">休 Se reposer</button></div>';
+const carteLegende=()=>'<div class="legend">城 capitale · 市 ville · 村 village · filet gauche : territoire d\'un royaume<br>'
+  +Object.keys(POI).map(k=>POI[k].g+' '+POI[k].n).join(' · ')
+  +'<br>Filet inférieur : paisible · dangereuse · mortelle</div>';
+function pMonde(){
+  let h='<p class="hint">Une seule génération continue : la carte n\'est qu\'une fenêtre sur le monde voxel. Le danger sort des couches de bruit, jamais de la distance — et il dérive chaque semaine selon ce que tu nettoies ou laisses pourrir.</p>';
+  /* sur grand ecran la carte est deja a gauche, en permanence : la repeter
+     ici serait un doublon qu'il faudrait tenir a jour deux fois */
+  if(!grandEcran())h+=carteHtml(5)+carteLegende()+carteActions();
+  else h+='<p class="hint">La carte et les trois occupations sont à gauche, toujours visibles — tu n\'as plus à quitter un menu pour voir où tu es.</p>';
   h+=blocVehicule();
   return h;
 }

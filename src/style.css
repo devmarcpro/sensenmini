@@ -393,3 +393,40 @@ nav.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px
   .meta,.hint,.log,.cinfo{font-size:11px}
   .cell{font-size:12px}
 }
+
+/* ==================================================================
+   L'ÉCRAN D'ORDINATEUR ÉTAIT UN TÉLÉPHONE ÉTIRÉ.
+   Une colonne de 660 pixels au milieu de 1900 : la carte, les onglets,
+   le panneau et le journal se suivaient en file indienne, et sur PC
+   les deux tiers de l'écran ne servaient à rien. Pire, cela imposait
+   des allers-retours d'onglet pour une seule intention — aller sur un
+   autel dans MONDE, ouvrir CELLULE pour le fouiller, ouvrir MAGIE pour
+   lire ce qu'on y a trouvé.
+
+   À partir de 1080 pixels, l'écran se coupe en deux : à GAUCHE la
+   scène — la carte, ou le combat quand il commence — et le journal,
+   tous deux collants ; à DROITE les onglets et leur panneau, qui
+   défilent seuls. On voit donc toujours où l'on est pendant qu'on
+   agit, ce qui est la seule chose que la file indienne interdisait.
+
+   Le téléphone ne change pas d'un pixel : tout tient dans une requête
+   de média, et la colonne unique reste la mise en page par défaut.
+   ================================================================== */
+@media(min-width:1080px){
+  .wrap{max-width:1560px;display:grid;grid-template-columns:minmax(420px,1fr) minmax(520px,1.15fr);
+    gap:0 22px;align-items:start}
+  /* le bandeau de jauges tient toute la largeur, au-dessus des deux colonnes */
+  .hud .wrap{display:block;max-width:1560px}
+  #scene{grid-column:1;position:sticky;top:74px}
+  .log{grid-column:1;margin-top:12px;max-height:34vh;overflow-y:auto}
+  nav{grid-column:2;grid-row:1;margin-top:0;position:sticky;top:74px;z-index:15;
+    background:var(--ink);flex-wrap:wrap;overflow-x:visible}
+  .panel{grid-column:2;grid-row:2 / span 2;padding-top:10px}
+  /* les onglets ont la place de tenir sur deux lignes : plus de defilement
+     horizontal, donc plus rien de cache derriere un bord */
+  nav button{padding:7px 9px}
+}
+/* très large : la scène peut respirer sans que le panneau maigrisse */
+@media(min-width:1500px){
+  .wrap{grid-template-columns:minmax(520px,1fr) minmax(620px,1fr)}
+}

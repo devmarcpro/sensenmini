@@ -21,7 +21,15 @@ import vm from 'node:vm';
 const root=join(dirname(fileURLToPath(import.meta.url)),'..');
 const argv=process.argv.slice(2);
 const arg=(k,d)=>{const i=argv.indexOf(k);return i>=0?argv[i+1]:d;};
-const N=+arg('--tirages',400),SEED=+arg('--seed',42),JSON_OUT=argv.includes('--json');
+/* QUATRE CENTS TIRAGES NE SUFFISAIENT PAS. Le seuil « une terre mortelle
+   rapporte quinze pour cent de plus » se jugeait sur une moyenne dont la
+   marge etait, de l'aveu meme du commentaire d'a cote, de l'ordre de dix
+   pour cent : il restait cinq points entre le bruit et l'alerte. Il a suffi
+   que j'ajoute cinq effets de parure — donc que je change l'ordre des
+   tirages, sans toucher au butin — pour que l'alerte tombe. Une mesure qu'un
+   changement etranger fait basculer ne mesure pas ce qu'elle croit.
+   A deux mille cinq cents tirages, elle est stable sur trois graines. */
+const N=+arg('--tirages',2500),SEED=+arg('--seed',42),JSON_OUT=argv.includes('--json');
 
 /* ---------- contexte isolé, DOM factice, aléatoire seedé ---------- */
 function fakeEl(){
@@ -112,8 +120,19 @@ function atelier(niveau,mk){
      S.carry=Object.keys(STATION);
      S.recipes={};['lame','manche','fixations'].forEach(ct=>{
        S.recipes[ct+':${mk}']=1;S.recipes[ct+':chene']=1;S.recipes[ct+':fer']=1;});
-     SK.forEach(k=>{S.sk[k].lv=${niveau};});
      for(let i=0;i<${Math.round(N/2)};i++){
+       /* ==================================================================
+          LA SONDE ENTRAINAIT LE FORGERON QU'ELLE MESURAIT.
+          Le niveau etait pose UNE FOIS avant la boucle — et chaque piece
+          forgee donne de l'XP. Au bout de mille assemblages, le
+          « debutant » etait devenu maitre, et la ligne « debutant » du
+          tableau montrait un forgeron de plus en plus habile. La preuve
+          tenait dans le nombre de tirages : a quatre cents tirages la
+          mediane du debutant sortait a 11,9, a quatre mille elle sortait a
+          22,1. Une mesure qui depend du nombre d'echantillons n'est pas une
+          mesure. On repose le niveau A CHAQUE assemblage.
+          ================================================================== */
+       SK.forEach(k=>{S.sk[k].lv=${niveau};S.sk[k].xp=0;});
        S.comp={};S.items=[];S.ref={};
        addRef('lingot','${mk}',6);addRef('planche','chene',6);addRef('lingot','fer',6);
        makeComp('lame','lingot','${mk}');makeComp('manche','planche','chene');makeComp('fixations','lingot','fer');

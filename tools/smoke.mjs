@@ -162,24 +162,32 @@ async function runScenario(scen){
      bouton d'occupation. Si ce n'est pas lui, c'est qu'autre chose est
      par-dessus, et il faut le dire.
      ================================================================== */
-  const couverts=await evalJs(`(()=>{
-    const ko=[];
-    document.querySelectorAll('#scene [data-occ],#panel [data-occ]').forEach(b=>{
-      const r=b.getBoundingClientRect();
-      if(!r.width||!r.height)return;
-      const x=Math.round(r.left+r.width/2),y=Math.round(r.top+r.height/2);
-      if(x<0||y<0||x>innerWidth||y>innerHeight)return;   /* sous le pli : on y va en defilant */
-      const el=document.elementFromPoint(x,y);
-      if(!el){ko.push(b.dataset.occ+' : rien au centre');return;}
-      if(el!==b&&!b.contains(el)){
-        const q=el.tagName+(el.id?'#'+el.id:'')+(el.className?'.'+String(el.className).split(' ')[0]:'');
-        ko.push(b.dataset.occ+' recouvert par '+q);
-      }
-    });
-    return ko;
-  })()`);
-  if(couverts&&couverts.length)
-    report(scen.name,'bouton couvert',couverts.join(' · '));
+  const verifCouverts=async ou=>{
+      const couverts=await evalJs(`(()=>{
+      const ko=[];
+      /* TOUS LES BOUTONS, pas seulement les trois occupations : le defaut du
+         jour ne tenait pas a ces boutons-la, il tenait a ce qui flottait
+         au-dessus d'eux. N'importe quel bouton peut se retrouver dessous. */
+      document.querySelectorAll('#scene button,#panel button').forEach(b=>{
+        const r=b.getBoundingClientRect();
+        if(!r.width||!r.height)return;
+        const x=Math.round(r.left+r.width/2),y=Math.round(r.top+r.height/2);
+        if(x<0||y<0||x>innerWidth||y>innerHeight)return;   /* sous le pli : on y va en defilant */
+        if(b.disabled)return;                              /* un bouton eteint n'attend pas de clic */
+        const el=document.elementFromPoint(x,y);
+        if(!el){ko.push(b.dataset.occ+' : rien au centre');return;}
+        if(el!==b&&!b.contains(el)){
+          const q=el.tagName+(el.id?'#'+el.id:'')+(el.className?'.'+String(el.className).split(' ')[0]:'');
+          const qui=b.dataset.occ||b.dataset.tab||b.id||(b.textContent||'').trim().slice(0,18)||b.tagName;
+          ko.push(qui+' recouvert par '+q);
+        }
+      });
+      return ko;
+    })()`);
+    if(couverts&&couverts.length)
+      report(scen.name,'bouton couvert',ou+' : '+couverts.join(' · '));
+  };
+  await verifCouverts('carte');
   /* tous les onglets */
   /* La barre d'onglets defile horizontalement : un tap peut ne pas atterrir,
      et un delai fixe ne le rattrape pas. On attend donc la confirmation que
@@ -235,6 +243,7 @@ async function runScenario(scen){
     if(ec>30)report(scen.name,'panneau interminable (partie avancée)',t+' fait '+ec+' écrans');
     await checkOverflow('onglet chargé '+t);
   }
+  await verifCouverts('partie avancée');
   if(VERBOSE)console.log('  partie avancée (écrans) : '+lourds.join(' · '));
   /* l'établi d'une partie avancée : c'est là que l'accordéon se juge */
   await tap('#tabs button[data-tab="atelier"]');await sleep(200);
@@ -245,6 +254,7 @@ async function runScenario(scen){
   await tap('#tabs button[data-tab="monde"]');await sleep(100);
   await tap('[data-occ="combat"]');await sleep(1600);flushErrors('entree en combat');
   const inCombat=await evalJs('S.occ==="combat"&&!!document.getElementById("guardBtn")');
+  await verifCouverts('en combat');
   if(!inCombat){
     /* on dit dans QUEL etat le jeu est reste : « la scene ne s'est pas
        ouverte » sans plus n'aide personne a chercher */

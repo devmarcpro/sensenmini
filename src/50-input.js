@@ -104,6 +104,8 @@ function handle(e){
   if(b=t.closest('[data-csadd]')){compSeqAjout(+b.dataset.csadd);paint();return;}
   if(b=t.closest('[data-csdel]')){const q=b.dataset.csdel.split(':');compSeqSuppr(+q[0],+q[1]);paint();return;}
   if(b=t.closest('[data-consofaire]')){consoFaire(b.dataset.consofaire);paint();return;}
+  if(b=t.closest('[data-munifaire]')){muniFaire(b.dataset.munifaire);paint();return;}
+  if(b=t.closest('[data-muniencocher]')){muniEncocher(b.dataset.muniencocher);paint();return;}
   if(b=t.closest('[data-consouser]')){consoUser(b.dataset.consouser);paint();return;}
   if(b=t.closest('[data-voler]')){const q=b.dataset.voler.split(':');volerOffre(q[0],+q[1]);paint();return;}
   if(b=t.closest('[data-primepay]')){primePayer();paint();return;}

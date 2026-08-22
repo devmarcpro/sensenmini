@@ -63,6 +63,27 @@ function pTable(){
      +'<button class="btn" data-consofaire="'+k+'" '+(b2?'disabled':'')+' style="padding:3px 8px">'+(b2||'fabriquer')+'</button>'
      +'<button class="btn pri" data-consouser="'+k+'" '+(n?'':'disabled')+' style="padding:3px 8px">utiliser</button>'
      +'</div></div>';}).join('')+'</div>';
+  /* LE CARQUOIS (10d). On le range pres des consommables parce que c'est le
+     meme geste : preparer d'avance ce dont on manquera loin de tout. Deux
+     boutons par ligne — en faire, et l'encocher — parce qu'une intention
+     (« je veux du fer au bout ») ne doit pas couter trois clics. */
+  {
+    const enc=S.carquois&&MUNI[S.carquois]?MUNI[S.carquois]:null;
+    h+=grp('矢','CARQUOIS',enc?enc.n+" × "+muniDe(S.carquois):'rien d encoche');
+    h+='<div class="meta">Une munition ne sert qu au tir, et seulement avec l arme qui va avec : '
+      +'les fleches a l arc, les billes a la fronde. Le carquois n en tient qu une sorte — '
+      +'c est ce qui en fait un choix. Vide, l arc tire encore, simplement sans rien de plus.</div>';
+    h+='<div class=matlist>'+MUNIK.map(k=>{const D=MUNI[k],b3=muniBlocage(k),n=muniDe(k);
+      const act=S.carquois===k;
+      return '<div class="mat'+(act?' on':'')+'"><b>'+D.g+'</b>'+D.n+' × '+n
+       +'<small>'+D.d+'</small>'
+       +'<small>'+FUNC[D.pour].n+' · '+costTxt(D.cout)+' -> '+D.lot+(D.st?' · '+STATION[D.st].n:'')+'</small>'
+       +'<div class=row style=margin-top:5px>'
+       +'<button class="btn" data-munifaire="'+k+'" '+(b3?'disabled':'')+' style="padding:3px 8px">'+(b3||'fabriquer')+'</button>'
+       +'<button class="btn'+(act?'':' pri')+'" data-muniencocher="'+k+'" '+(n&&!act?'':'disabled')+' style="padding:3px 8px">'
+       +(act?'encoche':'encocher')+'</button>'
+       +'</div></div>';}).join('')+'</div>';
+  }
   if(S.torche>0||S.huile>0)
     h+='<div class="meta">'+(S.torche>0?'松 torche allumée — '+Math.ceil(S.torche)+' s':'')
       +(S.torche>0&&S.huile>0?' · ':'')+(S.huile>0?'油 huile sur la lame — '+Math.ceil(S.huile)+' s':'')+'</div>';

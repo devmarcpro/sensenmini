@@ -3179,6 +3179,94 @@ test('saisons — la faune suit l annee',()=>{
   eq(rien,0,'et il reste toujours quelque chose à chasser, même en hiver');
 });
 
+test('munitions — le quatorzieme emplacement se remplit enfin',()=>{
+  /* Le carquois etait declare dans SLOTS et AUCUN objet du jeu ne pouvait y
+     entrer. Une ligne vide pour toujours, sous les yeux du joueur. */
+  const c=nouveau();
+  R(c,`S.carry=Object.keys(STATION);S.munis={};S.carquois='';
+    S.mat={chene:60,fer:40,gres:40,lin:40,cuir:20,charbon:40,argile:20,herbes:40,soufre:40};
+    S.ref={'lingot:fer':20,'tanne:cuir':10};`);
+
+  /* --- chacune se fabrique, par lots --- */
+  const bl=G(c,'MUNIK.filter(k=>!!muniBlocage(k))');
+  ok(bl.length===0,'les sept munitions se fabriquent avec ce qu on a',
+    'bloquees : '+bl.map(k=>k+' -> '+G(c,'muniBlocage("'+k+'")')).join(' | '));
+  R(c,'MUNIK.forEach(k=>muniFaire(k));');
+  const lots=G(c,'MUNIK.map(k=>muniDe(k)-MUNI[k].lot)');
+  eq(lots.filter(x=>x!==0).length,0,'et chacune rend le lot annonce, ni plus ni moins');
+
+  /* --- LE CARQUOIS N EN TIENT QU UNE SORTE : c est ce qui en fait un choix --- */
+  R(c,'muniEncocher("flecheferree");');
+  eq(G(c,'S.carquois'),'flecheferree','on encoche ce qu on veut');
+  R(c,'muniEncocher("flechevenin");');
+  eq(G(c,'S.carquois'),'flechevenin','en encocher une autre remplace la premiere');
+
+  /* --- UNE BILLE NE PART PAS D UN ARC --- */
+  R(c,`const p=FUNC.arc.comp.map(ct=>partFor(ct,['if','cuir']));
+    p.push(partFor('fixations',['fer']));S.eq.main1=mkItem('arme','arc',p,1.2);
+    S.eq.main2=null;`);
+  R(c,'muniEncocher("billeplomb");');
+  eq(G(c,'!!muniActive(S.eq.main1)'),false,'une bille de fronde ne sert a rien sur un arc');
+  R(c,'muniEncocher("flecheferree");');
+  eq(G(c,'!!muniActive(S.eq.main1)'),true,'une fleche, si');
+
+  /* --- LA POINTE DE FER PORTE PLUS LOIN QUE LA PIERRE --- */
+  R(c,`S.stats.dex=200;S.occ='combat';spawn();
+    /* TROIS MILLE COUPS ENTRAINENT L ARCHER. Une premiere version mesurait
+       la reference d abord et la munition ensuite : l ecart mesure etait
+       pour moitie celui du tir, pour moitie celui de la competence gagnee
+       entre les deux. On remet donc les competences a leur etat d avant
+       chaque mesure — sinon l instrument entraine ce qu il mesure. */
+    globalThis.__deg=(k,n)=>{
+      const sk=JSON.parse(JSON.stringify(S.sk)),sx=JSON.parse(JSON.stringify(S.sx));
+      S.munis[k]=9999;S.carquois=k;let t=0;
+      for(let i=0;i<n;i++){EE.forEach(e=>{e.hp=1e9;e.max=1e9;e.st=[];});
+        const h=EE[0].hp;attack(false);t+=h-EE[0].hp;}
+      S.sk=sk;S.sx=sx;S.seg=[];S.bonus=0;
+      return t/n;};`);
+  /* DEUX PROMESSES DISTINCTES, DEUX MESURES. La pointe de fer frappe plus
+     fort ET perce mieux ; mesurees ensemble, l'une couvrirait la panne de
+     l'autre — et la suite passerait avec un seul des deux fils branche. On
+     mesure donc chaque promesse seule, en ne bougeant qu'un chiffre. */
+  const ref=G(c,'__deg("flechepierre",3000)');
+  R(c,'MUNI.flechepierre.dmg=.5;');
+  const fort=G(c,'__deg("flechepierre",3000)');
+  R(c,'MUNI.flechepierre.dmg=0;');
+  gt(fort,ref*1.25,'ce que la munition ajoute aux degats se retrouve au bout du trait'
+    +' ('+ref.toFixed(1)+' contre '+fort.toFixed(1)+')');
+  R(c,'MUNI.flechepierre.pierce=.9;');
+  const perce=G(c,'__deg("flechepierre",3000)');
+  R(c,'MUNI.flechepierre.pierce=0;');
+  gt(perce,ref*1.15,'et sa perce entame l armure que la pointe nue n entame pas'
+    +' ('+ref.toFixed(1)+' contre '+perce.toFixed(1)+')');
+
+  /* --- ELLE SE VIDE, ET L ARC TIRE QUAND MEME --- */
+  R(c,'S.munis={flecheferree:3};S.carquois="flecheferree";'
+    +'EE.forEach(e=>{e.hp=1e9;e.max=1e9;});attack(false);');
+  eq(G(c,'muniDe("flecheferree")'),2,'un tir consomme une munition');
+  R(c,'attack(false);attack(false);');
+  eq(G(c,'muniDe("flecheferree")'),0,'et le carquois finit par se vider');
+  eq(G(c,'!!muniActive(S.eq.main1)'),false,'vide, il ne porte plus rien');
+  R(c,'globalThis.__h=EE[0].hp;attack(false);');
+  gt(G(c,'__h'),G(c,'EE[0].hp'),'mais l arc tire encore : un carquois vide ne casse pas un arc');
+
+  /* --- UNE ARME DE MELEE IGNORE LE CARQUOIS --- */
+  R(c,`S.munis={flecheferree:50};S.carquois='flecheferree';
+    const p2=FUNC.epee.comp.map(ct=>partFor(ct,['fer','chene']));
+    p2.push(partFor('fixations',['fer']));S.eq.main1=mkItem('arme','epee',p2,1.2);
+    EE.forEach(e=>{e.hp=1e9;e.max=1e9;});attack(false);`);
+  eq(G(c,'muniDe("flecheferree")'),50,'une epee ne puise pas dans le carquois');
+
+  /* --- LE SIFFLEMENT FAIT PARTIR CE QU ON PREFERE VOIR PARTIR --- */
+  const sans=G(c,'(()=>{const e=EE[0];e.sif=0;e.st=[];return fuiteChance(e);})()');
+  const avec=G(c,'(()=>{const e=EE[0];e.sif=1;e.st=[];return fuiteChance(e);})()');
+  gt(avec,sans,'la fleche sifflante pousse la bete vers la sortie');
+
+  /* --- ET LA COLLECTION LES COMPTE --- */
+  eq(G(c,'COLLECTION.muni.tout().length'),G(c,'MUNIK.length'),
+    'les sept munitions sont une famille de la collection');
+});
+
 test('consommables — quatre objets que le catalogue promettait',()=>{
   /* Ce ne sont pas des potions : on n'en distille pas, on les FAIT. Chacun
      repond a un manque precis que rien d'autre ne couvre. */

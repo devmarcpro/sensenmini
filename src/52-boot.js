@@ -15,7 +15,7 @@
 function chargementComplet(){
   try{
     return !!(EL&&MAT&&CAT&&BIOME&&FORM&&COMP&&FUNC&&SLOTS&&MODULE&&DOMAIN&&SKILLS&&SK&&STATS&&RACE&&CLASSE
-      &&genCell&&NEW&&gainXp&&gainStat&&mkItem&&partFor&&formeNom&&ALLIAGE&&allier&&cutGem&&GEMSPEC&&mkNpc&&linkFamilies&&JOBS
+      &&genCell&&NEW&&gainXp&&gainStat&&mkItem&&partFor&&formeNom&&ALLIAGE&&allier&&MUNI&&muniActive&&cutGem&&GEMSPEC&&mkNpc&&linkFamilies&&JOBS
       &&GOV&&GUILDS&&QTPL&&PLANTE&&cook&&escortList&&ORDERS&&PLOT&&MEUBLE&&plots&&genDungeon&&DJTHEME
       &&METEO&&SEASON&&offline&&AUTOS&&CONDS&&ACTES&&planTick&&STATUS&&addStatus&&KSIZE&&kingdomsNear&&hameauAt&&starterKit&&SHOPDEF
       &&CREATURE&&noteBestiaire&&PATTERN&&VOX&&VOXMAT&&voxelHtml&&matHtml&&compHtml&&ICONE&&iconeHtml&&AFFU&&PARURE&&mkParure&&util&&VEHICULE&&vehVitesse&&primeAjout&&volerOffre&&recelerTout&&CONSO&&consoFaire&&PECHE&&pecheTick&&GARDIEN&&ARTEFACT&&gardienTick&&GESTES&&seqTick&&pCombat&&LIEU&&lieuVisiter&&riviere&&caverne&&creEndInit&&creEquipe&&COLLECTION&&collecte&&pCollection&&HAUTFAIT&&hfBalayer&&heroHtml&&vide&&STANCE&&attack&&compileSpell&&harvestTick&&tickClock&&step&&paint&&grp&&foldHead

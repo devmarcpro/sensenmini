@@ -100,6 +100,8 @@ function sanitize(){
   S.comps=(S.comps||[]).map(c=>{if(Array.isArray(c.seq))c.seq=c.seq.filter(g=>g&&ORDK.includes(g.o));return c;});
   S.conso=S.conso||{};
   Object.keys(S.conso).forEach(k=>{if(!CONSO[k]||!(S.conso[k]>0))delete S.conso[k];});
+  if(!S.munis||typeof S.munis!=='object')S.munis={};
+  if(S.carquois&&!MUNI[S.carquois])S.carquois='';
   if(!(S.torche>0))S.torche=0;
   if(!(S.huile>0))S.huile=0;
   S.prime=S.prime||{};

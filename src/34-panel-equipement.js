@@ -11,6 +11,18 @@ function pEquip(){
   h+='<div class="card"><div class="pdoll"><div class="cam">'+heroHtml(5.4)+'</div></div></div>';
   h+='<div class="matlist">'+SLOTS.map(sl=>{
     const it=eqOf(sl.k);
+    /* LE CARQUOIS N'EST PAS UNE PIECE (10d). Les treize autres emplacements
+       portent un objet ; celui-ci porte une RESERVE, qui se vide. On le dit
+       ici parce que c'est ici que le joueur regarde ce qu'il porte — et
+       parce que cette ligne est restee vide depuis le premier jour. */
+    if(sl.k==='muni'){
+      const D=S.carquois&&typeof MUNI==='object'?MUNI[S.carquois]:null;
+      const n=D?muniDe(S.carquois):0;
+      return '<div class="mat">'
+        +'<b>'+(D?D.g:sl.g)+'</b>'+sl.n
+        +'<small>'+(D?D.n+' × '+n:'rien d encoche')+'</small>'
+        +'<small style="color:var(--jade)">'+(D?FUNC[D.pour].n+" · s encoche a l etabli":'—')+'</small></div>';
+    }
     return '<button class="mat'+(it?'':'')+'" data-unslot="'+sl.k+'" '+(it?'':'disabled')+'>'
       +(it?iconeHtml(it,2.7,'coin'):'')
       +'<b>'+sl.g+'</b>'+sl.n+'<small>'+(it?it.nom:'vide')+'</small>'

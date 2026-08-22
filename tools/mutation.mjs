@@ -198,6 +198,11 @@ const MUT=[
   ['boyau : une grande salle n en est pas un','boyaux',[['src/24-combat.js',"  if(typeof caverne==='function'&&caverne(here())===1)return true;","  if(typeof caverne==='function'&&caverne(here())>=1)return true;"]]],
   ['boyau : une lame courte ne subit rien','boyaux',[['src/24-combat.js','  return !F.dist&&F.reach>=2;','  return !F.dist;']]],
   /* le scriptorium */
+  ['munitions : la pointe de fer perce','munitions',[['src/24-combat.js',"  let pierce=PA.pierce+(MU?MU.pierce:0);",'  let pierce=PA.pierce;']]],
+  ['munitions : le trait porte ce qu on encoche','munitions',[['src/24-combat.js','  if(MU)base*=1+MU.dmg;','  if(MU)base*=1;']]],
+  ['munitions : le carquois se vide','munitions',[['src/24-combat.js','  if(MU)muniConsommer();','  if(0)muniConsommer();']]],
+  ['munitions : une bille ne part pas d un arc','munitions',[['src/10d-munitions.js',"  if(!D||D.pour!==w.fn||!muniDe(S.carquois))return null;",'  if(!D)return null;']]],
+  ['munitions : le sifflement fait fuir','munitions',[['src/24-combat.js','  if(e.sif)p*=1.8;','  if(e.sif)p*=1;']]],
   ['scriptorium : on comble sa lacune','scriptorium',[['src/14b-consommables.js','      doms.sort((a,b)=>connus[a]-connus[b]);','      doms.sort((a,b)=>connus[b]-connus[a]);']]],
   ['scriptorium : la difficulte suit la lecture','scriptorium',[['src/14b-consommables.js',"      const diff=Math.max(2,Math.min(12,2+Math.floor(lv('lecture')/6)));",'      const diff=4;']]],
   ['scriptorium : on n ecrit que ce qu on sait','scriptorium',[['src/14b-consommables.js',"      if(!doms.length)return 'aucun domaine pratiqué — le papier reste blanc';","      if(!doms.length){S.books.push({id:'b'+(S.nid++),dom:'feu',diff:4});return 'x';}"]]],

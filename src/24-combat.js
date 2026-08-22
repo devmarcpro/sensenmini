@@ -356,6 +356,9 @@ function fuiteChance(e){
      n'avait pas hors des combats ranges. */
   if(hasStatus(e,'enracine'))return 0;
   let p=.16+(e.hp<e.max*.4?.20:0);
+  /* le sifflement d'un rabot (10d) : la bete qui l'a entendu cherche la sortie
+     bien plus tot. C'est le seul emploi de la fleche qui ne fait pas de degats. */
+  if(e.sif)p*=1.8;
   if(hasStatus(e,'ralenti'))p*=.5;
   if(hasStatus(e,'etourdi'))p*=.3;
   /* ce qu'un chasseur sait faire : rester dessus */
@@ -495,7 +498,12 @@ function attack(heavy){
      Sur une arme de jet, c'est l'ÉLASTICITÉ qui remplace la dureté : un arc d'if
      porte loin, un arc d'ébène ne porte pas — le bois fait l'arme (A.4.1 / F.1). */
   const puis=isDist(w)?((w.ela||8)/45):(w.durBase/20);
+  /* CE QUI EST AU BOUT DU TRAIT (10d). Une arme de melee est un choix qu'on
+     porte ; le carquois est un choix qu'on refait des qu'il se vide. Il ne
+     s'applique qu'au tir, et seulement si la reserve va avec l'arme. */
+  const MU=typeof muniActive==='function'?muniActive(w):null;
   let base=roll(F.d[0]+extra,F.d[1])*puis*w.q*sf(lv(w.fn));
+  if(MU)base*=1+MU.dmg;
   base+=gemSum(w,'degats')*sf(lv(w.fn));                 /* gemmes : des dégâts plats, jamais une règle */
   /* le critique ne se tire plus : il se vise. Le multiplicateur arrive plus
      bas, une fois la zone connue — par cible, parce qu'un balayage ne touche
@@ -522,7 +530,7 @@ function attack(heavy){
     /* l'harmonie ne paie que le coup qui ferme la chaîne */
     (w.aff||[]).forEach(a=>{if(a.id==='harmonie')base*=1+a.p.p/100;});
   }
-  let pierce=PA.pierce;(w.aff||[]).forEach(a=>{if(a.id==='perce'&&hitN%a.p.n===0)pierce=Math.min(1,pierce+a.p.p/100);});
+  let pierce=PA.pierce+(MU?MU.pierce:0);(w.aff||[]).forEach(a=>{if(a.id==='perce'&&hitN%a.p.n===0)pierce=Math.min(1,pierce+a.p.p/100);});
   const dtype=sd.t||F.t;
   hitN++;
   /* balayage : une hampe qui fauche, ou le passif du manuel — jamais un arc */
@@ -573,6 +581,9 @@ function attack(heavy){
     /* le poison de lame (F.9) : il ne vient pas de l arme mais de ce qu on a
        etale dessus, et il vaut ce qu on n arrive pas a tuer autrement */
     if(S.lame>0)addStatus(tgt,'poison',6,Math.max(1,maxHp()*.010));
+    /* l'effet du projectile : il vaut ce que le coup a porte, pas un chiffre
+       fixe — un trait mal place empoisonne moins qu'un trait bien place */
+    if(MU&&MU.eff)MU.eff(tgt,applied);
     (w.aff||[]).forEach(a=>{
       if(a.id==='eclat'&&hitN%a.p.n===0)addStatus(tgt,'confusion',a.p.d,1);
       if(a.id==='sangsue'&&hitN%a.p.n===0)S.end=Math.min(100,S.end+Math.max(1,applied*a.p.p/100));
@@ -592,6 +603,7 @@ function attack(heavy){
     if(tgt.hp<=0)mortes.push(tgt);
     premier=false;
   });
+  if(MU)muniConsommer();
   knock();
   if(typeof sfx==='function'){sfx(resolver?'resolve':critVu?'crit':'hit');if(resolver||heavy)shake(resolver);}
   if(resolver){

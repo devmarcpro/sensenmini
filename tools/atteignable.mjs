@@ -471,6 +471,17 @@ bilan('effets cites par les pieces nommees',
   bilan('consommables fabricables',G('CONSK'),consoOk,
     'un consommable dont le cout demande une forme inexistante ne se fait jamais');
 
+  /* une munition : sa station, son cout, et l'ARME QUI LA TIRE. Une fleche
+     rangee sous une arme qui n'existe pas ne partirait jamais. */
+  const muniOk=new Set(G('MUNIK').filter(k=>{
+    const D=G('MUNI["'+k+'"]');
+    if(!G('!!FUNC["'+D.pour+'"]&&!!FUNC["'+D.pour+'"].dist'))return false;
+    if(D.st&&!G('!!STATION["'+D.st+'"]'))return false;
+    return D.cout.every(([r])=>r.startsWith('form:')?G('!!FORM["'+r.slice(5)+'"]'):G('!!CAT["'+r+'"]'));
+  }));
+  bilan('munitions fabricables',G('MUNIK'),muniOk,
+    'une munition sans arme de jet pour la tirer ne sert a personne');
+
   /* une station : ses matieres, et son ainee si elle en a une */
   const statOk=new Set(G('Object.keys(STATION)').filter(k=>{
     const D=G('STATION["'+k+'"]');

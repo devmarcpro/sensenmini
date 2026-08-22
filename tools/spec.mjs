@@ -2070,6 +2070,33 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('passifs — le resume les dit tous, pas seulement les sept d hier',()=>{
+  /* Le resume des passifs nommait sept champs sur dix-huit. Un joueur qui
+     equipait un passif d'ALLONGE ou de CRITIQUE ne voyait rien changer sur
+     sa fiche : la liste etait ecrite a la main, donc elle datait du jour ou
+     on l'a ecrite. */
+  const c=nouveau();
+  /* CHAQUE CHAMP DOIT AVOIR SON MOT : sans quoi le resume affiche une cle */
+  const muets=G(c,'Object.keys(passives()).filter(k=>!PASSIF_TXT[k])');
+  ok(muets.length===0,'chaque effet passif a son libelle',
+    muets.length?'sans mot : '+muets.join(', '):'');
+
+  /* --- et le panneau les dit VRAIMENT, un par un --- */
+  R(c,`globalThis.__dit=(k)=>{
+      S.modules=[{id:MK[0],dom:'feu',lv:1,xp:0}];S.postures=[0];
+      const vrai=passives;passives=()=>{const o={};Object.keys(vrai()).forEach(x=>o[x]=0);o[k]=k==='reach'?1:.25;return o;};
+      const h=pMagie();passives=vrai;return h;};`);
+  const oublies=G(c,'Object.keys(passives())').filter(k=>{
+    const mot=G(c,'PASSIF_TXT["'+k+'"]').split('{')[0].trim();
+    return G(c,'__dit("'+k+'")').indexOf(mot)<0;});
+  ok(oublies.length===0,'le resume nomme chacun des '+G(c,'Object.keys(passives()).length')+' effets',
+    oublies.length?'jamais dits : '+oublies.join(', '):'');
+
+  /* --- et il ne ment pas quand il n y a rien --- */
+  R(c,'S.modules=[];S.postures=[];globalThis.__vide=pMagie();');
+  ok(G(c,'__vide').indexOf('aucun —')>0,'et il le dit quand aucun passif n est place');
+});
+
 test('plats — seize recettes qui se reconnaissent, aucune qui se debloque',()=>{
   /* La marmite prenait des ingredients et rendait « un plat » : de la
      nutrition, du potentiel, un nom generique. Aucune RECETTE, donc aucune

@@ -72,10 +72,27 @@ function pMagie(){
       +S.modules.map((m,mi)=>MODULE[m.id].t!=='passif'?'':'<option value="'+mi+'"'+(cur===mi?' selected':'')+'>'+modLabel(mi)+'</option>').join('')
       +'</select>';
   }
+  /* ==================================================================
+     SEPT CHAMPS AFFICHES SUR DIX-HUIT.
+     Le resume des passifs nommait les degats, la perforation, la parade, la
+     garde, l'endurance, la riposte et le second coup. Onze autres existaient
+     — allonge, balayage, critique, execution, vitesse, chancellement,
+     reduction, cout d'endurance... — et un joueur qui equipait un passif
+     d'ALLONGE ou de CRITIQUE ne voyait strictement rien changer sur sa
+     fiche. La liste etait ecrite a la main, donc elle datait du jour ou on
+     l'a ecrite.
+
+     Elle se construit desormais sur la table : chaque champ non nul se dit,
+     avec le vocabulaire que PASSIF_TXT porte deja pour les modules pris un
+     par un. Ajouter un champ a passives() suffit a le faire apparaitre —
+     on ne peut plus en oublier un.
+     ================================================================== */
   const PA=passives();
-  h+='<div class="meta" style="margin-top:6px">Effet cumulé : dégâts +'+Math.round(PA.dmg*100)+'% · perforation '+Math.round(PA.pierce*100)
-   +'% · fenêtre de parade +'+Math.round(PA.win*100)+'% · garde '+Math.round(PA.gardecost*100)+'% · endurance +'+PA.regen.toFixed(1)+'/s'
-   +(PA.riposte?' · riposte à la parade parfaite':'')+(PA.multi?' · multi-coup '+Math.round(PA.multi*100)+'%':'')+'</div></div>';
+  const dits=Object.keys(PA).filter(k=>PA[k])
+    .map(k=>passifTxt({[k]:PA[k]},0)).filter(Boolean);
+  h+='<div class="meta" style="margin-top:6px">Effet cumulé : '
+   +(dits.length?dits.join(' · '):'aucun — place des modules passifs dans les emplacements ci-dessus')
+   +'</div></div>';
   /* modules connus */
   h+=grp('印','MODULES CONNUS',S.modules.length+'');
   h+=S.modules.length?'<div class="matlist">'+S.modules.map((m,i)=>{const d=MODULE[m.id];

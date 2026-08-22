@@ -131,6 +131,7 @@ const MUT=[
   ['parure : la lettre aide a lire','parures',[['src/25-modules.js',"  +(typeof util==='function'?util().lettre:0);",';']]],
   ['plat : le panneau l annonce','plats',[['src/36-panel-table.js',"       return '<div class=\"meta\">Cela donnera : <b>'+pl.g+' '+pl.n+'</b> — '+pl.d","       return '';const z=pl.d"]]],
   ['plat : le compte des recettes','plats',[['src/36-panel-table.js',"  h+='<div class=\"card\"><div class=\"meta\">Recettes reconnues : <b>'+vus.length+' / '+PLAT.length+'</b> — '","  h+='<div class=\"card\"><div class=\"meta\">'+('"]]],
+  ['passif : le resume se calcule','passifs',[['src/35-panel-magie.js','  const dits=Object.keys(PA).filter(k=>PA[k])',"  const dits=['dmg','pierce','win'].filter(k=>PA[k])"]]],
   /* les plats */
   ['plat : le plus exigeant gagne','plats',[['src/14-food.js','  for(const p of PLAT){let ok=false;try{ok=!!p.quand(t);}catch(e){ok=false;}if(ok)return p;}','  return PLAT[PLAT.length-1];']]],
   ['plat : il entre dans la collection','plats',[['src/14-food.js',"  collecte('plat',plat.k);",'']]],

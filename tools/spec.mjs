@@ -2081,6 +2081,20 @@ test('modificateurs — ce qui se met devant fait la profondeur',()=>{
   ok(res>.5,'« resonance » rend un second coup — '+res.toFixed(2));
   const off=G(c,'__sp(["offrande","projectile"]).casts[0].hp');
   ok(off>0,'« offrande » se paie en vie — '+off.toFixed(3));
+  /* --- ET LA FICHE DOIT LE DIRE. Cinq des dix nouveaux ne font QUE poser un
+     etat sur le module suivant : si la fiche du sort n'en parle pas, ils sont
+     invisibles, donc inutiles. Un effet qu'on ne voit pas n'existe pas. --- */
+  R(c,`S.modules=[{id:'gel',dom:'eau',lv:1,xp:0},{id:'projectile',dom:'feu',lv:1,xp:0}];
+    S.spells=[[0,1],[]];globalThis.__pm=pMagie();`);
+  const pm=G(c,'__pm');
+  /* ON CHERCHE LE GLYPHE DE L'ETAT, PAS SON NOM : le module s'appelle
+     « Morsure du gel » et figure dans la liste des modules possedes — mon
+     premier test passait donc en lisant le NOM DU MODULE, pas l'etat pose,
+     et une mutation qui effacait la ligne entiere ne le faisait pas broncher. */
+  const gl=G(c,'STATUS.gel.g');
+  ok(pm.indexOf(gl+' gel')>0,'la fiche du sort annonce l état posé, glyphe compris');
+  ok(pm.indexOf(gl+' gel 1.')>0,'et sa durée en secondes');
+
   /* le cout en mana suit : un modificateur negatif REND du mana */
   const m1=G(c,'__sp(["projectile"]).mana'),m2=G(c,'__sp(["offrande","projectile"]).mana');
   ok(m2<m1,'et elle rend du mana, comme le tribut de sang — '+m1.toFixed(1)+' puis '+m2.toFixed(1));

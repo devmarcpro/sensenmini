@@ -46,7 +46,19 @@ function pMagie(){
         return nm+' ×'+c.count+(c.pow?' · puissance '+Math.round(c.pow):'')+(c.heal?' · soin '+Math.round(c.heal):'')
           +(c.shield?' · endurance +'+Math.round(c.shield):'')
           +(c.el>=0?' · '+EL[c.el].n:' · hors cycle')+(c.echo?' · écho '+Math.round(c.echo*100)+'%':'')
-          +(c.hp?' · '+Math.round(c.hp*100)+'% PV par lancer':'');}).join('<br>')+'</div>';
+          +(c.hp?' · '+Math.round(c.hp*100)+'% PV par lancer':'')
+          /* L'ETAT POSE NE SE VOYAIT NULLE PART. Le compilateur le calcule
+             depuis toujours — un modificateur peut poser un statut sur le
+             module qui le suit, et « persistance » en allonge la duree — et
+             la fiche du sort n'en disait rien. Dix modificateurs viennent
+             d'arriver dont cinq ne font QUE cela : sans cette ligne, ils
+             seraient invisibles, donc inutiles. */
+          +(c.status&&STATUS[c.status.k]?' · '+STATUS[c.status.k].g+' '+STATUS[c.status.k].n.toLowerCase()
+             +' '+c.status.dur.toFixed(1)+' s':'')
+          +(c.buff?' · '+c.buff.k+' +'+Math.round(c.buff.v)+' pendant '+Math.round(c.buff.t)+' s':'')
+          +(c.soi&&STATUS[c.soi.k]?' · sur toi : '+STATUS[c.soi.k].n.toLowerCase()+' '+c.soi.dur.toFixed(1)+' s':'')
+          +(c.summon?' · invocation '+Math.round(c.summon.dps)+' par seconde':'')
+          +(c.drain?' · vol de vie '+Math.round(c.drain*100)+' %':'');}).join('<br>')+'</div>';
       h+=vecBar(sp.casts[0].vec);
     }
     h+='</div>';

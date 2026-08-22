@@ -120,6 +120,7 @@ const MUT=[
   ['garde : la hauteur encaisse','garde',[['src/24-combat.js',"    const inc=raw*(q===1?(acc>=1?.12:acc>0?.17:.30):1);",'    const inc=raw*(q===1?.20:1);']]],
   ['garde : le bouclier ne couvre que les voisines','garde',[['src/24-combat.js',"  if(grip().k==='bouclier'&&S.eq.main2&&(VOISINE[g]||[]).includes(d))return .5;","  if(grip().k==='bouclier'&&S.eq.main2)return .5;"]]],
   ['garde : ce qui vient de loin ne se pare pas','garde',[['src/24-combat.js',"  if(!d)return 0;                        /* ce qui vient de loin ne se pare pas */",'  if(!d)return 1;']]],
+  ['module : la fiche annonce l etat pose','modificateurs',[['src/35-panel-magie.js',"          +(c.status&&STATUS[c.status.k]?' · '+STATUS[c.status.k].g+' '+STATUS[c.status.k].n.toLowerCase()",'          +(false?'+"''"]]],
   /* les modificateurs */
   ['module : le modificateur multiplie','modificateurs',[['src/25-modules.js',"      if(def.mul){for(const k in def.mul)pend[k]=(k==='count')?pend[k]*def.mul[k]:(k==='echo'?pend.echo+def.mul[k]:pend[k]*def.mul[k]);}",'']]],
   ['module : le statut passe au suivant','modificateurs',[['src/25-modules.js','      if(def.status)pend.status=def.status;','']]],

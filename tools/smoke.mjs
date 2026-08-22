@@ -149,6 +149,37 @@ async function runScenario(scen){
   const born=await evalJs('!!S.race && document.getElementById("gate").hidden');
   if(!born)report(scen.name,'creation','le personnage n\'est pas ne');
   await shot('2-monde');await checkOverflow('onglet monde');
+
+  /* ==================================================================
+     UN BOUTON COUVERT EST UN BOUTON ABSENT.
+     La sonde verifiait qu'un bouton EXISTE et qu'il repond quand on le
+     tape par selecteur — ce qui court-circuite le vrai chemin. Dans une
+     page, un panneau flottant, une vignette d'evenement ou un conseil
+     peuvent recouvrir un bouton parfaitement present : le joueur clique
+     et rien ne se passe.
+
+     On demande donc au navigateur ce qui se trouve AU CENTRE de chaque
+     bouton d'occupation. Si ce n'est pas lui, c'est qu'autre chose est
+     par-dessus, et il faut le dire.
+     ================================================================== */
+  const couverts=await evalJs(`(()=>{
+    const ko=[];
+    document.querySelectorAll('#scene [data-occ],#panel [data-occ]').forEach(b=>{
+      const r=b.getBoundingClientRect();
+      if(!r.width||!r.height)return;
+      const x=Math.round(r.left+r.width/2),y=Math.round(r.top+r.height/2);
+      if(x<0||y<0||x>innerWidth||y>innerHeight)return;   /* sous le pli : on y va en defilant */
+      const el=document.elementFromPoint(x,y);
+      if(!el){ko.push(b.dataset.occ+' : rien au centre');return;}
+      if(el!==b&&!b.contains(el)){
+        const q=el.tagName+(el.id?'#'+el.id:'')+(el.className?'.'+String(el.className).split(' ')[0]:'');
+        ko.push(b.dataset.occ+' recouvert par '+q);
+      }
+    });
+    return ko;
+  })()`);
+  if(couverts&&couverts.length)
+    report(scen.name,'bouton couvert',couverts.join(' · '));
   /* tous les onglets */
   /* La barre d'onglets defile horizontalement : un tap peut ne pas atterrir,
      et un delai fixe ne le rattrape pas. On attend donc la confirmation que
@@ -214,11 +245,26 @@ async function runScenario(scen){
   await tap('#tabs button[data-tab="monde"]');await sleep(100);
   await tap('[data-occ="combat"]');await sleep(1600);flushErrors('entree en combat');
   const inCombat=await evalJs('S.occ==="combat"&&!!document.getElementById("guardBtn")');
-  if(!inCombat)report(scen.name,'combat','la scene de combat ne s\'est pas ouverte');
+  if(!inCombat){
+    /* on dit dans QUEL etat le jeu est reste : « la scene ne s'est pas
+       ouverte » sans plus n'aide personne a chercher */
+    const d=await evalJs('JSON.stringify({occ:S.occ,E:!!E,EE:EE.length,onglet:tab})');
+    report(scen.name,"combat","la scene de combat ne s'est pas ouverte — "+d);
+  }
   else{
     const g=await center('#guardBtn');
-    await press(g);await sleep(300);
-    const held=await evalJs('S.guard===true||(typeof E!=="undefined"&&!!E&&E.w>=0)');
+    /* UN DELAI FIXE N'EST PAS UNE CONDITION. Trois cent millisecondes
+       suffisaient neuf fois sur dix ; la dixieme, la garde n'etait pas
+       encore montee et la sonde criait au defaut. C'est la faute que j'ai
+       deja corrigee ailleurs dans cet outil et qui etait restee ici : on
+       attend que la garde SOIT levee, jusqu'a une seconde, au lieu de
+       parier sur un delai. */
+    await press(g);
+    let held=false;
+    for(let i=0;i<20&&!held;i++){
+      await sleep(50);
+      held=await evalJs('S.guard===true||(typeof E!=="undefined"&&!!E&&E.w>=0)');
+    }
     if(!held)report(scen.name,'combat','GARDE maintenue ne leve pas la garde');
     await release(g);await sleep(80);
     const rel=await evalJs('S.guard===false');

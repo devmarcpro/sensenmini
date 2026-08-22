@@ -80,7 +80,7 @@ function handle(e){
       else{if(c.mode!=='territorial'&&escortUsed()>=escortMax())return toast('Escorte pleine ('+escortMax()+' places)');c.esc=true;}}
     sceneMode='';paint();return;}
   if(b=t.closest('[data-ord]')){const c=S.comps[+b.dataset.ord];
-    if(c)c.order=ORDK[(ORDK.indexOf(c.order)+1)%4];paint();return;}
+    if(c)c.order=ORDK[(ORDK.indexOf(c.order)+1)%ORDK.length];paint();return;}
   if(b=t.closest('[data-revive]')){revive(+b.dataset.revive);paint();return;}
   if(b=t.closest('[data-free]')){const c=S.comps[+b.dataset.free];
     if(c){S.comps.splice(+b.dataset.free,1);log(c.nom+' reprend sa liberté.');}paint();return;}
@@ -218,7 +218,7 @@ $('scene').addEventListener('pointerdown',e=>{
   if(b.id==='heavyBtn'){e.preventDefault();attack(true);}
   if(b.id==='tameBtn'){e.preventDefault();tameBeast();}
   if(b.dataset.cyc){e.preventDefault();const c=S.comps.find(x=>x.id===b.dataset.cyc);
-    if(c)c.order=ORDK[(ORDK.indexOf(c.order)+1)%4];}
+    if(c)c.order=ORDK[(ORDK.indexOf(c.order)+1)%ORDK.length];}
 });
 addEventListener('keydown',e=>{
   if(e.repeat)return;

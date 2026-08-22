@@ -32,7 +32,7 @@ button:focus-visible{outline:2px solid var(--zhu);outline-offset:2px}
 .gauge .lab{display:flex;justify-content:space-between}
 .gauge .bar{height:6px;background:#000;border:1px solid var(--line);position:relative;overflow:hidden;margin-top:2px}
 .gauge .bar>b{position:absolute;inset:0 auto 0 0;width:0}
-.cut{position:fixed;left:0;right:0;top:0;z-index:60;background:var(--ink);border-bottom:3px solid var(--zhu);
+.cut{position:fixed;left:0;right:0;top:0;z-index:60;pointer-events:none;background:var(--ink);border-bottom:3px solid var(--zhu);
   display:flex;align-items:center;gap:14px;padding:10px 16px 10px 44px;animation:slam .16s steps(2) both}
 .cut.out{animation:leave .18s steps(2) both}
 .cut b{font-family:var(--brush);font-size:52px;line-height:.8;color:var(--zhu);font-weight:400}
@@ -169,22 +169,34 @@ select{width:100%;background:var(--sumi);color:var(--bone);border:1px solid var(
 .stat b{width:24px;text-align:center;color:var(--bone);font-weight:400}
 .stat i{font-style:normal;flex:1;color:var(--dim);font-size:9px}
 .stat button{width:24px;height:22px;background:var(--panel);border:1px solid var(--line2);line-height:1}
-.tip{position:fixed;left:calc(34px + 12px + env(safe-area-inset-left));right:calc(12px + env(safe-area-inset-right));
-  bottom:calc(12px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto;
+/* ==================================================================
+   UN CONSEIL QUI RECOUVRE CE QU'IL CONSEILLE.
+   Le conseil flottait au bas de l'ecran, par-dessus la page. Tant qu'il
+   n'y avait sous lui que du texte, cela passait. Depuis que la carte
+   porte les trois occupations et les gestes de la case, il tombe droit
+   sur les boutons — et « Combattre » ne repond plus. Le joueur clique,
+   rien ne se passe, et rien ne dit pourquoi : le bouton est la, visible,
+   simplement recouvert.
+
+   Il entre donc dans le FLUX, sous le journal, dans la colonne qu'il
+   commente. Il pousse la page au lieu de la couvrir. Un panneau qui
+   flotte au-dessus d'une zone cliquable est un piege, quelle que soit
+   sa hauteur : il suffit que le contenu grandisse d'une ligne.
+   ================================================================== */
+.tip{margin:10px 0 0;max-width:660px;
   background:var(--panel);border:1px solid var(--zhu);box-shadow:4px 4px 0 #000;
-  padding:10px 12px;z-index:52;display:flex;gap:12px;align-items:flex-start;animation:slam .16s steps(2) both}
+  padding:10px 12px;display:flex;gap:12px;align-items:flex-start;animation:slam .16s steps(2) both}
 .tip[hidden]{display:none}
 /* le conseil flotte au-dessus : la page se réserve la place pour défiler dessous */
 /* La page garde de la place pour defiler sous le conseil. Trois regles se
    succedaient ici, et la derniere ecrasait celle du telephone : la version
    etroite, qui a besoin de PLUS de place, en recevait moins. */
-body.has-tip{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
-@media(max-width:520px){body.has-tip{padding-bottom:calc(245px + env(safe-area-inset-bottom))}}
+/* il n'y a plus rien a reserver : le conseil occupe sa propre place */
 .tip b{font-family:var(--brush);font-size:34px;line-height:.8;color:var(--zhu);font-weight:400;flex:none}
 .tip .tt{flex:1;min-width:0}
 .tip .tt1{font-family:var(--px);font-size:12px;letter-spacing:.1em;color:var(--paper)}
 .tip .tt2{font-size:12.5px;color:var(--bone);line-height:1.55;margin-top:3px}
-@media(max-width:520px){.tip{left:calc(24px + 10px + env(safe-area-inset-left));right:calc(10px + env(safe-area-inset-right))}}
+
 .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--zhu);color:var(--paper);
   font-family:var(--px);font-size:11px;padding:9px 14px;border:1px solid #000;box-shadow:3px 3px 0 #000;z-index:55;max-width:88vw;text-align:center}
 
@@ -422,7 +434,8 @@ nav.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px
      panneau de droite commencait donc TOUT EN BAS, sous une colonne de vide.
      La scene enjambe les deux premieres lignes ; les onglets tiennent la
      ligne 1 a eux seuls, et le panneau commence juste dessous. */
-  #scene{grid-column:1;grid-row:1 / span 2;position:sticky;top:74px}
+  #scene{grid-column:1;grid-row:1 / span 2;position:sticky;top:74px;
+    max-height:calc(100dvh - 86px);overflow-y:auto}
   .log{grid-column:1;grid-row:3;margin-top:12px;max-height:30vh;overflow-y:auto}
   nav{grid-column:2;grid-row:1;margin-top:0;position:sticky;top:74px;z-index:15;
     background:var(--ink);flex-wrap:wrap;overflow-x:visible}
@@ -454,14 +467,9 @@ nav.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px
      une barre d'onglets qu'on ne peut pas cliquer vaut une barre absente */
   .cut{top:74px;left:calc(34px + 12px + env(safe-area-inset-left));right:auto;
     width:calc((100vw - 34px - 46px) * .42);max-width:640px}
-  .tip{left:calc(34px + 12px + env(safe-area-inset-left));right:auto;
-    width:calc((100vw - 34px - 46px) * .42);max-width:640px}
-  /* le conseil ne pousse plus la page : il a sa place dans la colonne. En
-     revanche il ne doit rien MASQUER — un conseil qui recouvre les trois
-     boutons d'occupation empeche exactement ce qu'il conseille de faire. La
-     scene se raccourcit tant qu'il est la. */
-  body.has-tip{padding-bottom:46px}
-  body.has-tip #scene{max-height:calc(100dvh - 300px);overflow-y:auto}
+  /* dans la colonne de gauche, sous le journal : il ne recouvre plus rien,
+     donc la scene n'a plus a se raccourcir pour lui */
+  .tip{grid-column:1;grid-row:4;max-width:none}
 }
 
 /* L'INTITULE DE FAMILLE. Sur grand ecran il coupe la barre en six blocs

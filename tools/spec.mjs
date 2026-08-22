@@ -25,6 +25,8 @@ const code=files.map(f=>readFileSync(join(root,'src',f),'utf8')).join('\n');
 /* tout le code du jeu en une chaine : de quoi verifier qu'un appel EXISTE,
    ce qu'aucune execution ne prouve quand le chemin est rare */
 function lireSrc(){return code;}
+/* le fichier d'entree seul : c'est la qu'on lit les gestes de la souris */
+function lireFichierEntree(){return readFileSync(join(root,'src','50-input.js'),'utf8');}
 
 function fakeEl(){
   const el={style:{setProperty(){}},children:[],dataset:{},innerHTML:'',textContent:'',className:'',hidden:false,
@@ -2066,6 +2068,41 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   /* --- le mode veteran les coupe tous --- */
   R(c,'S.seen={};S.tips=false;tipQ.length=0;for(let i=0;i<50;i++)tickTips();');
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
+});
+
+test('ordres — six, et deux qui ne frappent pas',()=>{
+  /* Suivre, attaquer, tenir, replier : le seul choix reel etait « combien de
+     degats contre combien de coups pris ». Trois curseurs sur une seule
+     ligne. Un compagnon ne pouvait rien faire que le joueur ne fasse deja
+     mieux ; l'escorte n'etait qu'un supplement de degats a pattes. */
+  const c=nouveau();
+  ok(G(c,'ORDK.length')>=6,'six ordres au moins — '+G(c,'ORDK.length'));
+  eq(G(c,'!!ORDERS.find(o=>o.soin)'),true,'un ordre qui soigne');
+  eq(G(c,'!!ORDERS.find(o=>o.gene)'),true,'un ordre qui gene');
+  /* LA ROUE D'ORDRES DOIT TOURNER SUR TOUS : un modulo ecrit en dur laisse
+     les derniers ordres inatteignables a la souris — ils existent et
+     personne ne peut les choisir. */
+  const src=lireFichierEntree();
+  ok(src.indexOf('%ORDK.length')>0,'la roue d ordres compte ses ordres au lieu de les supposer');
+  ok(src.indexOf('+1)%4]')<0,'et plus aucun compte ecrit en dur');
+
+  /* --- le soigneur rend de la vie, et ne frappe pas --- */
+  R(c,`S.occ='combat';E=null;EE=[];spawn();EE.forEach(x=>{x.hp=1e9;x.max=1e9;});
+    S.comps=[{id:'c1',nom:'x',esc:1,lv:10,order:'soigner',el:0,hp:50,max:50,mood:80,type:'humain'}];
+    S.hp=Math.round(maxHp()*.4);
+    globalThis.__pv0=S.hp;globalThis.__hp0=EE[0].hp;
+    for(let i=0;i<40;i++)compTick(.25);`);
+  ok(G(c,'S.hp')>G(c,'__pv0'),'le soigneur rend de la vie — '+G(c,'__pv0')+' puis '+G(c,'S.hp'));
+  eq(G(c,'EE[0].hp'),G(c,'__hp0'),'et ne frappe personne');
+  /* il soigne meme sans cible : c est tout l interet d un soin continu */
+  R(c,'S.hp=Math.round(maxHp()*.4);globalThis.__pv1=S.hp;for(let i=0;i<40;i++)compTick(.25);');
+  ok(G(c,'S.hp')>G(c,'__pv1'),'et il soigne tant que la vie manque');
+
+  /* --- le geneur ralentit et affaiblit --- */
+  R(c,`S.comps=[{id:'c2',nom:'y',esc:1,lv:10,order:'gener',el:0,hp:50,max:50,mood:80,type:'humain'}];
+    EE.forEach(x=>{x.st=[];x.hp=1e9;});
+    for(let i=0;i<40;i++)compTick(.25);`);
+  eq(G(c,'EE.some(x=>hasStatus(x,"ralenti"))'),true,'le gêneur ralentit ce qu il touche');
 });
 
 test('donjons — sept themes, sept gardiens, et rien qui se devine',()=>{

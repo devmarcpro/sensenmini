@@ -12,6 +12,21 @@ const ORDERS=[
   {k:'attaquer',g:'攻',n:'Attaquer',dmg:1.0,aggro:1.0,d:'frappe ta cible, prend sa part de coups'},
   {k:'tenir',g:'守',n:'Tenir',dmg:.6,aggro:2.2,d:'encaisse à ta place, frappe moins fort'},
   {k:'repli',g:'退',n:'Repli',dmg:.35,aggro:.2,d:'reste en retrait, harcèle de loin'},
+  /* ==================================================================
+     QUATRE ORDRES, ET TROIS QUI DISENT LA MEME CHOSE.
+     Suivre, attaquer, tenir, replier : le seul choix reel etait « combien
+     de degats contre combien de coups pris ». Trois curseurs sur une seule
+     ligne. Un compagnon ne pouvait rien faire que le joueur ne fasse deja
+     mieux, et l'escorte n'etait qu'un supplement de degats a pattes.
+
+     Deux ordres qui font autre chose, pas plus fort :
+       癒 SOIGNER — il ne frappe pas du tout, il te REND de la vie. C'est le
+         seul soin continu du jeu qui ne coute ni fiole ni mana.
+       妨 GENER — il frappe a peine, mais ce qu'il touche RALENTIT et
+         s'AFFAIBLIT. C'est du temps rendu au joueur, pas des degats.
+     ================================================================== */
+  {k:'soigner',g:'癒',n:'Soigner',dmg:0,aggro:.3,soin:1,d:'ne frappe pas — il te rend de la vie, sans fiole ni mana'},
+  {k:'gener',g:'妨',n:'Gêner',dmg:.3,aggro:.6,gene:1,d:'frappe a peine, mais ralentit et affaiblit ce qu il touche'},
 ];
 const ORDK=ORDERS.map(o=>o.k);
 /* E.17 : places_escorte = 1 + Charisme/5 + Leadership/10 */
@@ -85,6 +100,19 @@ function compTick(dt){
     if(c.t<iv)return;
     c.t=0;
     /* les compagnons ne se collent pas à ta cible : ils prennent les autres en charge */
+    const O=ORDERS.find(o=>o.k===ord)||{};
+    /* LE SOIGNEUR NE VISE RIEN : il regarde le joueur, pas la meute. Il agit
+       donc AVANT la recherche de cible, et il agit meme quand il n'y a
+       personne a frapper — c'est tout l'interet d'un soin continu. */
+    if(O.soin){
+      const h=Math.max(1,Math.round(maxHp()*(.012+c.lv*.0012)));
+      if(S.hp<maxHp()){
+        S.hp=Math.min(maxHp(),S.hp+h);
+        float('+'+h,'#4FA96B');compXp(c,h);gainXp('leadership',h*.4);
+      }
+      if(typeof compSeqAvance==='function')compSeqAvance(c);
+      return;
+    }
     const grp=engaged();
     if(!grp.length)return;
     const tgt=ord==='tenir'?grp[grp.length-1]:pick(grp);
@@ -94,6 +122,13 @@ function compTick(dt){
     float(Math.round(d),EL[compEl(c)].c);
     compXp(c,applied);
     gainXp('leadership',applied*.25);
+    /* LE GENEUR : ce qu'il enleve a la creature vaut mieux que ce qu'il lui
+       prend de vie — un ennemi ralenti frappe moins souvent, un ennemi
+       affaibli frappe moins fort. */
+    if(O.gene&&tgt.hp>0){
+      addStatus(tgt,'ralenti',2.5+c.lv*.04,1);
+      if(Math.random()<.35)addStatus(tgt,'affaibli',3+c.lv*.04,1);
+    }
     if(tgt.hp<=0)kill(tgt);
     if(typeof compSeqAvance==='function')compSeqAvance(c);
   });

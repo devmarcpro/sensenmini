@@ -261,6 +261,6 @@ function buildScene(){
     /* RIEN NE SE PASSE : c'est la carte qui occupe la scene. C'est la
        moitie « monde » de l'ecran coupe en deux — a droite les menus, a
        gauche l'endroit ou l'on est. */
-    $('scene').innerHTML='<div class="scene">'+carteHtml(5)+carteLegende()+carteActions()+gestesHtml()+'</div>';
+    $('scene').innerHTML='<div class="scene">'+carteActions()+gestesHtml()+carteHtml(5)+carteLegende()+'</div>';
   } else $('scene').innerHTML='';
 }

@@ -121,6 +121,11 @@ const MUT=[
   ['garde : le bouclier ne couvre que les voisines','garde',[['src/24-combat.js',"  if(grip().k==='bouclier'&&S.eq.main2&&(VOISINE[g]||[]).includes(d))return .5;","  if(grip().k==='bouclier'&&S.eq.main2)return .5;"]]],
   ['garde : ce qui vient de loin ne se pare pas','garde',[['src/24-combat.js',"  if(!d)return 0;                        /* ce qui vient de loin ne se pare pas */",'  if(!d)return 1;']]],
   ['module : la fiche annonce l etat pose','modificateurs',[['src/35-panel-magie.js',"          +(c.status&&STATUS[c.status.k]?' · '+STATUS[c.status.k].g+' '+STATUS[c.status.k].n.toLowerCase()",'          +(false?'+"''"]]],
+  /* les ordres d escorte */
+  ['ordre : le soigneur soigne','ordres',[['src/15-companions.js','        S.hp=Math.min(maxHp(),S.hp+h);','']]],
+  ['ordre : le soigneur ne frappe pas','ordres',[['src/15-companions.js',"    if(O.soin){","    if(false){"]]],
+  ['ordre : le geneur ralentit','ordres',[['src/15-companions.js',"      addStatus(tgt,'ralenti',2.5+c.lv*.04,1);",'']]],
+  ['ordre : la roue compte ses ordres','ordres',[['src/50-input.js','+1)%ORDK.length];}','+1)%4];}']]],
   /* les donjons */
   ['donjon : chaque theme a son gardien','donjons',[['src/17b-gardiens.js',"  temple:{n:'Le Noyeur',g:'溺',cre:'crocodile',","  temple0:{n:'Le Noyeur',g:'溺',cre:'crocodile',"]]],
   ['donjon : les salles suivent le theme','donjons',[['src/17-dungeon.js','  temple:{autel:3,puits:2,biblio:1.5},fonderie:{armurerie:3,tresor:1.5,garde:1.5},nid:{cache:2.5,tresor:2,piege:1.5}};','};']]],

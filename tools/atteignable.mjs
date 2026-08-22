@@ -442,6 +442,39 @@ bilan('effets cites par les pieces nommees',
   new Set(G('AFF.map(a=>a.id)')),
   'un effet disparu ferait tomber une piece qui ne fait rien');
 
+/* ---------- 6bis. le monde est-il trop plein ? ---------- */
+/* ATTEIGNABLE N'EST PAS LA SEULE QUESTION. Un lieu qu'on croise une case sur
+   deux cesse d'etre un lieu : il devient le decor. En posant six points
+   d'interet j'ai fait passer la densite de quarante a quarante-sept pour
+   cent sans m'en apercevoir — parce que rien ne la mesurait. Maintenant si.
+   On ne juge pas la valeur choisie ; on refuse qu'elle derive en silence. */
+{
+  /* PARTOUT() REUNIT DES ENSEMBLES : c'est ce qu'il faut pour dire « ce
+     qu'aucun monde ne produit est mort », et c'est faux pour compter. Le
+     total d'un monde y apparaissait UNE fois, les comptes des six mondes
+     toutes les six — deux cent quarante-trois pour cent de densite, ce qui
+     avait au moins le merite de se voir. On compte donc monde par monde. */
+  let tot=0;const par={};
+  mondes.forEach(ctx=>{
+    const r=vm.runInContext(`(()=>{const c={};let n=0;
+      for(let x=-28;x<28;x++)for(let y=-28;y<28;y++){const z=cell(x,y);n++;if(z.poi)c[z.poi]=(c[z.poi]||0)+1;}
+      return {n,c};})()`,ctx);
+    tot+=r.n;Object.keys(r.c).forEach(k=>{par[k]=(par[k]||0)+r.c[k];});
+  });
+  const n=Object.values(par).reduce((a,b)=>a+b,0);
+  const pct=n/Math.max(1,tot)*100;
+  const trop=pct>50;
+  if(trop)alertes++;
+  console.log('');
+  console.log('-- LE MONDE EST-IL TROP PLEIN ? ---------------------------------');
+  console.log((trop?'DENSE':'ok   ')+' points d interet                   '
+    +pct.toFixed(1)+' % des cases en portent un');
+  const rares=Object.keys(par).filter(k=>par[k]/tot*100<0.05);
+  if(rares.length)console.log('      introuvables en pratique (moins d une case sur deux mille) : '+rares.join(', '));
+  if(VERBOSE)Object.entries(par).sort((a,b)=>b[1]-a[1])
+    .forEach(([k,v])=>console.log('      '+k.padEnd(14)+(v/tot*100).toFixed(2)+' %'));
+}
+
 /* ---------- 7. les tirages sont-ils honnetes ? ---------- */
 /* Etre atteignable ne suffit pas : un affixe tire trois fois plus souvent
    qu'un autre est du contenu a moitie mort. On mesure l'ecart entre le plus

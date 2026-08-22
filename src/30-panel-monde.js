@@ -143,7 +143,7 @@ function pMonde(){
   let h='<p class="hint">Une seule génération continue : la carte n\'est qu\'une fenêtre sur le monde voxel. Le danger sort des couches de bruit, jamais de la distance — et il dérive chaque semaine selon ce que tu nettoies ou laisses pourrir.</p>';
   /* sur grand ecran la carte est deja a gauche, en permanence : la repeter
      ici serait un doublon qu'il faudrait tenir a jour deux fois */
-  if(!grandEcran())h+=carteHtml(5)+carteLegende()+carteActions()+gestesHtml();
+  if(!grandEcran())h+=carteActions()+gestesHtml()+carteHtml(5)+carteLegende();
   else h+='<p class="hint">La carte et les trois occupations sont à gauche, toujours visibles — tu n\'as plus à quitter un menu pour voir où tu es.</p>';
   h+=blocVehicule();
   return h;

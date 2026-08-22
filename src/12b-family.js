@@ -12,8 +12,10 @@
 const npcById=id=>S.npcs.find(n=>n.id===id)||null;
 /* ce qu'on annonce d'un PNJ : un mineur n'a pas de métier, il a un âge */
 const npcRole=n=>estEnfant(n)?(n.age<2?'nourrisson':'enfant'):JOBS[n.job].n;
-/* un enfant ne porte pas le nom de son père : on retire jusqu'à trouver autre chose */
-function nomDistinct(cult,pris){
+/* Un enfant PORTE le nom de son parent (E.31) — c'est la lignee qui se
+   transmet. Ce qui doit rester distinct, c'est le PRENOM : deux freres du
+   meme foyer ne s'appellent pas pareil. */
+function prenomDistinct(cult,pris){
   for(let i=0;i<12;i++){const nm=cultName(cult);if(!pris.includes(nm))return nm;}
   return cultName(cult)+' le Jeune';
 }
@@ -27,6 +29,11 @@ function marier(a,b){
 }
 function filier(enfant,p1,p2){
   famInit(enfant);
+  /* « Si le PNJ a un parent, il herite du nom de famille du parent — celui
+     a l'index 0 si parents multiples » (E.31). Une lignee devient alors
+     lisible d'un coup d'oeil dans la liste des habitants. */
+  const src=p1||p2;
+  if(src&&src.lign){enfant.lign=src.lign;enfant.nom=nomComplet(enfant.pre||enfant.nom,src.lign);}
   [p1,p2].forEach(p=>{if(!p)return;famInit(p);
     if(!enfant.fam.parents.includes(p.id))enfant.fam.parents.push(p.id);
     if(!p.fam.enfants.includes(enfant.id))p.fam.enfants.push(enfant.id);});
@@ -51,7 +58,8 @@ function linkFamilies(list){
     for(let i=0;i<n;i++){
       const bb=mkNpc(a.cell,ri(1,Math.min(16,plus)));
       bb.race=a.race;bb.cult=a.cult;bb.ville=a.ville;
-      bb.nom=nomDistinct(bb.cult,S.npcs.filter(x=>x.cell===a.cell).map(x=>x.nom));
+      bb.pre=prenomDistinct(bb.cult,S.npcs.filter(x=>x.cell===a.cell).map(x=>x.pre));
+      bb.nom=nomComplet(bb.pre,bb.lign);
       S.npcs.push(bb);filier(bb,a,b);
     }
   });
@@ -107,7 +115,8 @@ function weeklyFamilies(r){
     const bb=mkNpc(p.cell,0);
     bb.rel=Math.round(((p.rel||0)+(conj.rel||0))/4);
     bb.race=p.race;bb.cult=p.cult;bb.ville=p.ville;
-    bb.nom=nomDistinct(bb.cult,S.npcs.filter(x=>x.cell===p.cell).map(x=>x.nom));
+    bb.pre=prenomDistinct(bb.cult,S.npcs.filter(x=>x.cell===p.cell).map(x=>x.pre));
+    bb.nom=nomComplet(bb.pre,bb.lign);
     S.npcs.push(bb);filier(bb,p,conj);
     r.push('<span class="gd">'+bb.nom+' naît chez '+p.nom+' et '+conj.nom+'</span>');
   });

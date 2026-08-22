@@ -306,6 +306,84 @@ test('guildes — gabarits, rangs et suivi',()=>{
   gt(G(c,'__books'),0,'le palier s\'accompagne d\'un présent');
 });
 
+test('lignee — un enfant porte le nom de son parent',()=>{
+  /* E.31 decrit trois noms : le prenom, le NOM DE FAMILLE et le titre. Le
+     jeu n en avait qu un. Chaque habitant portait un mot tire au sort :
+     trois villageois d un meme foyer n avaient rien qui les rattache, et
+     les enfants d un roi ne portaient pas son nom. Une regle de succession
+     parfaitement juste dont RIEN ne se lisait a l ecran. */
+  const c=nouveau();
+
+  /* --- chaque culture sait former un nom de famille --- */
+  const muettes=G(c,`Object.keys(CULT).filter(k=>!CULT[k].fa||!CULT[k].fb
+    ||!CULT[k].fa.length||!CULT[k].fb.length)`);
+  ok(muettes.length===0,'les quinze cultures savent nommer une maison',
+    muettes.join(', '));
+  const varie=G(c,`(()=>{const s=new Set();
+    for(let i=0;i<400;i++)s.add(cultFamille('nipponne'));return s.size;})()`);
+  gt(varie,20,'et une culture en produit assez pour ne pas se repeter — '+varie);
+
+  /* --- un habitant a un prenom ET une maison --- */
+  R(c,`globalThis.__n=mkNpc('0,0',30);`);
+  ok(G(c,'!!__n.pre&&!!__n.lign'),'un habitant a un prenom et une lignee');
+  eq(G(c,'__n.nom'),G(c,'__n.pre+" "+__n.lign'),'et son nom affiche les deux');
+
+  /* --- L ENFANT HERITE --- */
+  R(c,`globalThis.__p=mkNpc('0,0',40);globalThis.__m=mkNpc('0,0',38);
+    globalThis.__e=mkNpc('0,0',5);
+    filier(__e,__p,__m);`);
+  eq(G(c,'__e.lign'),G(c,'__p.lign'),"l enfant porte la maison de son parent");
+  ok(G(c,'__e.nom').endsWith(G(c,'__p.lign')),'et son nom affiche le lien');
+  /* --- ET DEUX FRERES PORTENT LA MEME MAISON, JAMAIS LE MEME PRENOM ---
+     On ne s en remet pas au tirage pour obtenir une fratrie : on relance
+     jusqu a en avoir une. Un test qui se contente de « rien a comparer »
+     quand le hasard le prive de son sujet ne verifie rien du tout. */
+  const fratrie=G(c,`(()=>{
+    for(let essai=0;essai<80;essai++){
+      S.npcs=[];
+      const a=mkNpc('9,9',44),b=mkNpc('9,9',42);
+      a.cult=b.cult='nipponne';
+      a.lign=b.lign=cultFamille('nipponne');
+      a.nom=nomComplet(a.pre,a.lign);b.nom=nomComplet(b.pre,b.lign);
+      S.npcs.push(a,b);
+      linkFamilies(S.npcs);
+      const e=S.npcs.filter(n=>n.fam&&n.fam.parents.length);
+      if(e.length>1)return {pre:e.map(x=>x.pre),lign:e.map(x=>x.lign),pere:a.lign};
+    }
+    return null;})()`);
+  /* et la regle elle-meme, pincee au plus juste : on lui interdit tous les
+     prenoms d une culture sauf un, et l on exige qu elle trouve celui-la.
+     Sur un foyer de deux enfants, une collision est trop rare pour qu une
+     panne se voie ; ici elle ne peut pas passer. */
+  const evite=G(c,`(()=>{
+    const tous=[];CULT.sino.a.forEach(x=>CULT.sino.b.forEach(y=>tous.push(x+y)));
+    const seul=tous[3],pris=tous.filter(n=>n!==seul);
+    let ko=0;
+    for(let i=0;i<40;i++){const n=prenomDistinct('sino',pris);if(pris.includes(n))ko++;}
+    return ko;})()`);
+  eq(evite,0,'un prenom deja porte dans le foyer n est jamais repris');
+  ok(!!fratrie,'un foyer finit par avoir deux enfants');
+  if(fratrie){
+    eq(new Set(fratrie.pre).size,fratrie.pre.length,
+      'deux enfants du meme foyer ne portent pas le meme prenom');
+    ok(fratrie.lign.every(l=>l===fratrie.pere),
+      'mais ils portent tous la maison de leur parent',fratrie.lign.join(', '));
+  }
+
+  /* --- LA DYNASTIE --- */
+  const dyn=G(c,`(()=>{for(let i=0;i<60;i++){
+      const k={cult:'latine',race:'humain',gov:'monarchie'};
+      const r=mkRuler(k);
+      if(r&&r.enfants.length)return {nom:r.nom,lign:r.lign,
+        enf:r.enfants.map(e=>e.nom),heir:r.heir};}
+    return null;})()`);
+  ok(dyn&&dyn.enf.every(n=>n.endsWith(dyn.lign)),
+    'les enfants d un souverain portent sa maison',
+    dyn?dyn.nom+' -> '+dyn.enf.join(', '):'aucun souverain avec enfants');
+  ok(!dyn||!dyn.heir||dyn.heir.endsWith(dyn.lign),
+    "et l heritier se lit comme etant de la meme maison que le mort");
+});
+
 test('familles — liens, deuil, héritage, succession',()=>{
   const c=nouveau();
   /* on peuple plusieurs villages : un hameau de trois âmes ne prouve rien */
@@ -1612,10 +1690,23 @@ test('symetrie — les creatures se battent avec nos regles',()=>{
   eq(G(c,'E.end'),G(c,'__e1'),'et la reprise est suspendue un instant, comme la nôtre');
 
   /* --- une creature epuisee ne frappe VRAIMENT plus --- */
-  R(c,`EE.forEach(e=>{e.hp=1e9;e.max=1e9;e.end=e.endMax;});
+  /* ON CHOISIT L'ESPECE. La mesure portait sur ce que spawn() avait mis en
+     face — et le jour ou le tirage a donne une PROIE, la reference est
+     tombee a zero : une proie ne riposte pas, elle s'ecarte. On comparait
+     alors zero a zero, et le temoin ne temoignait de rien. Un loup ne fuit
+     pas : c'est lui qu'il faut pour mesurer un souffle. */
+  R(c,`E=mkEnemy('loup',4,false,false);EE=[E];foc=0;
+    EE.forEach(e=>{e.hp=1e9;e.max=1e9;e.end=e.endMax;e.w=-1;e.tt=0;});
     S.hp=maxHp()*99;globalThis.__pv=()=>{const h=S.hp;
       for(let i=0;i<400;i++)combatTick(.1);return h-S.hp;};`);
   const frais=G(c,'__pv()');
+  /* QUATRE CENTS TICKS NE SUFFISAIENT PAS TOUJOURS. La mesure de reference
+     tombait parfois a zero — la creature n'avait simplement pas eu le temps
+     de frapper — et l'on comparait alors deux zeros. Un temoin qui vaut zero
+     ne temoigne de rien : on l'exige non nul, et la fenetre est assez large
+     pour qu'il le soit. */
+  ok(frais>0,'une creature fraiche frappe — sans quoi la mesure ne dit rien',
+    'degats de reference : '+Math.round(frais));
   R(c,'EE.forEach(e=>{e.end=0;e.endLock=999;e.w=-1;e.tt=0;});S.hp=maxHp()*99;');
   const asec=G(c,'__pv()');
   /* UNE INEGALITE STRICTE SANS MARGE EST UN PILE OU FACE des que la mesure

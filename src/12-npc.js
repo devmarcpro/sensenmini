@@ -26,7 +26,10 @@ function mkNpc(cellKey,age){
   const a=age!==undefined?age:ri(17,Math.min(90,Math.round(RACE[race].life*.6)));
   /* un enfant n'a ni métier ni bourse : il apprend, et il grandira */
   const jeune=a<MAJORITE;
-  return {id:'n'+(S.nid++),nom:cultName(cult),race,cult,job,
+  /* prenom et lignee se rangent a part : l'heritage porte sur la lignee
+     seule, et `nom` reste ce qui s'affiche partout (E.31) */
+  const pre=cultName(cult),lign=cultFamille(cult);
+  return {id:'n'+(S.nid++),nom:nomComplet(pre,lign),pre,lign,race,cult,job,
     age:a,
     sign:[ri(0,4),ri(0,11)],lv:jeune?1:ri(1,14),rel:0,mood:ri(45,85),
     cell:cellKey,or:jeune?0:(JOBS[job].wallet||30),orMax:jeune?12:(JOBS[job].wallet||30),
@@ -43,7 +46,8 @@ function ensureNpcs(){
     const kg=kingdomsNear().find(x=>x.id===t.k);
     const nes=[];
     for(let i=0;i<n;i++){const p=mkNpc(k);
-      if(kg&&Math.random()<.9){p.race=kg.race;p.cult=pick(RACE[kg.race].cult);p.nom=cultName(p.cult);}
+      if(kg&&Math.random()<.9){p.race=kg.race;p.cult=pick(RACE[kg.race].cult);
+        p.pre=cultName(p.cult);p.lign=cultFamille(p.cult);p.nom=nomComplet(p.pre,p.lign);}
       p.ville=t.nom;S.npcs.push(p);nes.push(p);}
     linkFamilies(nes);
     return;

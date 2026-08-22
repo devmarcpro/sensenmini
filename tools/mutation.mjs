@@ -200,6 +200,10 @@ const MUT=[
   /* le scriptorium */
   ['collection : le filtre retire ce qu on a deja','collection',[['src/48b-panel-collection.js',"    h+='<div class=\"matlist\">'+tout.filter(k=>!seulManque||!eus.includes(k)).map(k=>{","    h+='<div class=\"matlist\">'+tout.map(k=>{"]]],
   ['collection : le plus pres du bout vient en premier','collection',[['src/48b-panel-collection.js','    .filter(f=>f.m>0).sort((x,y)=>x.m-y.m);','    .filter(f=>f.m>0);']]],
+  ['lignee : l enfant herite du nom du parent','lignee',[['src/12b-family.js',"  if(src&&src.lign){enfant.lign=src.lign;enfant.nom=nomComplet(enfant.pre||enfant.nom,src.lign);}","  if(false){enfant.lign=src.lign;}"]]],
+  ['lignee : deux freres gardent des prenoms distincts','lignee',[['src/12b-family.js','  for(let i=0;i<12;i++){const nm=cultName(cult);if(!pris.includes(nm))return nm;}','  for(let i=0;i<12;i++){const nm=cultName(cult);return nm;}']]],
+  ['lignee : la dynastie porte un nom','lignee',[['src/22-realms.js','  for(let i=0;i<n;i++)enfants.push({nom:nomComplet(cultName(k.cult),lign),age:Math.max(1,age-ri(18,42))});','  for(let i=0;i<n;i++)enfants.push({nom:nomComplet(cultName(k.cult),cultFamille(k.cult)),age:Math.max(1,age-ri(18,42))});']]],
+  ['lignee : le nom affiche la maison','lignee',[['src/05-data-social.js',"const nomComplet=(pre,lign)=>lign?pre+' '+lign:pre;",'const nomComplet=(pre,lign)=>pre;']]],
   ['veille : la cadence se perime en changeant de matiere','absence',[['src/19-idle.js',"  const bonne=k==='harv'?(S.occ!=='recolte'||R.harvSur===S.target)","  const bonne=k==='harv'?true"]]],
   ['veille : le plafond de huit heures se dit','absence',[['src/19-idle.js','  if(sec>capH*3600+60)','  if(false)']]],
   ['veille : le filon tari se dit','absence',[['src/19-idle.js','    if(n<veut)r.push(n?','    if(false)r.push(n?']]],

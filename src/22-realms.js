@@ -81,14 +81,21 @@ function capName(cult,x,y){
 /* un souverain a une famille : c'est elle qui décide de la succession (12.3) */
 function mkRuler(k){
   if(k.gov==='anarchie')return null;              /* personne ne règne : c'est tout le principe */
-  const nom=cultName(k.cult),age=ri(28,70);
+  /* LA DYNASTIE PORTE UN NOM (E.31). Les enfants d'un roi tiraient le
+     leur au sort : la regle de succession etait juste, et rien a l'ecran
+     ne disait que l'heritier etait de la meme maison que le mort. */
+  const lign=cultFamille(k.cult);
+  const nom=nomComplet(cultName(k.cult),lign),age=ri(28,70);
   const enfants=[];
   const n=Math.random()<.75?ri(1,3):0;
-  for(let i=0;i<n;i++)enfants.push({nom:cultName(k.cult),age:Math.max(1,age-ri(18,42))});
+  for(let i=0;i<n;i++)enfants.push({nom:nomComplet(cultName(k.cult),lign),age:Math.max(1,age-ri(18,42))});
   enfants.sort((a,b)=>b.age-a.age);
   const majeur=enfants.find(e=>e.age>=14);
   return {nom,age,race:k.race,titre:TITRES[k.gov],lv:ri(12,30),
-    conjoint:Math.random()<.7?cultName(k.cult):null,enfants,
+    lign,
+    /* le conjoint garde sa maison : le document ne tranche pas la coutume,
+       nous non plus */
+    conjoint:Math.random()<.7?nomComplet(cultName(k.cult),cultFamille(k.cult)):null,enfants,
     heir:majeur?majeur.nom:null};
 }
 /* villes du royaume, matérialisées à la première interrogation */

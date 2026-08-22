@@ -524,10 +524,11 @@ bilan('effets cites par les pieces nommees',
      STRUCTURELLE : une culture est atteignable si une RACE la porte, et si
      cette race peut peupler le monde. On verifie donc la construction, et
      l'echantillon ne sert plus qu'a informer. */
-  const racesVues=sous(vus,'r:');
+  /* la culture se juge sur les races que le monde PEUT peupler, pas sur
+     celles que cet echantillon-ci a tirees : sinon un coup de des sur une
+     race rare condamne d'un coup toutes ses cultures */
   const cultOk=new Set();
   G('Object.keys(RACE)').forEach(r=>{
-    if(!racesVues.has(r))return;
     G('RACE["'+r+'"].cult').forEach(k=>cultOk.add(k));
   });
   bilan('cultures qu une race porte',G('Object.keys(CULT)'),cultOk,
@@ -535,8 +536,26 @@ bilan('effets cites par les pieces nommees',
   const jamaisVues=G('Object.keys(CULT)').filter(k=>!sous(vus,'c:').has(k));
   if(jamaisVues.length&&VERBOSE)
     console.log('      (non tirees sur cet echantillon, sans que cela prouve rien : '+jamaisVues.join(', ')+')');
-  bilan('races que le monde peuple',G('Object.keys(RACE)'),sous(vus,'r:'),
-    'une race que personne n incarne bloque le cent pour cent');
+  /* MEME REMARQUE QUE POUR LES CULTURES, ET ELLE A FINI PAR MORDRE.
+     Six mondes ne posent qu'une poignee de villages ; une race tiree une
+     fois sur huit peut n'y jamais paraitre, et l'audit criait alors au
+     contenu mort sur un pur coup de des — il l'a fait le jour ou une
+     modification sans rapport a decale la suite pseudo-aleatoire.
+     La question STRUCTURELLE est : le tirage des habitants peut-il la
+     produire, ou un royaume peut-il l'avoir pour race dominante ? */
+  const racesPossibles=new Set(G(`(()=>{
+    const s=new Set();
+    /* on interroge la fabrique elle-meme, un grand nombre de fois : c'est
+       elle qui decide, et non une liste recopiee ici qui vieillirait */
+    for(let i=0;i<4000;i++)s.add(mkNpc('0,0',30).race);
+    /* et les royaumes, qui ont chacun leur race dominante */
+    kingdomsNear().forEach(k=>s.add(k.race));
+    return [...s];})()`));
+  bilan('races que le monde peut peupler',G('Object.keys(RACE)'),racesPossibles,
+    'une race que personne ne peut incarner bloque le cent pour cent');
+  const rJamais=G('Object.keys(RACE)').filter(k=>!sous(vus,'r:').has(k));
+  if(rJamais.length&&VERBOSE)
+    console.log('      (non tirees sur cet echantillon, sans que cela prouve rien : '+rJamais.join(', ')+')');
 }
 
 /* ---------- 6bis. le monde est-il trop plein ? ---------- */

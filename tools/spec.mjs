@@ -2070,6 +2070,58 @@ test('conseils — chaque systeme se signale, et sans mentir',()=>{
   eq(G(c,'Object.keys(S.seen).length'),0,'le mode vétéran n\'en montre aucun');
 });
 
+test('fioles — treize effets, et chacun deplace quelque chose',()=>{
+  /* Trente-cinq matieres vegetales poussent dans le monde ; neuf seulement
+     avaient une vertu a l'alambic. L'herboristerie ramassait un lierre, un
+     roseau, un houblon en sachant qu'ils ne feraient jamais rien d'autre que
+     de la ficelle ou de la soupe. */
+  const c=nouveau();
+  ok(G(c,'Object.keys(POTEFF).length')>=13,'treize effets au moins — '+G(c,'Object.keys(POTEFF).length'));
+  /* chaque plante d alchimie doit pointer sur un effet qui existe */
+  const perdues=G(c,'Object.keys(ALCHPLANTE).filter(k=>!POTEFF[ALCHPLANTE[k]])');
+  ok(perdues.length===0,'chaque plante mene a un effet qui existe',
+    perdues.length?'sans effet : '+perdues.join(', '):'');
+  /* et chaque plante doit etre une matiere du monde */
+  const fantomes=G(c,'Object.keys(ALCHPLANTE).filter(k=>!MAT[k])');
+  ok(fantomes.length===0,'chaque plante d alchimie existe comme matiere',
+    fantomes.length?'inconnues : '+fantomes.join(', '):'');
+  /* et chaque effet doit avoir une plante qui le donne : une fiole qu'aucune
+     plante ne distille ne se boit jamais */
+  const orphelins=G(c,'Object.keys(POTEFF).filter(k=>!Object.keys(ALCHPLANTE).some(p=>ALCHPLANTE[p]===k)&&!PARTS.some(x=>x.alch===k))');
+  ok(orphelins.length===0,'chaque effet a une source',
+    orphelins.length?'sans source : '+orphelins.join(', '):'');
+
+  /* --- CHACUN DOIT DEPLACER QUELQUE CHOSE : une fiole qui ne fait rien est
+     un objet de decor qu on transporte --- */
+  R(c,`globalThis.__fiole=(k)=>{
+      S.hp=Math.round(maxHp()*.5);S.end=40;S.mana=0;S.faim=50;S.buffs=[];S.st=[];S.lame=0;
+      addStatus(S,'saignement',9,1);addStatus(S,'poison',9,1);addStatus(S,'infection',9,1);
+      const av=JSON.stringify([Math.round(S.hp),Math.round(S.end),Math.round(S.mana),Math.round(S.faim),
+        (S.buffs||[]).length,(S.st||[]).length,S.lame,Math.round((S.repose||0)*100),Math.round(st('per'))]);
+      try{POTEFF[k].fait(1);}catch(e){return 'exception : '+e.message;}
+      const ap=JSON.stringify([Math.round(S.hp),Math.round(S.end),Math.round(S.mana),Math.round(S.faim),
+        (S.buffs||[]).length,(S.st||[]).length,S.lame,Math.round((S.repose||0)*100),Math.round(st('per'))]);
+      return av===ap?'inerte':'';};`);
+  const inertes=G(c,'Object.keys(POTEFF)').filter(k=>G(c,'__fiole("'+k+'")'));
+  ok(inertes.length===0,'chacune des '+G(c,'Object.keys(POTEFF).length')+' fioles change l état du joueur',
+    inertes.length?'sans effet : '+inertes.join(', '):'');
+
+  /* --- UN BONUS POSE A ZERO EST UN BONUS ABSENT. Compter les bonus ne
+     suffit pas : une fiole qui en pose un de valeur nulle bouge l'etat sans
+     rien donner. On lit donc la VALEUR, pas la presence. --- */
+  R(c,"S.buffs=[];S.end=10;POTEFF.souffle.fait(1);");
+  ok(G(c,"buffOf('regen')")>0,'le second souffle pose un vrai gain d endurance — '
+    +G(c,"buffOf('regen')"));
+  R(c,"S.buffs=[];POTEFF.oeil.fait(1);");
+  ok(G(c,"buffOf('per')")>0,'l oeil de nuit ajoute vraiment de la Perception');
+
+  /* --- et la satiete ralentit VRAIMENT la faim, par la boucle --- */
+  R(c,`S.buffs=[];S.faim=100;S.occ='repos';for(let i=0;i<200;i++)step(1);globalThis.__f0=100-S.faim;
+    S.buffs=[];POTEFF.satiete.fait(1);S.faim=100;for(let i=0;i<200;i++)step(1);globalThis.__f1=100-S.faim;`);
+  ok(G(c,'__f1')<G(c,'__f0'),'rassasié, la faim tombe moins vite — '
+    +G(c,'__f0').toFixed(1)+' contre '+G(c,'__f1').toFixed(1));
+});
+
 test('attelages — huit, et le terrain decide',()=>{
   /* Cinq attelages pour un monde de vingt biomes : trois roulants, deux
      flottants, et rien qui reponde a ce que le monde a de particulier. La

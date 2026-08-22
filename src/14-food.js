@@ -223,10 +223,24 @@ const BUFFN={force:'Force',per:'Perception',vol:'Volonté',dmg:'Dégâts',def:'R
    vaut ce qu'on n'arrive pas a tuer autrement — et il est illegal a peu
    pres partout, ce qui est le propre d'une bonne solution.
    ================================================================== */
+/* ==================================================================
+   NEUF PLANTES POUR HUIT FIOLES, ET VINGT-SIX AUTRES QUI NE SERVENT A
+   RIEN A L'ALAMBIC.
+   Trente-cinq matieres vegetales poussent dans le monde ; neuf seulement
+   avaient une vertu. L'herboristerie ramassait donc un lierre, un roseau,
+   un houblon en sachant d'avance qu'ils ne feraient jamais rien d'autre
+   que de la ficelle ou de la soupe.
+
+   Cinq de plus, et cinq fioles qui remplissent des trous reels : rien
+   ne rendait de l'ENDURANCE, rien ne donnait de la VITESSE, rien ne
+   soignait le SAIGNEMENT, rien n'aidait a VOIR, rien ne calmait la faim.
+   ================================================================== */
 const ALCHPLANTE={
   achillee:'soin',herbes:'remede',racines:'antipoison',camomille:'sommeil',
   menthe:'fraicheur',ortie:'resistance',sauge:'mana',
   belladone:'poisonlame',amanite:'poisonlame',
+  houblon:'souffle',lierre:'hate',roseau:'garrot',
+  myrtille:'oeil',dattes:'satiete',
 };
 const POTEFF={
   soin:{n:'Soin',g:'癒',sub:v=>'rend '+Math.round(18*v)+' PV sur-le-champ',
@@ -248,6 +262,19 @@ const POTEFF={
     fait(){S.mana=maxMana();return 'mana plein';}},
   poisonlame:{n:'Poison de lame',g:'塗',sub:v=>'tes coups empoisonnent '+Math.round(180*v)+' s',
     fait(v){S.lame=Math.round(180*v);return 'la lame luit';}},
+  souffle:{n:'Second souffle',g:'息',sub:v=>'rend tout le souffle et le tient '+Math.round(v*120)+' s',
+    fait(v){S.end=100;poserBuff('regen',+(1.2*v).toFixed(1),Math.round(120*v),'Second souffle');
+      return 'le souffle revient et tient';}},
+  hate:{n:'Hâte',g:'疾',sub:v=>'plus vif '+Math.round(90*v)+' s',
+    fait(v){addStatus(S,'hate',Math.round(90*v),1);return 'les gestes s enchainent';}},
+  garrot:{n:'Garrot',g:'締',sub:()=>'arrete une plaie qui saigne',
+    fait(){return soigner('saignement','le garrot serre')?'la plaie se ferme':'rien qui saigne';}},
+  oeil:{n:'Oeil de nuit',g:'瞳',sub:v=>'+'+Math.round(3*v)+' en Perception '+Math.round(v*300)+' s',
+    fait(v){poserBuff('per',Math.max(1,Math.round(3*v)),Math.round(300*v),'Oeil de nuit');
+      return 'les ombres se detachent';}},
+  satiete:{n:'Satiété',g:'飽',sub:v=>'la faim tombe deux fois moins vite, '+Math.round(v*600)+' s',
+    fait(v){poserBuff('satiete',.5,Math.round(600*v),'Satiété');S.faim=Math.min(100,S.faim+12*v);
+      return 'le ventre se tient tranquille';}},
 };
 const poserBuff=(k,v,t,n)=>{S.buffs=(S.buffs||[]).filter(b=>b.k!==k);S.buffs.push({k,v,t,n});};
 function distill(sel2){

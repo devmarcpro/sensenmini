@@ -37,7 +37,7 @@ const MUT=[
   ['parure : metier','parures',[['src/08-state.js',"+(typeof utilSk==='function'?utilSk(k):0);",';']]],
   ['parure : statistique','parures',[['src/25-modules.js',"+(typeof utilStat==='function'?utilStat(k):0)",'']]],
   ['parure : charge','parures',[['src/10-craft.js',"+(typeof util==='function'?util().poids:0)",'']]],
-  ['parure : faim','parures',[['src/28-loop.js','*(1-util().faim));','));']]],
+  ['parure : faim','parures',[['src/28-loop.js','*(1-util().faim)','*(1-0)']]],
   ['parure : immunite poison','parures',[['src/20-status.js',
     "if(tgt===S&&k==='poison'&&typeof don==='function'&&don('antipoison'))return;",'']]],
   ['parure : pas silencieux','parures',[['src/21-reputation.js',"+(don('silence')?8:0);",';']]],
@@ -134,6 +134,10 @@ const MUT=[
   ['passif : le resume se calcule','passifs',[['src/35-panel-magie.js','  const dits=Object.keys(PA).filter(k=>PA[k])',"  const dits=['dmg','pierce','win'].filter(k=>PA[k])"]]],
   ['attelage : le refus nomme la bete','attelages',[['src/22b-vehicules.js',"    return 'il faut une bête apprivoisée dans ton escorte';",'    return null;']]],
   ['attelage : la fiche dit le terrain','attelages',[['src/30-panel-monde.js',"        +vehTerrain(D2)+","        +\"\"+"]]],
+  /* les fioles */
+  ['fiole : la satiete ralentit la faim','fioles',[['src/28-loop.js',"    *(1-Math.min(.6,buffOf('satiete'))));",'    );']]],
+  ['fiole : le second souffle tient','fioles',[['src/14-food.js',"poserBuff('regen',+(1.2*v).toFixed(1)","poserBuff('regen',0"]]],
+  ['fiole : le garrot ferme la plaie','fioles',[['src/14-food.js',"    fait(){return soigner('saignement','le garrot serre')?'la plaie se ferme':'rien qui saigne';}},","    fait(){return 'rien';}},"]]],
   /* les attelages */
   ['attelage : la roue ne monte pas','attelages',[['src/22b-vehicules.js','  if(rude&&!D.tout)return false;','']]],
   ['attelage : une bete demande une bete','attelages',[['src/22b-vehicules.js',"  if(D.bete&&!(S.comps||[]).some(x=>x.esc&&!x.dead&&x.type==='bete'))return false;",'']]],

@@ -7,7 +7,10 @@ let harvT=0,expT=0,uiT=9,ptrDown=false,craftT=0,endLock=0,respawnT=0,hitFx=0,spe
 function step(dt){
   tickClock(dt);
   /* une ceinture bien faite ne remplit pas le ventre : elle le vide moins vite */
-  S.faim=Math.max(0,S.faim-dt/90*(S.race==='sylvide'?.5:1)*(1-util().faim));
+  /* la satiete d'une fiole ralentit la faim comme une parure le ferait :
+     un bonus qui ne se lit nulle part n'est qu'une ligne de texte */
+  S.faim=Math.max(0,S.faim-dt/90*(S.race==='sylvide'?.5:1)*(1-util().faim)
+    *(1-Math.min(.6,buffOf('satiete'))));
   /* l'equipement change entre deux images : on recalcule au plus une fois par tour */
   salirUtil();
   tickBuffs(dt);

@@ -610,6 +610,26 @@ test('panneaux — chaque onglet se rend, replié ou déplié',()=>{
      exactement ce qui est arrive a l'onglet COMBAT. */
   const onglets=[...readFileSync(join(root,'index.html'),'utf8')
     .matchAll(/data-tab="([a-z]+)"/g)].map(m=>m[1]);
+  /* LES ONGLETS SONT RANGES PAR FAMILLE, et un onglet ajoute hors famille se
+     retrouverait rattache en silence a la precedente — c'est-a-dire au
+     mauvais endroit. On exige donc que chaque onglet suive un intitule, et
+     qu'aucune famille ne soit vide. */
+  const nav=readFileSync(join(root,'index.html'),'utf8');
+  const bloc=nav.slice(nav.indexOf('<nav id="tabs">'),nav.indexOf('</nav>'));
+  const jetons=[...bloc.matchAll(/class="navgrp">([^<]+)<|data-tab="([a-z]+)"/g)]
+    .map(m=>m[1]?{g:m[1]}:{t:m[2]});
+  ok(jetons.length&&jetons[0].g,'la barre commence par un intitule de famille');
+  let fam=null;const orphelins=[],vides=[];let compte=0;
+  jetons.forEach(j=>{
+    if(j.g){if(fam!==null&&compte===0)vides.push(fam);fam=j.g;compte=0;}
+    else{if(fam===null)orphelins.push(j.t);compte++;}
+  });
+  if(fam!==null&&compte===0)vides.push(fam);
+  ok(orphelins.length===0,'chaque onglet appartient a une famille',
+    orphelins.length?'sans famille : '+orphelins.join(', '):'');
+  ok(vides.length===0,'aucune famille ne reste vide',vides.length?'vides : '+vides.join(', '):'');
+  eq(jetons.filter(j=>j.t).length,onglets.length,'et la barre porte tous les onglets connus');
+
   /* sur une partie neuve et sur une partie avancée */
   for(const avance of [false,true]){
     if(avance)R(c,`S.or=99999;claimCell();

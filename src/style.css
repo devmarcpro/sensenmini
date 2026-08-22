@@ -463,3 +463,20 @@ nav.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px
   body.has-tip{padding-bottom:46px}
   body.has-tip #scene{max-height:calc(100dvh - 300px);overflow-y:auto}
 }
+
+/* L'INTITULE DE FAMILLE. Sur grand ecran il coupe la barre en six blocs
+   lisibles ; sur telephone la barre defile deja horizontalement et un
+   intitule y volerait la place d'un onglet — il disparait. */
+.navgrp{display:none}
+@media(min-width:1080px){
+  /* UN INTITULE PAR LIGNE COUTAIT SIX LIGNES — trois cents pixels de haut,
+     et le panneau redescendait d'autant. L'intitule se met donc DANS la
+     ligne, avant sa famille : les six blocs se suivent et tiennent en deux
+     lignes, ce qui garde le groupement sans le payer en hauteur. */
+  .navgrp{display:flex;align-items:center;font-family:var(--px);font-size:8.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--dim);opacity:.62;padding:0 8px 0 10px;margin-left:2px;
+    border-left:1px solid var(--line2);white-space:nowrap}
+  .navgrp:first-child{border-left:0;padding-left:0;margin-left:0}
+  nav{border-bottom:1px solid var(--line);padding-bottom:4px;row-gap:2px}
+  nav button{padding:5px 8px}
+}

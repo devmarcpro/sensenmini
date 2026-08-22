@@ -99,6 +99,38 @@ function colAvoir(cat){
   const dedu=D.vus?D.vus():[];
   return [...new Set(enr.concat(dedu))].filter(k=>tout.includes(k));
 }
+/* ==================================================================
+   UN OBJECTIF QUI NE PAIE RIEN N'EST PAS UN OBJECTIF.
+
+   J'avais ecrit, en posant la collection : « une premiere fois se dit :
+   c'est la seule recompense, et elle suffit — on ne donne pas d'or pour
+   avoir vu quelque chose. » La deuxieme moitie de la phrase reste vraie et
+   la premiere etait fausse. Remplir une famille demande des semaines de
+   jeu ; n'en rien tirer, c'est demander un travail et rendre un applaudis-
+   sement.
+
+   Ce qu'une collection achevee donne n'est pas un tresor : c'est de la
+   CONNAISSANCE, et elle se paie dans ce qu'on sait faire.
+     — toutes les MATIERES : on sait ou regarder, et la main revient parfois
+       plus pleine ;
+     — tous les BIOMES : on sait ou poser le pied, et l'on marche plus vite ;
+     — toutes les CREATURES : on sait ou trancher, et la bete rend plus ;
+     — tous les MODULES : on a tout lu, et un livre de plus s'ouvre a chaque
+       lecture reussie.
+   Et CHAQUE famille achevee, quelle qu'elle soit, vaut un pour cent d'XP
+   partout : rien n'est complete pour rien. Vingt-sept familles, vingt-sept
+   pour cent — c'est le prix d'une partie entiere, et cela se merite.
+   ================================================================== */
+const COLBON={
+  mat:'la main revient parfois plus pleine',
+  biome:'on marche dix pour cent plus vite',
+  creature:'les bêtes rendent un tiers de butin en plus',
+  module:'un livre réussi enseigne un module de plus',
+};
+const colComplete=cat=>colPct(cat)>=1;
+function colFamilles(){let n=0;COLK.forEach(k=>{if(colComplete(k))n++;});return n;}
+/* « rien n'est complete pour rien » : un pour cent d'XP par famille */
+const colErudition=()=>colFamilles()*.01;
 const colPct=cat=>{const D=COLLECTION[cat];if(!D)return 0;
   const t=D.tout().length;return t?colAvoir(cat).length/t:0;};
 /* la complétion générale : chaque entrée du jeu pèse pareil, quelle que

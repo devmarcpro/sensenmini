@@ -1136,6 +1136,72 @@ test('anatomie — le coup vaut ce qu il touche, et la visee remplace le de',()=
   ok(torse>pieds&&torse<tete,'et le torse est entre les deux');
 });
 
+test('erudition — une collection achevee paie en savoir-faire',()=>{
+  /* J'avais ecrit, en posant la collection : « une premiere fois se dit :
+     c'est la seule recompense, et elle suffit. » La deuxieme moitie de la
+     phrase reste vraie — pas d'or pour avoir vu quelque chose — et la
+     premiere etait fausse : remplir une famille demande des semaines, n'en
+     rien tirer, c'est demander un travail et rendre un applaudissement. */
+  const c=nouveau();
+  /* --- rien n'est acquis d'avance --- */
+  R(c,'S.col={};');
+  eq(G(c,'colFamilles()'),0,'au depart, aucune famille achevee');
+  eq(G(c,'colErudition()'),0,'et aucune erudition');
+
+  /* --- une famille achevee vaut un pour cent, partout --- */
+  R(c,`globalThis.__finir=(cat)=>{S.col=S.col||{};S.col[cat]={};
+      COLLECTION[cat].tout().forEach(k=>S.col[cat][k]=1);};
+    __finir('biome');`);
+  eq(G(c,'colComplete("biome")'),true,'les biomes sont complets');
+  ok(G(c,'colErudition()')>0.005,'et l erudition monte');
+  R(c,`S.sk.epee={xp:0,lv:1,pot:100,base:50};gainXp('epee',1000);globalThis.__x1=S.sk.epee.xp;
+    S.col={};S.sk.epee={xp:0,lv:1,pot:100,base:50};gainXp('epee',1000);globalThis.__x0=S.sk.epee.xp;`);
+  ok(G(c,'__x1')>G(c,'__x0'),'et chaque compétence en profite — '
+    +G(c,'__x0').toFixed(0)+' puis '+G(c,'__x1').toFixed(0));
+
+  /* --- les biomes : on sait ou poser le pied --- */
+  R(c,`S.col={};S.pos=[0,0];cell(6,0).seen=true;S.day=10;travel(6,0);globalThis.__t0=S.day-10;
+    S.pos=[0,0];S.day=10;__finir('biome');travel(6,0);globalThis.__t1=S.day-10;`);
+  ok(G(c,'__t1')<G(c,'__t0'),'tous les biomes vus, on marche plus vite — '
+    +G(c,'__t0').toFixed(3)+' puis '+G(c,'__t1').toFixed(3));
+
+  /* --- les creatures : la bete rend plus --- */
+  R(c,`S.col={};S.occ='combat';E=null;EE=[];spawn();
+    globalThis.__butin=()=>{S.mat={};const k=mkEnemy('loup',4,false,false);
+      k.drop='cuir';k.hp=0;kill(k);return S.mat.cuir||0;};`);
+  const nu=G(c,'__butin()');
+  R(c,"__finir('creature');");
+  const su=G(c,'__butin()');
+  ok(su>nu,'tout le bestiaire vu, la bête rend plus — '+nu+' puis '+su);
+
+  /* --- les modules : un livre de plus s ouvre --- */
+  R(c,`S.col={};S.modules=[];S.sk.lecture={xp:0,lv:1,pot:100,base:50};
+    globalThis.__lire=()=>{S.modules=[];S.books=[{id:'x',dom:'feu',diff:1}];
+      const r=Math.random;Math.random=()=>.99;readBook(0);Math.random=r;
+      return S.modules.reduce((a,m)=>a+m.lv,0);};`);
+  const m0=G(c,'__lire()');
+  R(c,"__finir('module');");
+  const m1=G(c,'__lire()');
+  ok(m1>m0,'tous les modules connus, un livre en enseigne un de plus — '+m0+' puis '+m1);
+
+  /* --- les matieres : la main revient plus pleine --- */
+  R(c,`S.col={};S.occ='recolte';S.mat={};
+    globalThis.__recolter=(n)=>{const cc=here();
+      const mk=cellMats(cc).find(m=>canHarvest(m));
+      if(!mk)return 0;
+      S.target=mk;S.mat={};harvT=0;
+      for(let i=0;i<n;i++){cc.stock=null;harvT=99;harvestTick(0);}
+      return S.mat[mk]||0;};`);
+  const r0=G(c,'__recolter(60)');
+  R(c,"__finir('mat');");
+  const r1=G(c,'__recolter(60)');
+  ok(r1>r0,'toutes les matieres vues, la main revient plus pleine — '+r0+' puis '+r1);
+
+  /* --- et chaque promesse affichee correspond a un branchement --- */
+  eq(G(c,'Object.keys(COLBON).every(k=>!!COLLECTION[k])'),true,
+    'aucune famille promise qui n existe pas');
+});
+
 test('boyaux — une hampe cogne les parois, une lame courte non',()=>{
   /* E.3.2 : « la lame qui rencontre un bloc rebondit — recuperation
      rallongee, clang, cout d'endurance supplementaire. Se battre dans un

@@ -28,7 +28,7 @@ const B=join(dirname(fileURLToPath(import.meta.url)),'..');
 
 /* [nom, suite a lancer, [[fichier, cherche, remplace], ...]] */
 const MUT=[
-  ['parure : marche','parures',[['src/28-loop.js','*(1-util().marche)*mv*mm;','*mv*mm;']]],
+  ['parure : marche','parures',[['src/28-loop.js','*(1-util().marche)*mv*mm*ery;','*mv*mm*ery;']]],
   ['parure : cicatrisation','parures',[
     ['src/28-loop.js','*.06*dt*(1+util().soin));','*.06*dt);'],
     ['src/28-loop.js','*.015*dt*(S.thermal||1)*(1+util().soin));','*.015*dt*(S.thermal||1));'],
@@ -75,7 +75,7 @@ const MUT=[
   ['gardien : il se recoud','gardiens',[['src/17b-gardiens.js',"    if(g.repos>2.5){",'    if(false){']]],
   ['gardien : sa piece nommee','gardiens',[['src/17-dungeon.js',"    if(G2&&ARTEFACT[G2.arte]&&!sacPlein())dropArtefactNomme(G2.arte,d.floors.length);",'']]],
   /* le ciel et l annee */
-  ['ciel : temps de trajet','ciel',[['src/28-loop.js','*mv*mm;','*mv;']]],
+  ['ciel : temps de trajet','ciel',[['src/28-loop.js','*mv*mm*ery;','*mv*ery;']]],
   ['ciel : blizzard qui mord','ciel',[['src/28-loop.js','if(fx(c).gel&&!eclaireIci()&&!foyerIci()){','if(false){']]],
   ['ciel : foudre','ciel',[['src/28-loop.js','if(fx(c).foudre&&!eclaireIci()){','if(false){']]],
   ['ciel : voiles ingouvernables','ciel',[['src/22b-vehicules.js',
@@ -83,7 +83,7 @@ const MUT=[
   ['ciel : traits devies','ciel',[['src/24-combat.js','if(isDist(w))base*=meteoDist();','']]],
   ['annee : la faune suit','saisons',[['src/23c-creatures.js','      w*=saisonMul(k);','']]],
   /* les vehicules */
-  ['vehicule : vitesse','vehicules',[['src/28-loop.js','*(1-util().marche)*mv*mm;','*(1-util().marche)*mm;']]],
+  ['vehicule : vitesse','vehicules',[['src/28-loop.js','*(1-util().marche)*mv*mm*ery;','*(1-util().marche)*mm*ery;']]],
   ['vehicule : cargo','vehicules',[['src/10-craft.js',
     "+(typeof vehCargo==='function'?vehCargo():0);",';']]],
   ['vehicule : terrain','vehicules',[['src/22b-vehicules.js',
@@ -96,6 +96,12 @@ const MUT=[
   ['symetrie : le souffle des creatures','symetrie',[['src/28-loop.js',"    if(e.w<0&&!crePeutFrapper(e))continue;",'']]],
   ['symetrie : la depense','symetrie',[['src/28-loop.js','{creDepense(e);resolveHit(S.guard?1:0,e);}','resolveHit(S.guard?1:0,e);']]],
   ['symetrie : l armure d un PNJ','symetrie',[['src/24-combat.js',"(typeof creArmure==='function'?creArmure(tgt,zk):tgt.arm)",'tgt.arm']]],
+  /* l erudition */
+  ['erudition : un pour cent par famille','erudition',[['src/09-progress.js',"  if(typeof colErudition==='function')mul*=1+colErudition();",'']]],
+  ['erudition : les biomes font marcher plus vite','erudition',[['src/28-loop.js',"  const ery=(typeof colComplete==='function'&&colComplete('biome'))?.9:1;","  const ery=1;"]]],
+  ['erudition : le bestiaire paie en butin','erudition',[['src/24-combat.js',"  const ercre=(typeof colComplete==='function'&&colComplete('creature'))?1:0;",'  const ercre=0;']]],
+  ['erudition : les modules ouvrent un livre de plus','erudition',[['src/25-modules.js',"      +((typeof colComplete==='function'&&colComplete('module'))?1:0);",'      ;']]],
+  ['erudition : la recolte revient plus pleine','erudition',[['src/26-harvest.js',"    const bonus=(typeof colComplete==='function'&&colComplete('mat')&&Math.random()<.35)?1:0;",'    const bonus=0;']]],
   /* les boyaux */
   ['boyau : le rythme casse','boyaux',[['src/24-combat.js','    *(geneIci()?1/1.4:1);','    ;']]],
   ['boyau : pas de balayage','boyaux',[['src/24-combat.js',"  if(swp&&etroitIci()){swp=0;if(hitN<=1)log('<span class=\"bd\">La hampe cogne la paroi — pas de place pour faucher.</span>');}",'']]],
@@ -120,7 +126,7 @@ const MUT=[
   ['anatomie : la visee sort de l arme','anatomie',[['src/24-combat.js','const viseeDe=(F,PA)=>Math.max(0,Math.min(1,(21-(F.crit||20)+(PA?PA.crit||0:0))/20));','const viseeDe=()=>.2;']]],
   ['symetrie : l equipement au niveau','symetrie',[['src/24c-symetrie.js','const q=Math.max(.5,Math.min(1.8,.5+lv/25));','const q=1;']]],
   ['lecture : l echec est gradue','jet decide',[['src/25-modules.js','const grave=marge<=-10||brut===1;','const grave=false;']]],
-  ['lecture : la reussite large','jet decide',[['src/25-modules.js','+(large?2:0);','+0;']]],
+  ['lecture : la reussite large','jet decide',[['src/25-modules.js','+(large?2:0)\n','+0\n']]],
   /* les cavernes */
   ['caverne : deux champs croises','cavernes',[['src/07d-cavernes.js',"  return (Math.abs(a-.5)<.085&&Math.abs(b-.5)<.085)?1:0;",'  return (Math.abs(a-.5)<.085)?1:0;']]],
   ['caverne : pas sous le ciel','cavernes',[['src/07d-cavernes.js','  if(d<2)return 0;','']]],

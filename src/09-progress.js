@@ -32,6 +32,8 @@ function gainXp(id,amount){
   if(S.race==='nain'&&(id==='minage'||id==='forge'))mul*=1.15;
   if(S.race==='cendreux'&&id==='forge')mul*=1.15;
   if(repose())mul*=1.05;
+  /* chaque famille de collection achevee vaut un pour cent, partout */
+  if(typeof colErudition==='function')mul*=1+colErudition();
   s.xp+=amount*mul;
   let n=xpNext(s.lv);
   while(s.xp>=n){

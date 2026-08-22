@@ -218,7 +218,9 @@ function travel(x,y){
   /* Le ciel de la case d'arrivee decide : la neige tient aux jambes, la
      tempete double le trajet, le blizzard le triple presque. */
   const mm=meteoMarche(c);
-  S.day+=d/24*(1-util().marche)*mv*mm;S.pos=[x,y];c.seen=true;S.target=null;
+  /* tous les biomes vus : on sait ou poser le pied */
+  const ery=(typeof colComplete==='function'&&colComplete('biome'))?.9:1;
+  S.day+=d/24*(1-util().marche)*mv*mm*ery;S.pos=[x,y];c.seen=true;S.target=null;
   /* Et un blizzard mord celui qui n'a pas d'abri. C'est la seule meteo qui
      BLESSE : « voyager devient dangereux, s'abriter devient le gameplay ». */
   if(fx(c).gel&&!eclaireIci()&&!foyerIci()){

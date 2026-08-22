@@ -162,7 +162,8 @@ function readBook(i){
     /* « Reussite de 10 et plus → tous les modules du livre et un bonus
        d'XP » : la marge compte, pas seulement le franchissement. */
     const large=marge>=10;
-    const n=1+Math.floor(lv('lecture')/12)+(large?2:0);
+    const n=1+Math.floor(lv('lecture')/12)+(large?2:0)
+      +((typeof colComplete==='function'&&colComplete('module'))?1:0);
     if(large)gainXp('lecture',b.diff*60);
     for(let k=0;k<n;k++){
       const cands=MK.filter(id=>MODULE[id].d.includes(b.dom));

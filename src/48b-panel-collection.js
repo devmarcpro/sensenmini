@@ -16,6 +16,9 @@ function pCollection(){
   h+='<div class="card"><h3><span>蒐 COLLECTION</span><i>'+T.a+' / '+T.t+'</i></h3>'
    +'<div class="meta">'+pc+' % du jeu rencontré. Chaque entrée pèse pareil, quelle que soit sa famille — sinon les '+Object.keys(MAT).length+' matières écraseraient tout le reste et le chiffre ne dirait plus rien.</div>'
    +barre(T.pct)
+   +'<div class="meta">Érudition : '+colFamilles()+' famille(s) achevée(s) — <b>+'
+     +Math.round(colErudition()*100)+' % d\'XP sur tout ce que tu pratiques</b>. '
+     +'Une collection ne rend pas de l\'or : elle rend ce qu\'on sait faire.</div>'
    +'</div>';
 
   /* les familles, de la plus complète à la moins — ce qui reste à faire
@@ -29,6 +32,8 @@ function pCollection(){
     h+=foldHead('col',f.k,D.g,D.n.toUpperCase(),
       f.a+' / '+f.t+' · '+Math.round(f.pct*100)+' %',null);
     if(!foldOpen('col',f.k,null))return;
+    if(COLBON[f.k])h+='<div class="card"><div class="meta">'
+      +(f.pct>=1?'<b>Acquis : ':'À l\'achèvement : ')+COLBON[f.k]+(f.pct>=1?'</b>':'')+'</div></div>';
     const eus=colAvoir(f.k);
     const tout=D.tout();
     h+='<div class="card">'+barre(f.pct)+'</div>';

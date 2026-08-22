@@ -27,7 +27,9 @@ function harvestTick(dt){
     if(stockOf(c,mk)<=0){
       log('<span class="bd">'+m.n+' : le gisement est épuisé ici — il se reconstitue la semaine prochaine.</span>');
       S.occ='repos';S.target=null;S.resume=null;return;}
-    const qte=takeStock(c,mk,1+Math.floor(lv(CAT[m.c].sk)/10));
+    /* toutes les matieres vues : on sait ou regarder */
+    const bonus=(typeof colComplete==='function'&&colComplete('mat')&&Math.random()<.35)?1:0;
+    const qte=takeStock(c,mk,1+Math.floor(lv(CAT[m.c].sk)/10)+bonus);
     S.mat[mk]=(S.mat[mk]||0)+qte;collecte('mat',mk);
     if(PLANTE[mk])addFood(mk,qte);
     gainXp(CAT[m.c].sk,m.d);questTick('harvest',qte,mk);noteRate('harv');

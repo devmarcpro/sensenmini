@@ -713,7 +713,9 @@ function kill(who){
   /* les bêtes ne portent pas de bourse : quelques pièces au mieux — les humains, si (7.6) */
   const g=Math.round((1+c.corr*.08+c.depth*1.5)*(K.rare?4:1)*(K.boss?6:1)*(1+(K.or||0)));
   S.or+=g;
-  if(K.drop)S.mat[K.drop]=(S.mat[K.drop]||0)+1+(K.rare?2:0);
+  /* tout le bestiaire vu : on sait ou trancher */
+  const ercre=(typeof colComplete==='function'&&colComplete('creature'))?1:0;
+  if(K.drop)S.mat[K.drop]=(S.mat[K.drop]||0)+1+(K.rare?2:0)+ercre;
   if(K.cre&&CREATURE[K.cre].cat!=='humain'&&CREATURE[K.cre].cat!=='corrompu')creatureDrops(K);
   /* « ce qu'il porte decide de ce qu'il encaisse — et de ce qu'il laisse »
      (E.3.5). Un humanoide abattu laisse une piece de son propre equipement,
